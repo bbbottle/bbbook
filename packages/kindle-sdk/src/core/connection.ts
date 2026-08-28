@@ -33,6 +33,13 @@ export class KindleConnection {
     })
   }
 
+  downloadFile(remotePath: string, localPath: string) {
+    return Effect.gen({ self: this }, function* () {
+      const client = yield* this.#requireClient()
+      return yield* Executor.downloadFile(client, remotePath, localPath)
+    })
+  }
+
   disconnect() {
     return Effect.gen({ self: this }, function* () {
       if (!this.#client) return

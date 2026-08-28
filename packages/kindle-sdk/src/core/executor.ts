@@ -105,6 +105,30 @@ export const uploadFile = (client: Client, localPath: string, remotePath: string
     })
   })
 
+export const downloadFile = (client: Client, remotePath: string, localPath: string) =>
+  Effect.promise<void>((signal) => {
+    return new Promise((resolve, reject) => {
+      client.sftp((err, sftp) => {
+        if (err) {
+          return reject(err)
+        }
+
+        const onAbort = () => {
+          reject(new Error('Download aborted'))
+        }
+
+        signal.addEventListener('abort', onAbort, { once: true })
+
+        sftp.fastGet(remotePath, localPath, (err2) => {
+          if (err2) {
+            return reject(err2)
+          }
+          resolve(undefined)
+        })
+      })
+    })
+  })
+
 export const disconnect = (client: Client) =>
   Effect.sync(() => {
     client.end()
