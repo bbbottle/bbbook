@@ -1,0 +1,14 @@
+node:
+  version: '20.18.1'
+
+initialize:
+  - run: |
+      if ! command -v pnpm &> /dev/null; then
+        curl -fsSL https://get.pnpm.io/install.sh | sh -
+      fi
+  - run: export PNPM_HOME="$HOME/.local/share/pnpm" && export PATH="$PNPM_HOME/bin:$PATH" && pnpm --version
+  - run: export PNPM_HOME="$HOME/.local/share/pnpm" && export PATH="$PNPM_HOME/bin:$PATH" && pnpm install
+  - run: export PNPM_HOME="$HOME/.local/share/pnpm" && export PATH="$PNPM_HOME/bin:$PATH" && pnpm approve-builds --all
+
+maintenance:
+  - run: export PNPM_HOME="$HOME/.local/share/pnpm" && export PATH="$PNPM_HOME/bin:$PATH" && pnpm install
