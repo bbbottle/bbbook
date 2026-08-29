@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ku-surface: #fbfbf8;
+  --ku-paper: #ffffff;
+  --ku-ink: #111111;
+  --ku-muted: #6b6b6b;
+  --ku-subtle: #9d9797;
+  --ku-divider: #d4d4d4;
+  --ku-accent: #000000;
+  --ku-focus: #000000;
+
+  --ku-device-shell: #f7f6f2;
+  --ku-device-bezel: #d9d7d1;
+  --ku-device-inset: #c4c2bb;
+}
+
+.dark {
+  --ku-surface: #111111;
+  --ku-paper: #000000;
+  --ku-ink: #eeeeee;
+  --ku-muted: #9d9d9d;
+  --ku-subtle: #808080;
+  --ku-divider: #333333;
+  --ku-accent: #ffffff;
+  --ku-focus: #ffffff;
+
+  --ku-device-shell: #1a1a1a;
+  --ku-device-bezel: #333333;
+  --ku-device-inset: #0d0d0d;
+}
+
+html,
+body {
+  background-color: var(--ku-surface);
+  color: var(--ku-ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: var(--ku-ink);
+  color: var(--ku-surface);
+}
+
+@layer components {
+  .ku-focus-ring {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--ku-focus);
+  }
+
+  .ku-grey-image img,
+  img.ku-grey-image {
+    filter: grayscale(100%) contrast(1.08);
+  }
+}
