@@ -11,7 +11,7 @@ export function ActionBar({ children, className }: ActionBarProps) {
   return (
     <div
       className={cn(
-        'flex h-[54px] items-center border-b border-divider bg-paper px-1',
+        'flex h-[54px] items-center bg-paper px-1',
         className
       )}
     >
@@ -44,7 +44,7 @@ export function ActionItem({ icon, children, className, onClick }: ActionItemPro
       className={cn(
         'flex h-[50px] w-[50px] flex-col items-center justify-center',
         'text-[10px] font-sans font-medium lowercase tracking-wide text-ink',
-        'focus-visible:ku-focus-ring active:opacity-70',
+        'focus-visible:ku-focus-ring active:bg-ink active:text-paper',
         className
       )}
     >

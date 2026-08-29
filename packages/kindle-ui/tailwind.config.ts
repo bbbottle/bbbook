@@ -27,6 +27,7 @@ export default {
       },
       fontFamily: {
         sans: [
+          '"Amazon Ember"',
           'ui-sans-serif',
           'system-ui',
           '-apple-system',
@@ -36,6 +37,7 @@ export default {
           'sans-serif',
         ],
         serif: [
+          'Bookerly',
           'ui-serif',
           'Georgia',
           'Cambria',

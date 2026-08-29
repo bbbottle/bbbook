@@ -61,7 +61,7 @@ export function MenuItem({
       onClick={onClick}
       className={cn(
         'block cursor-pointer px-5 py-3 text-base font-sans text-ink outline-none',
-        'hover:bg-ink hover:text-surface focus-visible:ku-focus-ring',
+        'hover:bg-ink hover:text-surface active:bg-ink active:text-paper focus-visible:ku-focus-ring',
         className
       )}
     >

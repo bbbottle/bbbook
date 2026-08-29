@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '../../utils/cn.js'
 
 export interface PopoverProps {
@@ -18,20 +19,16 @@ export function Popover({ open, onClose, children, className }: PopoverProps) {
     return () => window.removeEventListener('keydown', handler)
   }, [open, onClose])
 
-  if (!open) return null
+  if (!open || typeof document === 'undefined') return null
 
-  return (
+  return createPortal(
     <div
       className={cn('fixed inset-0 z-50', className)}
       onClick={onClose}
       aria-hidden="true"
     >
-      <div
-        className="h-full w-full"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {children}
-      </div>
-    </div>
+      {children}
+    </div>,
+    document.body
   )
 }
