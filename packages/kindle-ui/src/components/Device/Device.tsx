@@ -29,7 +29,7 @@ export function Device({
       className={cn(
         'relative mx-auto select-none overflow-hidden',
         'rounded-kindle border border-device-bezel',
-        'bg-gradient-to-br from-[#faf9f5] via-device-shell to-device-bezel',
+        'bg-gradient-to-br from-[#fcfaf4] via-device-shell to-[#ded9cd]',
         'shadow-shell',
         className
       )}
@@ -71,8 +71,8 @@ export function Device({
         style={{ bottom: '30px', height: '24px' }}
       >
         <span
-          className="text-[10px] font-semibold tracking-[0.2em] text-device-logo"
-          style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}
+          className="text-[11px] font-medium tracking-[0.12em] text-device-logo"
+          style={{ fontFamily: "'Amazon Ember', 'Helvetica Neue', Arial, sans-serif" }}
         >
           kindle
         </span>

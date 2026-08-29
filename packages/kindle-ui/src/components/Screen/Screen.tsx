@@ -32,24 +32,26 @@ export const Screen = forwardRef<ScreenHandle, ScreenProps>(function Screen(
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-screen border border-black/[0.06] bg-device-screen shadow-screen',
+        'relative overflow-hidden rounded-screen border border-device-inset/50 bg-device-bezel p-[3px] shadow-[inset_0_2px_8px_rgba(0,0,0,0.18)]',
         className
       )}
       style={style}
     >
-      <div
-        className={cn(
-          'h-full w-full overflow-auto bg-paper text-ink',
-          'ku-grey-image',
-          contentClassName
+      <div className="relative h-full w-full overflow-hidden rounded-[5px] bg-device-screen shadow-screen">
+        <div
+          className={cn(
+            'h-full w-full overflow-auto bg-paper text-ink',
+            'ku-grey-image',
+            contentClassName
+          )}
+          style={{ filter: 'grayscale(100%) contrast(1.08)' }}
+        >
+          {children}
+        </div>
+        {overlay && (
+          <EinkOverlay ref={overlayRef} className="absolute inset-0 h-full w-full" />
         )}
-        style={{ filter: 'grayscale(100%) contrast(1.08)' }}
-      >
-        {children}
       </div>
-      {overlay && (
-        <EinkOverlay ref={overlayRef} className="absolute inset-0 h-full w-full" />
-      )}
     </div>
   )
 })

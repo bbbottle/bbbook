@@ -12,11 +12,11 @@
   --ku-accent: #000000;
   --ku-focus: #000000;
 
-  --ku-device-shell: #f3f1eb;
-  --ku-device-bezel: #e8e5de;
-  --ku-device-inset: #d3d0c8;
-  --ku-device-screen: #d6d3cd;
-  --ku-device-logo: #8c8983;
+  --ku-device-shell: #f5f2e9;
+  --ku-device-bezel: #eae5d9;
+  --ku-device-inset: #d8d4cc;
+  --ku-device-screen: #d6d2cb;
+  --ku-device-logo: #5c5850;
 }
 
 .dark {
