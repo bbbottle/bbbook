@@ -32,7 +32,7 @@ export interface ActionItemProps {
   icon?: ReactNode
   children?: ReactNode
   className?: string
-  onClick?: () => void
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
 }
 
 export function ActionItem({ icon, children, className, onClick }: ActionItemProps) {
@@ -51,6 +51,7 @@ export function ActionItem({ icon, children, className, onClick }: ActionItemPro
     </button>
   )
 }
+
 
 export interface SearchBarProps {
   value?: string
@@ -87,4 +88,12 @@ export function SearchBar({
       </span>
     </div>
   )
+}
+
+export interface ActionBarSpaceProps {
+  className?: string
+}
+
+export function ActionBarSpace({ className }: ActionBarSpaceProps) {
+  return <div className={cn('flex-[2_4_auto] px-2', className)} />
 }

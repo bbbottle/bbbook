@@ -12,9 +12,11 @@
   --ku-accent: #000000;
   --ku-focus: #000000;
 
-  --ku-device-shell: #f7f6f2;
-  --ku-device-bezel: #d9d7d1;
-  --ku-device-inset: #c4c2bb;
+  --ku-device-shell: #f3f1eb;
+  --ku-device-bezel: #e8e5de;
+  --ku-device-inset: #d3d0c8;
+  --ku-device-screen: #d6d3cd;
+  --ku-device-logo: #8c8983;
 }
 
 .dark {
@@ -28,8 +30,10 @@
   --ku-focus: #ffffff;
 
   --ku-device-shell: #1a1a1a;
-  --ku-device-bezel: #333333;
+  --ku-device-bezel: #2d2d2d;
   --ku-device-inset: #0d0d0d;
+  --ku-device-screen: #111111;
+  --ku-device-logo: #a8a8a8;
 }
 
 html,

@@ -1,2 +1,6 @@
 export { ListItem } from './ListItem.js'
+export { ListItemIcon } from './ListItemIcon.js'
+export { ListItemText } from './ListItemText.js'
 export type { ListItemProps } from './ListItem.js'
+export type { ListItemIconProps } from './ListItemIcon.js'
+export type { ListItemTextProps } from './ListItemText.js'

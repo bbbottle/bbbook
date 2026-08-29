@@ -1,2 +1,8 @@
 export { Dialog } from './Dialog.js'
+export { DialogTitle } from './DialogTitle.js'
+export { DialogContent } from './DialogContent.js'
+export { DialogAction } from './DialogAction.js'
 export type { DialogProps } from './Dialog.js'
+export type { DialogTitleProps } from './DialogTitle.js'
+export type { DialogContentProps } from './DialogContent.js'
+export type { DialogActionProps } from './DialogAction.js'

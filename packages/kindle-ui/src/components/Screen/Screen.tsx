@@ -32,14 +32,14 @@ export const Screen = forwardRef<ScreenHandle, ScreenProps>(function Screen(
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-screen border border-black/30 bg-paper shadow-screen',
+        'relative overflow-hidden rounded-screen border border-black/[0.06] bg-device-screen shadow-screen',
         className
       )}
       style={style}
     >
       <div
         className={cn(
-          'h-full w-full overflow-auto text-ink',
+          'h-full w-full overflow-auto bg-paper text-ink',
           'ku-grey-image',
           contentClassName
         )}
