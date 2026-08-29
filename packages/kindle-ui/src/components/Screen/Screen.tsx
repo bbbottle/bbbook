@@ -50,7 +50,7 @@ export const Screen = forwardRef<ScreenHandle, ScreenProps>(function Screen(
       {overlay ? (
         <EinkOverlay
           ref={einkRef}
-          className="pointer-events-none absolute inset-0"
+          className="absolute inset-0"
         >
           <div className="min-h-full w-full bg-paper">{children}</div>
         </EinkOverlay>

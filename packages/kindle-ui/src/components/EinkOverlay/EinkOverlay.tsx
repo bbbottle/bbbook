@@ -65,8 +65,10 @@ void main() {
 
   float flash = u_flash;
 
-  float alpha = (1.0 - flash) * 0.5 + flash;
-  vec3 color = mix(vec3(overlay), vec3(1.0), flash);
+  // Refresh flash: E-ink panels do not emit light, so the flash should not
+  // brighten the screen. Use a brief dark/clear pulse instead of a white flash.
+  float alpha = (1.0 - flash) * 0.5 + flash * 0.9;
+  vec3 color = mix(vec3(overlay), vec3(0.0), flash);
 
   gl_FragColor = vec4(color, alpha);
 }
@@ -206,9 +208,9 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
     }, [paused])
 
     return (
-      <div className={cn('relative h-full w-full', className)}>
+      <div className={cn('pointer-events-none relative h-full w-full', className)}>
         <div
-          className="ku-scrollbar-hide h-full w-full overflow-auto"
+          className="pointer-events-auto ku-scrollbar-hide h-full w-full overflow-auto"
           style={{ filter: 'grayscale(100%) contrast(1.08)' }}
         >
           {children}
