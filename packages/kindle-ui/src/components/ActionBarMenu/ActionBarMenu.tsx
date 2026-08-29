@@ -19,9 +19,7 @@ export function ActionBarMenu({ items }: ActionBarMenuProps) {
 
   return (
     <>
-      <ActionItem onClick={handleClick} icon={<MoreIcon />}>
-        More
-      </ActionItem>
+      <ActionItem onClick={handleClick} icon={<MoreIcon />} />
       <Menu open={Boolean(anchorEl)} onClose={handleClose} anchorEl={anchorEl}>
         {items?.map((item, i) => (
           <MenuItem
@@ -40,10 +38,10 @@ export function ActionBarMenu({ items }: ActionBarMenuProps) {
 
 function MoreIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <circle cx="5" cy="12" r="2" />
+    <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="12" cy="5" r="2" />
       <circle cx="12" cy="12" r="2" />
-      <circle cx="19" cy="12" r="2" />
+      <circle cx="12" cy="19" r="2" />
     </svg>
   )
 }

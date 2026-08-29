@@ -29,38 +29,34 @@ export function Device({
       className={cn(
         'relative mx-auto select-none overflow-hidden',
         'rounded-kindle border border-device-bezel',
-        'bg-gradient-to-br from-[#fcfaf4] via-device-shell to-[#ded9cd]',
+        'bg-gradient-to-br from-[#faf8f2] via-device-shell to-[#e8e4d9]',
         'shadow-shell',
         className
       )}
       style={{
         width: 'min(92vw, 420px)',
-        aspectRatio: '3 / 4',
+        aspectRatio: '10 / 14.45',
       }}
     >
-      {/* plastic grain */}
       <div
-        className="pointer-events-none absolute inset-0 rounded-kindle opacity-[0.025]"
+        className="pointer-events-none absolute inset-0 rounded-kindle opacity-[0.03]"
         style={{
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
         }}
       />
 
-      {/* soft specular highlight */}
-      <div
-        className="pointer-events-none absolute inset-0 rounded-kindle bg-gradient-to-br from-white/40 via-transparent to-black/[0.03]"
-      />
+      <div className="pointer-events-none absolute inset-0 rounded-kindle bg-gradient-to-br from-white/30 via-transparent to-black/[0.03]" />
 
       <Screen
         ref={screenRef}
         overlay={overlay}
         className="absolute"
         style={{
-          top: '42px',
-          left: '44px',
-          right: '44px',
-          bottom: '74px',
+          top: '38px',
+          left: '28px',
+          right: '28px',
+          bottom: '82px',
         }}
       >
         {children}
@@ -68,10 +64,10 @@ export function Device({
 
       <div
         className="absolute left-0 right-0 flex items-center justify-center"
-        style={{ bottom: '30px', height: '24px' }}
+        style={{ bottom: '28px', height: '28px' }}
       >
         <span
-          className="text-[11px] font-medium tracking-[0.12em] text-device-logo"
+          className="text-[17px] font-normal tracking-[0.14em] text-device-logo"
           style={{ fontFamily: "'Amazon Ember', 'Helvetica Neue', Arial, sans-serif" }}
         >
           kindle
@@ -83,7 +79,7 @@ export function Device({
           type="button"
           onClick={handleHomeClick}
           className="absolute left-1/2 -translate-x-1/2 cursor-pointer rounded-full"
-          style={{ bottom: '8px', width: '38px', height: '10px' }}
+          style={{ bottom: '6px', width: '38px', height: '10px' }}
           aria-label="Home"
         >
           <span

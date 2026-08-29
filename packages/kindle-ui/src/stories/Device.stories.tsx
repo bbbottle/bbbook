@@ -5,23 +5,27 @@ import { Button } from '../components/Button/Button.js'
 import { List } from '../components/List/List.js'
 import { ListItem } from '../components/ListItem/ListItem.js'
 import { Navbar } from '../components/Navbar/Navbar.js'
-import { StatusBar } from '../components/StatusBar/StatusBar.js'
+import { StatuBar } from '../components/StatuBar/StatuBar.js'
 import { ActionBar, ActionGroup, ActionItem, SearchBar, ActionBarSpace } from '../components/ActionBar/ActionBar.js'
 import { ActionBarMenu } from '../components/ActionBarMenu/ActionBarMenu.js'
-import { ThemeProvider } from '../components/ThemeProvider/ThemeProvider.js'
+
 import { Section, SectionTitle } from '../components/Section/Section.js'
 import { Tab, TabItem } from '../components/Tab/Tab.js'
 import { Grid, GridItem } from '../components/Grid/Grid.js'
 import { Switch } from '../components/Switch/Switch.js'
 import { TimeBar } from '../components/TimeBar/TimeBar.js'
 import { Divider } from '../components/Divider/Divider.js'
-import { Card, CardContent, CardTitle, CardAction } from '../components/Card/Card.js'
-import { KindleOasis } from '../components/KindleOasis/KindleOasis.js'
+import { Card, CardTitle, CardContent, CardAction } from '../components/Card/Card.js'
+import { Icon } from '../components/Icon/Icon.js'
 
 const meta: Meta<typeof Device> = {
   title: 'Kindle UI/Device',
   component: Device,
   parameters: { layout: 'centered' },
+  argTypes: {
+    homeButton: { control: 'boolean' },
+    overlay: { control: 'boolean' },
+  },
 }
 export default meta
 
@@ -41,10 +45,30 @@ function BirdIcon({ className }: { className?: string }) {
   )
 }
 
+const headerMenu = [
+  { textPrimary: 'Sync' },
+  { textPrimary: 'Settings' },
+  { textPrimary: 'About' },
+]
+
+export const Playground: Story = {
+  args: { homeButton: false, overlay: true },
+  render: (args) => (
+    <Device {...args}>
+      <div className="flex h-full flex-col items-center justify-center p-8 text-center text-ink">
+        <BirdIcon className="mb-4 h-12 w-12" />
+        <p className="font-serif text-lg">The Little Prince</p>
+        <p className="mt-1 font-sans text-xs text-muted">Swipe to unlock</p>
+      </div>
+    </Device>
+  ),
+}
+
 export const LockScreen: Story = {
-  render: () => (
-    <Device>
-      <div className="flex h-full flex-col items-center justify-center bg-device-screen p-8 text-ink">
+  args: { homeButton: false, overlay: true },
+  render: (args) => (
+    <Device {...args}>
+      <div className="flex h-full flex-col items-center justify-center p-8 text-center text-ink">
         <BirdIcon className="mb-4 h-12 w-12" />
         <p className="font-serif text-lg">The Little Prince</p>
         <p className="mt-1 font-sans text-xs text-muted">Swipe to unlock</p>
@@ -54,72 +78,54 @@ export const LockScreen: Story = {
 }
 
 export const Library: Story = {
-  render: () => (
-    <Device>
-      <div className="flex h-full flex-col">
-        <StatusBar time="09:20 AM" battery={72} wifi="full" />
-        <Navbar title="Library" />
-        <ActionBar>
-          <ActionGroup>
-            <ActionItem>Home</ActionItem>
-            <ActionItem>Back</ActionItem>
-          </ActionGroup>
-          <ActionBarSpace />
-          <SearchBar placeholder="Filter" className="mx-2 w-32" />
-          <ActionBarMenu
-            items={[
-              { textPrimary: 'Sort by title' },
-              { textPrimary: 'Sort by author' },
-              { textPrimary: 'Refresh' },
-            ]}
-          />
-        </ActionBar>
-        <List className="flex-1 overflow-auto">
-          <ListItem title="The Great Gatsby" subtitle="F. Scott Fitzgerald" meta="32%" />
-          <ListItem title="1984" subtitle="George Orwell" meta="New" active />
-          <ListItem title="Moby Dick" subtitle="Herman Melville" meta="Cloud" />
-          <ListItem title="Invisible Man" subtitle="Ralph Ellison" />
-          <ListItem title="Dune" subtitle="Frank Herbert" />
-        </List>
-      </div>
-    </Device>
-  ),
-}
-
-export const Store: Story = {
+  args: { homeButton: false, overlay: true },
   render: () => {
     const [query, setQuery] = useState('')
-    const [tab, setTab] = useState('all')
+    const [active, setActive] = useState<string | null>('1984')
     return (
       <Device>
         <div className="flex h-full flex-col">
-          <StatusBar time="09:21 AM" battery={72} wifi="full" />
-          <Navbar title="Store" />
-          <div className="border-b border-divider p-3">
-            <SearchBar
-              value={query}
-              onChange={setQuery}
-              onSubmit={() => {}}
-              placeholder="Search z-library"
+          <Navbar fixed>
+            <StatuBar
+              deviceName="My Kindle"
+              battery={86}
+              celluar={{ on: true, label: 'LTE', signal: 3 }}
             />
-          </div>
-          <Tab>
-            <TabItem active={tab === 'all'} onClick={() => setTab('all')}>All</TabItem>
-            <TabItem active={tab === 'downloaded'} onClick={() => setTab('downloaded')}>Downloaded</TabItem>
-          </Tab>
-          <Section>
-            <SectionTitle label="Results" />
-            <Grid dense>
-              <GridItem><div className="h-full w-full bg-muted" /></GridItem>
-              <GridItem><div className="h-full w-full bg-muted" /></GridItem>
-              <GridItem><div className="h-full w-full bg-muted" /></GridItem>
-              <GridItem><div className="h-full w-full bg-muted" /></GridItem>
-            </Grid>
-          </Section>
+            <ActionBar>
+              <ActionGroup>
+                <ActionItem icon={<Icon name="home" size={22} />}>home</ActionItem>
+                <ActionItem icon={<Icon name="back" size={22} />}>back</ActionItem>
+                <ActionItem icon={<Icon name="settings" size={22} />}>settings</ActionItem>
+              </ActionGroup>
+              <ActionBarSpace />
+              <ActionGroup>
+                <SearchBar
+                  value={query}
+                  onChange={setQuery}
+                  onSubmit={(value) => console.log('search', value)}
+                  placeholder="Search"
+                />
+                <ActionBarMenu items={headerMenu} />
+              </ActionGroup>
+            </ActionBar>
+          </Navbar>
           <List className="flex-1 overflow-auto">
-            <ListItem title="Design Patterns" subtitle="Gang of Four" meta="EPUB" />
-            <ListItem title="Clean Code" subtitle="Robert C. Martin" meta="EPUB" />
-            <ListItem title="The Pragmatic Programmer" subtitle="Hunt & Thomas" meta="PDF" />
+            {[
+              { title: 'The Great Gatsby', subtitle: 'F. Scott Fitzgerald', meta: '32%' },
+              { title: '1984', subtitle: 'George Orwell', meta: 'New' },
+              { title: 'Moby Dick', subtitle: 'Herman Melville', meta: 'Cloud' },
+              { title: 'Invisible Man', subtitle: 'Ralph Ellison', meta: '10%' },
+              { title: 'Dune', subtitle: 'Frank Herbert', meta: 'Cloud' },
+            ].map((book) => (
+              <ListItem
+                key={book.title}
+                title={book.title}
+                subtitle={book.subtitle}
+                meta={book.meta}
+                active={active === book.title}
+                onClick={() => setActive(book.title)}
+              />
+            ))}
           </List>
         </div>
       </Device>
@@ -127,37 +133,93 @@ export const Store: Story = {
   },
 }
 
+export const Store: Story = {
+  args: { homeButton: false, overlay: true },
+  render: () => {
+    const [query, setQuery] = useState('')
+    const [tab, setTab] = useState('all')
+    return (
+      <Device>
+        <div className="flex h-full flex-col">
+          <Navbar fixed>
+            <StatuBar deviceName="My Kindle" battery={72} wifi="full" />
+            <ActionBar>
+              <ActionGroup>
+                <ActionItem icon={<Icon name="home" size={22} />}>home</ActionItem>
+                <ActionItem icon={<Icon name="back" size={22} />}>back</ActionItem>
+              </ActionGroup>
+              <ActionBarSpace />
+              <ActionGroup>
+                <SearchBar
+                  value={query}
+                  onChange={setQuery}
+                  onSubmit={(value) => console.log('search', value)}
+                  placeholder="Search"
+                />
+                <ActionBarMenu items={headerMenu} />
+              </ActionGroup>
+            </ActionBar>
+          </Navbar>
+          <Tab>
+            <TabItem active={tab === 'all'} onClick={() => setTab('all')}>All</TabItem>
+            <TabItem active={tab === 'downloaded'} onClick={() => setTab('downloaded')}>Downloaded</TabItem>
+          </Tab>
+          <Section className="flex-1 overflow-auto">
+            <SectionTitle label="Results" />
+            <Grid dense>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <GridItem key={i}><div className="h-full w-full bg-muted" /></GridItem>
+              ))}
+            </Grid>
+            <List>
+              <ListItem title="Design Patterns" subtitle="Gang of Four" meta="EPUB" />
+              <ListItem title="Clean Code" subtitle="Robert C. Martin" meta="EPUB" />
+              <ListItem title="The Pragmatic Programmer" subtitle="Hunt & Thomas" meta="PDF" />
+            </List>
+          </Section>
+        </div>
+      </Device>
+    )
+  },
+}
+
 export const Components: Story = {
-  render: () => (
-    <Device>
-      <div className="flex h-full flex-col p-4 overflow-auto">
-        <TimeBar className="mb-2" />
-        <SectionTitle label="Settings" />
-        <Card>
-          <CardTitle>Device Options</CardTitle>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Airplane mode</span>
-              <Switch checked={false} />
-            </div>
-            <Divider className="my-2" />
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Dark mode</span>
-              <Switch checked />
-            </div>
-          </CardContent>
-          <CardAction>
-            <Button>Done</Button>
-          </CardAction>
-        </Card>
-      </div>
-    </Device>
-  ),
+  args: { homeButton: false, overlay: true },
+  render: () => {
+    const [airplane, setAirplane] = useState(false)
+    const [wifi, setWifi] = useState(false)
+    return (
+      <Device>
+        <div className="flex h-full flex-col overflow-auto p-4">
+          <TimeBar className="mb-2" />
+          <Card>
+            <CardTitle>Device Options</CardTitle>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Airplane mode</span>
+                <Switch checked={airplane} onChange={setAirplane} ariaLabel="Airplane mode" />
+              </div>
+              <Divider className="my-2" />
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Wi-Fi</span>
+                <Switch checked={wifi} onChange={setWifi} ariaLabel="Wi-Fi" />
+              </div>
+            </CardContent>
+            <CardAction>
+              <Button onClick={() => { setAirplane(false); setWifi(false) }}>Reset</Button>
+              <Button>Done</Button>
+            </CardAction>
+          </Card>
+        </div>
+      </Device>
+    )
+  },
 }
 
 export const HomeButton: Story = {
-  render: () => (
-    <Device homeButton>
+  args: { homeButton: true, overlay: true },
+  render: (args) => (
+    <Device {...args}>
       <div className="flex h-full items-center justify-center p-8 text-center">
         <p className="font-serif text-lg text-ink">Press the home button to refresh the screen.</p>
       </div>
@@ -165,33 +227,4 @@ export const HomeButton: Story = {
   ),
 }
 
-export const Dark: Story = {
-  render: () => (
-    <ThemeProvider defaultMode="dark">
-      <Device>
-        <div className="flex h-full flex-col">
-          <StatusBar time="09:22 PM" battery={45} wifi="full" />
-          <Navbar title="Library" />
-          <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-            <p className="font-serif text-lg text-ink">Dark mode is ready.</p>
-            <p className="mt-2 font-sans text-xs text-muted">
-              CSS variables drive the shell and screen palettes.
-            </p>
-          </div>
-        </div>
-      </Device>
-    </ThemeProvider>
-  ),
-}
 
-export const Oasis: Story = {
-  render: () => (
-    <KindleOasis>
-      <div className="flex h-full flex-col items-center justify-center p-6 text-center">
-        <StatusBar time="10:04 AM" battery={88} wifi="full" />
-        <p className="font-serif text-lg text-ink">Kindle Oasis frame</p>
-        <p className="mt-2 font-sans text-xs text-muted">Landscape layout with page-turn grip.</p>
-      </div>
-    </KindleOasis>
-  ),
-}

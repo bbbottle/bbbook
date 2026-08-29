@@ -1,14 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Device } from '../components/Device/Device.js'
 import { ActionBar, ActionGroup, ActionItem, ActionBarSpace, SearchBar } from '../components/ActionBar/ActionBar.js'
 import { ActionBarMenu } from '../components/ActionBarMenu/ActionBarMenu.js'
 import { Button } from '../components/Button/Button.js'
+import { Icon } from '../components/Icon/Icon.js'
 import { Card, CardContent, CardTitle, CardAction, CardMedia } from '../components/Card/Card.js'
 import { Container } from '../components/Container/Container.js'
 import { Dialog } from '../components/Dialog/Dialog.js'
-import { DialogContent } from '../components/Dialog/DialogContent.js'
-import { DialogAction } from '../components/Dialog/DialogAction.js'
 import { Divider } from '../components/Divider/Divider.js'
 import { Grid, GridItem } from '../components/Grid/Grid.js'
 import { ListItem } from '../components/ListItem/ListItem.js'
@@ -100,27 +99,30 @@ export const MenuStory: Story = {
 
 export const ActionBarMenuStory: Story = {
   name: 'ActionBarMenu',
-  render: () => (
-    <Device>
-      <div className="flex h-full flex-col p-4">
-        <ActionBar>
-          <ActionGroup>
-            <ActionItem>Home</ActionItem>
-            <ActionItem>Back</ActionItem>
-          </ActionGroup>
-          <ActionBarSpace />
-          <SearchBar placeholder="Filter" className="mx-2 w-32" />
-          <ActionBarMenu
-            items={[
-              { textPrimary: 'Sort by title' },
-              { textPrimary: 'Sort by author' },
-              { textPrimary: 'Refresh' },
-            ]}
-          />
-        </ActionBar>
-      </div>
-    </Device>
-  ),
+  render: () => {
+    const [query, setQuery] = useState('')
+    return (
+      <Device>
+        <div className="flex h-full flex-col p-4">
+          <ActionBar>
+            <ActionGroup>
+              <ActionItem icon={<Icon name="home" size={22} />}>home</ActionItem>
+              <ActionItem icon={<Icon name="back" size={22} />}>back</ActionItem>
+            </ActionGroup>
+            <ActionBarSpace />
+            <SearchBar value={query} onChange={setQuery} placeholder="Filter" />
+            <ActionBarMenu
+              items={[
+                { textPrimary: 'Sort by title' },
+                { textPrimary: 'Sort by author' },
+                { textPrimary: 'Refresh' },
+              ]}
+            />
+          </ActionBar>
+        </div>
+      </Device>
+    )
+  },
 }
 
 export const DividerStory: Story = {
@@ -187,17 +189,29 @@ export const ListItemStory: Story = {
 
 export const DialogStory: Story = {
   name: 'Dialog',
-  render: () => (
-    <Device>
-      <Dialog open title="Replace Wallpaper?" onClose={() => {}}>
-        <DialogContent>The selected image will be processed and applied to the lock screen.</DialogContent>
-        <DialogAction>
-          <Button variant="ghost">Cancel</Button>
-          <Button>Replace</Button>
-        </DialogAction>
-      </Dialog>
-    </Device>
-  ),
+  render: () => {
+    const [open, setOpen] = useState(false)
+    return (
+      <Device>
+        <div className="flex h-full flex-col items-center justify-center p-4">
+          <Button onClick={() => setOpen(true)}>Open dialog</Button>
+          <Dialog
+            open={open}
+            title="Replace Wallpaper?"
+            onClose={() => setOpen(false)}
+            actions={
+              <>
+                <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+                <Button onClick={() => setOpen(false)}>Replace</Button>
+              </>
+            }
+          >
+            The selected image will be processed and applied to the lock screen.
+          </Dialog>
+        </div>
+      </Device>
+    )
+  },
 }
 
 export const ContainerStory: Story = {
@@ -208,4 +222,141 @@ export const ContainerStory: Story = {
       <p className="text-sm text-muted">Provides surface and typography defaults.</p>
     </Container>
   ),
+}
+
+export const Catalog: Story = {
+  name: 'Catalog',
+  render: () => {
+    const [sw, setSw] = useState(false)
+    const [tab, setTab] = useState('all')
+    const [menuOpen, setMenuOpen] = useState(false)
+    const [dialogOpen, setDialogOpen] = useState(false)
+    const [query, setQuery] = useState('')
+    const menuBtnRef = useRef<HTMLButtonElement>(null)
+
+    return (
+      <Device>
+        <div className="h-full space-y-2 p-3 text-sm">
+          <h1 className="mb-1 text-base font-serif font-semibold text-ink">Kindle UI Primitives</h1>
+
+          <section className="space-y-1">
+            <h2 className="text-[10px] font-sans font-medium uppercase tracking-wider text-muted">Switch</h2>
+            <div className="flex items-center gap-2">
+              <Switch checked={sw} onChange={(v) => setSw(v)} ariaLabel="airplane mode" />
+              <span className="text-ink">{sw ? 'On' : 'Off'}</span>
+            </div>
+          </section>
+
+          <Divider />
+
+          <section className="space-y-1">
+            <h2 className="text-[10px] font-sans font-medium uppercase tracking-wider text-muted">Tab</h2>
+            <Tab>
+              {['all', 'cloud', 'device'].map((key) => (
+                <TabItem key={key} active={tab === key} onClick={() => setTab(key)}>
+                  {key}
+                </TabItem>
+              ))}
+            </Tab>
+          </section>
+
+          <Divider />
+
+          <section className="space-y-1">
+            <h2 className="text-[10px] font-sans font-medium uppercase tracking-wider text-muted">Menu</h2>
+            <Button ref={menuBtnRef} className="h-8 px-3 text-xs" onClick={() => setMenuOpen(true)}>
+              Open menu
+            </Button>
+            <Menu anchorEl={menuBtnRef.current} open={menuOpen} onClose={() => setMenuOpen(false)}>
+              <MenuItem textPrimary="Sort by title" onClick={() => setMenuOpen(false)} />
+              <MenuItem textPrimary="Refresh" onClick={() => setMenuOpen(false)} />
+            </Menu>
+          </section>
+
+          <Divider />
+
+          <section className="space-y-1">
+            <h2 className="text-[10px] font-sans font-medium uppercase tracking-wider text-muted">ActionBarMenu</h2>
+            <ActionBar className="rounded-screen">
+              <ActionGroup>
+                <ActionItem icon={<Icon name="home" size={22} />}>home</ActionItem>
+              </ActionGroup>
+              <ActionBarSpace />
+              <SearchBar value={query} onChange={setQuery} placeholder="Filter" />
+              <ActionBarMenu items={[{ textPrimary: 'Settings' }, { textPrimary: 'About' }]} />
+            </ActionBar>
+          </section>
+
+          <Divider />
+
+          <section className="space-y-1">
+            <h2 className="text-[10px] font-sans font-medium uppercase tracking-wider text-muted">Grid</h2>
+            <Grid dense>
+              <GridItem><div className="h-full w-full bg-muted" /></GridItem>
+              <GridItem><div className="h-full w-full bg-muted" /></GridItem>
+              <GridItem><div className="h-full w-full bg-muted" /></GridItem>
+              <GridItem><div className="h-full w-full bg-muted" /></GridItem>
+            </Grid>
+          </section>
+
+          <Divider />
+
+          <section className="space-y-1">
+            <h2 className="text-[10px] font-sans font-medium uppercase tracking-wider text-muted">Section</h2>
+            <Section className="px-0">
+              <SectionTitle label="Library" />
+              <p className="text-xs text-muted">12 books on device</p>
+            </Section>
+          </section>
+
+          <Divider />
+
+          <section className="space-y-1">
+            <h2 className="text-[10px] font-sans font-medium uppercase tracking-wider text-muted">ListItem</h2>
+            <ListItem title="The Great Gatsby" subtitle="F. Scott Fitzgerald" meta="32%" />
+          </section>
+
+          <Divider />
+
+          <section className="space-y-1">
+            <h2 className="text-[10px] font-sans font-medium uppercase tracking-wider text-muted">Card</h2>
+            <Card className="w-full">
+              <CardMedia className="h-20" />
+              <CardTitle className="text-sm">The Little Prince</CardTitle>
+              <CardContent className="text-xs text-muted">Antoine de Saint-Exupéry</CardContent>
+              <CardAction>
+                <Button className="h-8 px-3 text-xs">Open</Button>
+              </CardAction>
+            </Card>
+          </section>
+
+          <Divider />
+
+          <section className="space-y-1">
+            <h2 className="text-[10px] font-sans font-medium uppercase tracking-wider text-muted">Dialog</h2>
+            <Button className="h-8 px-3 text-xs" onClick={() => setDialogOpen(true)}>
+              Open dialog
+            </Button>
+            <Dialog
+              open={dialogOpen}
+              onClose={() => setDialogOpen(false)}
+              title="Confirm?"
+              actions={
+                <>
+                  <Button className="h-8 px-3 text-xs" variant="ghost" onClick={() => setDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button className="h-8 px-3 text-xs" onClick={() => setDialogOpen(false)}>
+                    OK
+                  </Button>
+                </>
+              }
+            >
+              Apply changes to the device?
+            </Dialog>
+          </section>
+        </div>
+      </Device>
+    )
+  },
 }

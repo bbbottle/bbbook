@@ -3,20 +3,19 @@ import { cn } from '../../utils/cn.js'
 
 export interface ContainerProps {
   children?: ReactNode
-  dark?: boolean
   deviceFrame?: ElementType
   className?: string
 }
 
-export function Container({ children, dark, deviceFrame, className }: ContainerProps) {
+export function Container({ children, deviceFrame, className }: ContainerProps) {
   const content = (
-    <div className={cn(dark && 'dark', 'min-h-screen bg-surface font-sans text-ink', className)}>
+    <div className={cn('min-h-screen bg-surface font-sans text-ink', className)}>
       {children}
     </div>
   )
 
   if (deviceFrame) {
-    return createElement(deviceFrame, { dark }, content)
+    return createElement(deviceFrame, {}, content)
   }
 
   return content

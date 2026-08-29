@@ -12,7 +12,7 @@ export function Card({ children, className, onClick }: CardProps) {
     <div
       onClick={onClick}
       className={cn(
-        'rounded-lg border border-ink bg-surface p-3 shadow-eink',
+        'rounded-lg border border-ink bg-paper p-3 shadow-eink',
         className
       )}
     >

@@ -6,21 +6,26 @@ import { Dialog } from '../components/Dialog/Dialog.js'
 const meta: Meta<typeof Dialog> = {
   title: 'Kindle UI/Dialog',
   component: Dialog,
+  argTypes: {
+    open: { control: 'boolean' },
+    title: { control: 'text' },
+  },
 }
 export default meta
 
 type Story = StoryObj<typeof Dialog>
 
 export const Default: Story = {
-  render: () => {
-    const [open, setOpen] = useState(true)
+  args: { open: true, title: 'Replace Wallpaper?' },
+  render: (args) => {
+    const [open, setOpen] = useState(args.open ?? true)
     return (
       <div>
         <Button onClick={() => setOpen(true)}>Open Dialog</Button>
         <Dialog
+          {...args}
           open={open}
           onClose={() => setOpen(false)}
-          title="Replace Wallpaper?"
           actions={
             <>
               <Button variant="ghost" onClick={() => setOpen(false)}>

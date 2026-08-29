@@ -1,57 +1,62 @@
 import {
-  forwardRef,
+  useEffect,
   useImperativeHandle,
   useRef,
+  forwardRef,
   type ReactNode,
+  type CSSProperties,
 } from 'react'
 import { EinkOverlay, type EinkOverlayHandle } from '../EinkOverlay/index.js'
 import { cn } from '../../utils/cn.js'
+
+export interface ScreenProps {
+  children?: ReactNode
+  overlay?: boolean
+  className?: string
+  style?: CSSProperties
+}
 
 export interface ScreenHandle {
   refresh: () => void
 }
 
-export interface ScreenProps {
-  children?: ReactNode
-  className?: string
-  contentClassName?: string
-  style?: React.CSSProperties
-  overlay?: boolean
-}
-
 export const Screen = forwardRef<ScreenHandle, ScreenProps>(function Screen(
-  { children, className, contentClassName, style, overlay = true },
+  { children, overlay = true, className, style },
   ref
 ) {
-  const overlayRef = useRef<EinkOverlayHandle>(null)
+  const einkRef = useRef<EinkOverlayHandle>(null)
 
   useImperativeHandle(ref, () => ({
-    refresh: () => overlayRef.current?.refresh(),
+    refresh: () => {
+      einkRef.current?.refresh()
+    },
   }))
+
+  useEffect(() => {
+    const id = setTimeout(() => einkRef.current?.refresh(), 50)
+    return () => clearTimeout(id)
+  }, [])
 
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-screen border border-device-inset/50 bg-device-bezel p-[3px] shadow-[inset_0_2px_8px_rgba(0,0,0,0.18)]',
+        'relative overflow-hidden rounded-screen',
+        'border border-device-screen-border bg-paper',
+        'shadow-[inset_0_2px_10px_rgba(0,0,0,0.16)]',
         className
       )}
       style={style}
     >
-      <div className="relative h-full w-full overflow-hidden rounded-[5px] bg-device-screen shadow-screen">
-        <div
-          className={cn(
-            'h-full w-full overflow-auto bg-paper text-ink',
-            'ku-grey-image',
-            contentClassName
-          )}
-          style={{ filter: 'grayscale(100%) contrast(1.08)' }}
+      {overlay ? (
+        <EinkOverlay
+          ref={einkRef}
+          className="pointer-events-none absolute inset-0"
         >
-          {children}
-        </div>
-        {overlay && (
-          <EinkOverlay ref={overlayRef} className="absolute inset-0 h-full w-full" />
-        )}
-      </div>
+          <div className="min-h-full w-full bg-paper">{children}</div>
+        </EinkOverlay>
+      ) : (
+        <div className="min-h-full w-full bg-paper">{children}</div>
+      )}
     </div>
   )
 })

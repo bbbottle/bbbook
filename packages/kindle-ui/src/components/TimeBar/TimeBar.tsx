@@ -16,7 +16,7 @@ export function TimeBar({ className }: TimeBarProps) {
   return (
     <div
       className={cn(
-        'flex h-5 items-center justify-center bg-surface text-xs font-sans text-muted',
+        'flex h-5 items-center justify-center bg-paper text-xs font-sans text-muted',
         className
       )}
     >

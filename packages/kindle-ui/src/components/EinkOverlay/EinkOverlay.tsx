@@ -206,11 +206,16 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
     }, [paused])
 
     return (
-      <div className={cn('relative', className)}>
-        {children}
+      <div className={cn('relative h-full w-full', className)}>
+        <div
+          className="ku-scrollbar-hide h-full w-full overflow-auto"
+          style={{ filter: 'grayscale(100%) contrast(1.08)' }}
+        >
+          {children}
+        </div>
         <canvas
           ref={canvasRef}
-          className="pointer-events-none absolute inset-0 h-full w-full"
+          className="pointer-events-none absolute inset-0 z-40 h-full w-full"
           style={{ width: '100%', height: '100%' }}
         />
       </div>

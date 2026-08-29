@@ -10,16 +10,14 @@ export const tokens = {
       accent: '#000000',
       focus: '#000000',
     },
-    dark: {
-      surface: '#111111',
-      paper: '#000000',
-      ink: '#eeeeee',
-      muted: '#9d9d9d',
-      subtle: '#808080',
-      divider: '#333333',
-      accent: '#ffffff',
-      focus: '#ffffff',
-    },
+  },
+  device: {
+    shell: '#f4f1e9',
+    bezel: '#ebe7dd',
+    inset: '#d8d4cc',
+    screen: '#d6d2cb',
+    screenBorder: 'rgba(0, 0, 0, 0.32)',
+    logo: '#8a8478',
   },
   typography: {
     sans: [
@@ -48,6 +46,25 @@ export const tokens = {
       '2xl': '1.5rem',
       '3xl': '2rem',
     },
+    lineHeights: {
+      tight: '1.25',
+      snug: '1.375',
+      normal: '1.5',
+      relaxed: '1.625',
+    },
+    letterSpacings: {
+      tight: '-0.025em',
+      normal: '0',
+      wide: '0.025em',
+      wider: '0.05em',
+      widest: '0.1em',
+    },
+    weights: {
+      normal: '400',
+      medium: '500',
+      semibold: '600',
+      bold: '700',
+    },
   },
   spacing: {
     0: '0',
@@ -65,11 +82,33 @@ export const tokens = {
     sm: '2px',
     md: '4px',
     lg: '8px',
-    kindle: '24px',
+    screen: '6px',
+    dialog: '6px',
+    kindle: '40px',
+  },
+  shadows: {
+    eink: 'inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -2px 7px rgba(0,0,0,0.08)',
+    screen: 'inset 0 0 0 2px rgba(0,0,0,0.08), inset 0 2px 8px rgba(0,0,0,0.18)',
+    screenBorder: 'inset 0 0 0 1px rgba(0,0,0,0.5)',
+    shell: '0 24px 60px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.1)',
   },
   motion: {
     flash: '150ms',
     fast: '100ms',
     base: '200ms',
+    slow: '300ms',
+  },
+  zIndex: {
+    base: '0',
+    dropdown: '50',
+    overlay: '50',
+    dialog: '50',
+  },
+  breakpoints: {
+    sm: '640px',
+    md: '768px',
+    lg: '1024px',
   },
 } as const
+
+export type Tokens = typeof tokens

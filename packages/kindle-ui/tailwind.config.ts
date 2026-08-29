@@ -5,7 +5,6 @@ export default {
     './src/**/*.{js,ts,jsx,tsx}',
     './.storybook/**/*.{js,ts,jsx,tsx}',
   ],
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -22,6 +21,7 @@ export default {
           bezel: 'var(--ku-device-bezel)',
           inset: 'var(--ku-device-inset)',
           screen: 'var(--ku-device-screen)',
+          'screen-border': 'var(--ku-device-screen-border)',
           logo: 'var(--ku-device-logo)',
         },
       },
@@ -45,14 +45,14 @@ export default {
         ],
       },
       borderRadius: {
-        kindle: '48px',
-        screen: '8px',
-        dialog: '6px',
+        kindle: 'var(--ku-radius-kindle)',
+        screen: 'var(--ku-radius-screen)',
+        dialog: 'var(--ku-radius-dialog)',
       },
       boxShadow: {
-        eink: 'inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -2px 7px rgba(0,0,0,0.08)',
-        screen: 'inset 0 0 0 2px rgba(0,0,0,0.06), inset 0 2px 8px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.35)',
-        shell: '0 24px 60px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.1)',
+        eink: 'var(--ku-shadow-eink)',
+        screen: 'var(--ku-shadow-screen)',
+        shell: 'var(--ku-shadow-shell)',
       },
       spacing: {
         '18': '4.5rem',
@@ -60,6 +60,9 @@ export default {
       },
       borderWidth: {
         '3': '3px',
+      },
+      transitionDuration: {
+        flash: 'var(--ku-motion-flash)',
       },
     },
   },

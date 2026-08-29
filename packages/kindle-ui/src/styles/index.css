@@ -12,28 +12,25 @@
   --ku-accent: #000000;
   --ku-focus: #000000;
 
-  --ku-device-shell: #f5f2e9;
-  --ku-device-bezel: #eae5d9;
+  --ku-device-shell: #f4f1e9;
+  --ku-device-bezel: #ebe7dd;
   --ku-device-inset: #d8d4cc;
   --ku-device-screen: #d6d2cb;
-  --ku-device-logo: #5c5850;
-}
+  --ku-device-screen-border: rgba(0, 0, 0, 0.32);
+  --ku-device-logo: #8a8478;
 
-.dark {
-  --ku-surface: #111111;
-  --ku-paper: #000000;
-  --ku-ink: #eeeeee;
-  --ku-muted: #9d9d9d;
-  --ku-subtle: #808080;
-  --ku-divider: #333333;
-  --ku-accent: #ffffff;
-  --ku-focus: #ffffff;
+  --ku-radius-screen: 6px;
+  --ku-radius-dialog: 6px;
+  --ku-radius-kindle: 40px;
 
-  --ku-device-shell: #1a1a1a;
-  --ku-device-bezel: #2d2d2d;
-  --ku-device-inset: #0d0d0d;
-  --ku-device-screen: #111111;
-  --ku-device-logo: #a8a8a8;
+  --ku-shadow-eink: inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -2px 7px rgba(0,0,0,0.08);
+  --ku-shadow-screen: inset 0 0 0 2px rgba(0,0,0,0.08), inset 0 2px 8px rgba(0,0,0,0.18);
+  --ku-shadow-shell: 0 24px 60px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.1);
+
+  --ku-motion-flash: 150ms;
+  --ku-motion-fast: 100ms;
+  --ku-motion-base: 200ms;
+  --ku-motion-slow: 300ms;
 }
 
 html,
@@ -59,5 +56,16 @@ body {
   .ku-grey-image img,
   img.ku-grey-image {
     filter: grayscale(100%) contrast(1.08);
+  }
+}
+
+@layer utilities {
+  .ku-scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .ku-scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }

@@ -14,7 +14,6 @@ const preview: Preview = {
       default: 'paper',
       values: [
         { name: 'paper', value: '#fbfbf8' },
-        { name: 'dark', value: '#111111' },
         { name: 'white', value: '#ffffff' },
       ],
     },

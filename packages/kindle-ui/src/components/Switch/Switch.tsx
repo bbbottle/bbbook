@@ -38,7 +38,7 @@ export function Switch({
         {...rest}
       />
       <span className="h-full w-full rounded-full bg-muted transition-colors peer-checked:bg-ink peer-focus-visible:ku-focus-ring" />
-      <span className="absolute left-1 top-1 h-6 w-6 rounded-full bg-surface transition-transform peer-checked:translate-x-6" />
+      <span className="absolute left-1 top-1 h-6 w-6 rounded-full bg-paper transition-transform peer-checked:translate-x-6" />
     </label>
   )
 }

@@ -27,7 +27,7 @@ export function Menu({ anchorEl, open, onClose, children, className }: MenuProps
     <Popover open={open} onClose={onClose}>
       <div
         className={cn(
-          'fixed z-50 min-w-[230px] overflow-hidden rounded-dialog border border-ink bg-surface shadow-eink',
+          'fixed z-50 min-w-[230px] overflow-hidden rounded-dialog border border-ink bg-paper shadow-eink',
           className
         )}
         style={{ top: position.top, left: position.left }}

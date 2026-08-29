@@ -67,11 +67,11 @@ export type { ScreenHandle, ScreenProps } from './components/Screen/index.js'
 export { Section, SectionTitle } from './components/Section/index.js'
 export type { SectionProps, SectionTitleProps } from './components/Section/index.js'
 
+export { StatuBar, StatusBar } from './components/StatuBar/index.js'
+export type { StatuBarProps } from './components/StatuBar/index.js'
+
 export { Switch } from './components/Switch/index.js'
 export type { SwitchProps } from './components/Switch/index.js'
-
-export { StatusBar } from './components/StatusBar/index.js'
-export type { StatusBarProps } from './components/StatusBar/index.js'
 
 export { Tab, TabItem } from './components/Tab/index.js'
 export type { TabProps, TabItemProps } from './components/Tab/index.js'
@@ -99,11 +99,5 @@ export type { ActionBarMenuProps } from './components/ActionBarMenu/index.js'
 
 export { Typography } from './components/Typography/index.js'
 export type { TypographyProps } from './components/Typography/index.js'
-
-export { ThemeProvider, useKindleTheme } from './components/ThemeProvider/index.js'
-export type { ThemeProviderProps } from './components/ThemeProvider/index.js'
-
-export { KindleOasis } from './components/KindleOasis/index.js'
-export type { KindleOasisProps } from './components/KindleOasis/index.js'
 
 export { tokens } from './theme/tokens.js'
