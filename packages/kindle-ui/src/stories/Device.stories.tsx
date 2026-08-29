@@ -142,7 +142,11 @@ export const Store: Story = {
       <Device>
         <div className="flex h-full flex-col">
           <Navbar fixed>
-            <StatuBar deviceName="My Kindle" battery={72} wifi="full" />
+            <StatuBar
+              deviceName="My Kindle"
+              battery={72}
+              celluar={{ on: true, label: 'LTE', signal: 3 }}
+            />
             <ActionBar>
               <ActionGroup>
                 <ActionItem icon={<Icon name="home" size={22} />}>home</ActionItem>
