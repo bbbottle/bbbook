@@ -29,7 +29,6 @@ void main() {
 
 const FRAGMENT_SHADER = `
 precision mediump float;
-uniform float u_time;
 uniform float u_flash;
 varying vec2 v_uv;
 
@@ -51,26 +50,30 @@ float noise(vec2 p) {
 void main() {
   vec2 uv = v_uv;
 
-  // Resolution-independent, low-frequency paper grain. Keep amplitude tiny
-  // so the e-ink texture is almost invisible and never creates moiré.
-  float n1 = noise(uv * 40.0 + vec2(12.34, 56.78));
-  float n2 = noise(uv * 80.0 - vec2(34.12, 9.87)) * 0.5;
-  float grain = (n1 * 0.667 + n2 * 0.333) * 0.05;
+  // Very subtle, low-frequency paper grain. The amplitude is kept tiny so the
+  // texture is fine and almost invisible, while a stable panel tone gives the
+  // whole screen the distinct off-white look of real e-ink paper.
+  float n1 = noise(uv * 32.0 + vec2(12.34, 56.78));
+  float n2 = noise(uv * 64.0 - vec2(34.12, 9.87)) * 0.5;
+  float grain = ((n1 * 0.667 + n2 * 0.333) - 0.5) * 0.03;
 
-  // Very faint, irregular vertical banding.
-  float band = (sin(uv.y * 24.0 + uv.x * 3.0 + noise(uv * 6.0) * 2.0) * 0.5 + 0.5) * 0.012;
+  // Faint, irregular vertical banding.
+  float band = ((sin(uv.y * 16.0 + uv.x * 4.0 + noise(uv * 6.0) * 2.0) * 0.5 + 0.5) - 0.5) * 0.012;
 
-  float overlay = grain + band;
+  float overlay = 0.18 + grain + band;
 
   vec2 cc = uv - 0.5;
   float dist = dot(cc, cc);
-  float vig = smoothstep(0.9, 0.25, dist);
-  overlay *= mix(1.0, 0.0, vig * 0.3);
+  float vig = smoothstep(0.85, 0.20, dist);
+  overlay *= mix(1.0, 0.0, vig * 0.25);
 
   // Refresh flash: e-ink has no backlight, so flash darkens rather than brightens.
   float alpha = mix(overlay, 0.85, u_flash);
 
-  gl_FragColor = vec4(vec3(0.0), alpha);
+  // Tint toward the Figma screen fill (#8D8F8D). Output is premultiplied so
+  // the panel color blends cleanly with the underlying content.
+  vec3 panel = vec3(0.5537, 0.5608, 0.5537);
+  gl_FragColor = vec4(panel * alpha, alpha);
 }
 `
 
@@ -155,7 +158,9 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
       gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0)
 
       gl.enable(gl.BLEND)
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+      // The fragment shader outputs premultiplied RGBA; compositing with the
+      // canvas backbuffer and the browser page both use ONE / ONE_MINUS_SRC_ALPHA.
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
 
       return () => {
         cancelAnimationFrame(rafRef.current)
@@ -171,13 +176,9 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
       const program = programRef.current
       if (!canvas || !gl || !program) return
 
-      const uTime = gl.getUniformLocation(program, 'u_time')
       const uFlash = gl.getUniformLocation(program, 'u_flash')
-      const uResolution = gl.getUniformLocation(program, 'u_resolution')
-      const startTime = performance.now()
 
       const render = () => {
-        const time = (performance.now() - startTime) / 1000
         const dpr = Math.min(window.devicePixelRatio || 1, 2)
         const w = Math.max(1, Math.floor(canvas.clientWidth * dpr))
         const h = Math.max(1, Math.floor(canvas.clientHeight * dpr))
@@ -190,9 +191,6 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
         gl.viewport(0, 0, canvas.width, canvas.height)
         gl.clearColor(0, 0, 0, 0)
         gl.clear(gl.COLOR_BUFFER_BIT)
-
-        gl.uniform1f(uTime, time)
-        gl.uniform2f(uResolution, canvas.width, canvas.height)
 
         if (!paused) {
           flashRef.current = Math.max(0, flashRef.current - 0.03)
