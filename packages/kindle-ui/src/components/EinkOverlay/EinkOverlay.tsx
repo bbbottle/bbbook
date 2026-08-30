@@ -32,6 +32,8 @@ precision mediump float;
 uniform float u_flash;
 varying vec2 v_uv;
 
+const vec3 panel = vec3(0.5537, 0.5608, 0.5537); // #8D8F8D
+
 float hash(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
 }
@@ -60,20 +62,18 @@ void main() {
   // Faint, irregular vertical banding.
   float band = ((sin(uv.y * 16.0 + uv.x * 4.0 + noise(uv * 6.0) * 2.0) * 0.5 + 0.5) - 0.5) * 0.012;
 
-  float overlay = 0.18 + grain + band;
-
   vec2 cc = uv - 0.5;
   float dist = dot(cc, cc);
   float vig = smoothstep(0.85, 0.20, dist);
-  overlay *= mix(1.0, 0.0, vig * 0.25);
 
   // Refresh flash: e-ink has no backlight, so flash darkens rather than brightens.
-  float alpha = mix(overlay, 0.85, u_flash);
+  // We use mix-blend-mode: multiply on the canvas, so this color is multiplied
+  // with the HTML content underneath. White content × panel = #8D8F8D.
+  vec3 tint = panel + grain + band;
+  tint *= mix(1.0, 0.92, vig * 0.25);
+  tint = mix(tint, vec3(0.25), u_flash);
 
-  // Tint toward the Figma screen fill (#8D8F8D). Output is premultiplied so
-  // the panel color blends cleanly with the underlying content.
-  vec3 panel = vec3(0.5537, 0.5608, 0.5537);
-  gl_FragColor = vec4(panel * alpha, alpha);
+  gl_FragColor = vec4(tint, 1.0);
 }
 `
 
@@ -157,10 +157,10 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
       gl.enableVertexAttribArray(positionLocation)
       gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0)
 
-      gl.enable(gl.BLEND)
-      // The fragment shader outputs premultiplied RGBA; compositing with the
-      // canvas backbuffer and the browser page both use ONE / ONE_MINUS_SRC_ALPHA.
-      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+      // Canvas is composited with mix-blend-mode: multiply, so the shader can
+      // output an opaque tint color and the browser multiplies it with the
+      // underlying page content.
+      gl.disable(gl.BLEND)
 
       return () => {
         cancelAnimationFrame(rafRef.current)
@@ -216,7 +216,7 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
         <canvas
           ref={canvasRef}
           className="pointer-events-none absolute inset-0 z-40 h-full w-full"
-          style={{ width: '100%', height: '100%' }}
+          style={{ width: '100%', height: '100%', mixBlendMode: 'multiply' }}
         />
       </div>
     )
