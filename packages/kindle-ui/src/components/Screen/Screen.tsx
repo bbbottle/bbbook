@@ -14,6 +14,7 @@ export interface ScreenProps {
   overlay?: boolean
   className?: string
   style?: CSSProperties
+  wallpaper?: string | false
 }
 
 export interface ScreenHandle {
@@ -21,7 +22,7 @@ export interface ScreenHandle {
 }
 
 export const Screen = forwardRef<ScreenHandle, ScreenProps>(function Screen(
-  { children, overlay = true, className, style },
+  { children, overlay = true, className, style, wallpaper },
   ref
 ) {
   const einkRef = useRef<EinkOverlayHandle>(null)
@@ -37,6 +38,25 @@ export const Screen = forwardRef<ScreenHandle, ScreenProps>(function Screen(
     return () => clearTimeout(id)
   }, [])
 
+  const hasWallpaper = Boolean(wallpaper)
+  const contentClass = cn(
+    'min-h-full w-full',
+    hasWallpaper ? 'relative' : 'bg-paper'
+  )
+  const renderContent = (
+    <>
+      {hasWallpaper && (
+        <img
+          src={String(wallpaper)}
+          alt=""
+          className="absolute inset-0 -z-10 h-full w-full object-cover"
+          aria-hidden="true"
+        />
+      )}
+      {children}
+    </>
+  )
+
   return (
     <div
       className={cn(
@@ -50,10 +70,10 @@ export const Screen = forwardRef<ScreenHandle, ScreenProps>(function Screen(
           ref={einkRef}
           className="absolute inset-0"
         >
-          <div className="min-h-full w-full bg-paper">{children}</div>
+          <div className={contentClass}>{renderContent}</div>
         </EinkOverlay>
       ) : (
-        <div className="min-h-full w-full bg-paper">{children}</div>
+        <div className={contentClass}>{renderContent}</div>
       )}
     </div>
   )

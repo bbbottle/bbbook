@@ -30,20 +30,6 @@ export default meta
 
 type Story = StoryObj<typeof Device>
 
-function BirdIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      width="48"
-      height="48"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-    >
-      <path d="M20.5 11c-.4-1.2-1.5-2-2.9-2-1 0-1.9.5-2.4 1.2l-1.1-2.2c-.6-1.3-2-2-3.4-1.7-1.1.2-2 .9-2.5 1.9l-.9 1.8c-.5 1-1.6 1.6-2.8 1.6H2v2h2.7c1.8 0 3.4-1 4.2-2.6l.9-1.8c.2-.4.6-.6 1-.7.6-.1 1.2.2 1.5.7l1.6 3.2c.2.4.6.6 1 .6.4 0 .8-.2 1-.6l.7-1.4c.2-.5.7-.8 1.3-.8.8 0 1.4.6 1.4 1.4 0 .3-.1.6-.3.8l-2.6 3.1c-.4.5-.2 1.2.4 1.4l3.5 1.2v-1.8l-2.5-.8 1.8-2.2c.5-.7.8-1.6.6-2.5z" />
-    </svg>
-  )
-}
-
 const headerMenu = [
   { textPrimary: 'Sync' },
   { textPrimary: 'Settings' },
@@ -55,7 +41,6 @@ export const Playground: Story = {
   render: (args) => (
     <Device {...args}>
       <div className="flex h-full flex-col items-center justify-center p-8 text-center text-ink">
-        <BirdIcon className="mb-4 h-12 w-12" />
         <p className="font-serif text-lg">The Little Prince</p>
         <p className="mt-1 font-sans text-xs text-muted">Swipe to unlock</p>
       </div>
@@ -68,7 +53,6 @@ export const LockScreen: Story = {
   render: (args) => (
     <Device {...args}>
       <div className="flex h-full flex-col items-center justify-center p-8 text-center text-ink">
-        <BirdIcon className="mb-4 h-12 w-12" />
         <p className="font-serif text-lg">The Little Prince</p>
         <p className="mt-1 font-sans text-xs text-muted">Swipe to unlock</p>
       </div>
@@ -82,7 +66,7 @@ export const Library: Story = {
     const [query, setQuery] = useState('')
     const [active, setActive] = useState<string | null>('1984')
     return (
-      <Device>
+      <Device wallpaper="">
         <div className="flex h-full flex-col">
           <Navbar fixed>
             <StatuBar
@@ -138,7 +122,7 @@ export const Store: Story = {
     const [query, setQuery] = useState('')
     const [tab, setTab] = useState('all')
     return (
-      <Device>
+      <Device wallpaper="">
         <div className="flex h-full flex-col">
           <Navbar fixed>
             <StatuBar
@@ -192,7 +176,7 @@ export const Components: Story = {
     const [airplane, setAirplane] = useState(false)
     const [wifi, setWifi] = useState(false)
     return (
-      <Device>
+      <Device wallpaper="">
         <div className="flex h-full flex-col overflow-auto p-4">
           <TimeBar className="mb-2" />
           <Card>

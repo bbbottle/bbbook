@@ -6,12 +6,14 @@ export interface DeviceProps {
   children?: ReactNode
   className?: string
   overlay?: boolean
+  wallpaper?: string | false
 }
 
 export function Device({
   children,
   className,
   overlay = true,
+  wallpaper = '/assets/wallpaper.png',
 }: DeviceProps) {
   const screenRef = useRef<ScreenHandle>(null)
 
@@ -39,7 +41,7 @@ export function Device({
       >
         {/* Figma node 3:4 — screen; black border, inset shadow, grey off-state fill */}
         <div className="pointer-events-none absolute left-1/2 top-[1.38888888888889%] h-[97.22222222222221%] w-[97.19626168224299%] -translate-x-1/2 border border-device-screen-border bg-device-screen">
-          <Screen ref={screenRef} overlay={overlay} className="absolute inset-0">
+          <Screen ref={screenRef} overlay={overlay} className="absolute inset-0" wallpaper={wallpaper}>
             {children}
           </Screen>
           <div
