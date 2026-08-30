@@ -29,7 +29,7 @@ export function Device({
         width: 'min(92vw, calc(90vh * 268 / 382), 772px)',
       }}
     >
-      {/* Figma node 6:12 — screen-frame; radius 2px, no border */}
+      {/* Figma node 6:12 — screen-frame; 2px radius, no border, four bevelled edges */}
       <div
         className="pointer-events-none absolute overflow-hidden rounded-screenFrame"
         style={{
@@ -39,8 +39,35 @@ export function Device({
           height: '75.39267015706806%',
         }}
       >
-        {/* Figma node 3:4 — screen; black border, inset shadow, grey off-state fill */}
-        <div className="pointer-events-none absolute left-1/2 top-[1.38888888888889%] h-[97.22222222222221%] w-[97.19626168224299%] -translate-x-1/2 border border-device-screen-border bg-device-screen">
+        {/* Bevel edges derived from Figma 6:12 geometry.
+            +1px overlap ensures the screen layer covers any sub-pixel gap. */}
+        <div
+          className="absolute inset-x-0 top-0 z-0 bg-device-screenframe-top"
+          style={{ height: 'calc((4 / 288) * 100% + 1px)' }}
+        />
+        <div
+          className="absolute inset-x-0 bottom-0 z-0 bg-device-screenframe-bottom"
+          style={{ height: 'calc((4 / 288) * 100% + 1px)' }}
+        />
+        <div
+          className="absolute inset-y-0 left-0 z-0 bg-device-screenframe-left"
+          style={{ width: 'calc((3 / 214) * 100% + 1px)' }}
+        />
+        <div
+          className="absolute inset-y-0 right-0 z-0 bg-device-screenframe-right"
+          style={{ width: 'calc((3 / 214) * 100% + 1px)' }}
+        />
+
+        {/* Figma node 3:4 — screen; black 1px border, inset shadow, grey off-state fill */}
+        <div
+          className="pointer-events-none absolute z-10 border border-device-screen-border bg-device-screen"
+          style={{
+            top: 'calc((4 / 288) * 100%)',
+            bottom: 'calc((4 / 288) * 100%)',
+            left: 'calc((3 / 214) * 100%)',
+            right: 'calc((3 / 214) * 100%)',
+          }}
+        >
           <Screen ref={screenRef} overlay={overlay} className="absolute inset-0" wallpaper={wallpaper}>
             {children}
           </Screen>
@@ -49,13 +76,6 @@ export function Device({
             aria-hidden="true"
           />
         </div>
-
-        <img
-          src="/assets/figma-screen-frame.svg"
-          alt=""
-          className="pointer-events-none absolute inset-0 z-10 h-full w-full"
-          aria-hidden="true"
-        />
       </div>
 
       {/* Figma node 5:2 — kindle logo; scales with device width */}

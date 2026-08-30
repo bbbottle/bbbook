@@ -60,7 +60,7 @@ export const Screen = forwardRef<ScreenHandle, ScreenProps>(function Screen(
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-screen bg-paper text-base',
+        'relative overflow-hidden bg-paper text-base',
         className
       )}
       style={style}

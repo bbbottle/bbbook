@@ -22,6 +22,12 @@ export default {
           inset: 'var(--ku-device-inset)',
           screen: 'var(--ku-device-screen)',
           'screen-border': 'var(--ku-device-screen-border)',
+          screenframe: {
+            top: 'var(--ku-device-screen-frame-top)',
+            bottom: 'var(--ku-device-screen-frame-bottom)',
+            left: 'var(--ku-device-screen-frame-left)',
+            right: 'var(--ku-device-screen-frame-right)',
+          },
           logo: 'var(--ku-device-logo)',
         },
       },

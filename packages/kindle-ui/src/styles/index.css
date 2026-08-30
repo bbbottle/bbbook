@@ -33,6 +33,10 @@
   --ku-device-inset: #d0ccc3;
   --ku-device-screen: #8d8f8d;
   --ku-device-screen-border: #222222;
+  --ku-device-screen-frame-top: #989287;
+  --ku-device-screen-frame-bottom: #b6b4a1;
+  --ku-device-screen-frame-left: #c4c5b1;
+  --ku-device-screen-frame-right: #908775;
   --ku-device-logo: #736a56;
 
   --ku-radius-sm: 1px;

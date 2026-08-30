@@ -31,7 +31,6 @@ const FRAGMENT_SHADER = `
 precision mediump float;
 uniform float u_time;
 uniform float u_flash;
-uniform vec2 u_resolution;
 varying vec2 v_uv;
 
 float hash(vec2 p) {
@@ -52,25 +51,26 @@ float noise(vec2 p) {
 void main() {
   vec2 uv = v_uv;
 
-  float dither = noise(uv * u_resolution * 0.8) - 0.5;
-  float dotPattern = step(0.5, dither + 0.5) * 0.04;
-  float ghost = step(0.5, fract(uv.y * 600.0)) * 0.006;
+  // Resolution-independent, low-frequency paper grain. Keep amplitude tiny
+  // so the e-ink texture is almost invisible and never creates moiré.
+  float n1 = noise(uv * 40.0 + vec2(12.34, 56.78));
+  float n2 = noise(uv * 80.0 - vec2(34.12, 9.87)) * 0.5;
+  float grain = (n1 * 0.667 + n2 * 0.333) * 0.05;
+
+  // Very faint, irregular vertical banding.
+  float band = (sin(uv.y * 24.0 + uv.x * 3.0 + noise(uv * 6.0) * 2.0) * 0.5 + 0.5) * 0.012;
+
+  float overlay = grain + band;
 
   vec2 cc = uv - 0.5;
   float dist = dot(cc, cc);
   float vig = smoothstep(0.9, 0.25, dist);
-
-  float overlay = dotPattern + ghost;
   overlay *= mix(1.0, 0.0, vig * 0.3);
 
-  float flash = u_flash;
+  // Refresh flash: e-ink has no backlight, so flash darkens rather than brightens.
+  float alpha = mix(overlay, 0.85, u_flash);
 
-  // Refresh flash: E-ink panels do not emit light, so the flash should not
-  // brighten the screen. Use a brief dark/clear pulse instead of a white flash.
-  float alpha = (1.0 - flash) * 0.5 + flash * 0.9;
-  vec3 color = mix(vec3(overlay), vec3(0.0), flash);
-
-  gl_FragColor = vec4(color, alpha);
+  gl_FragColor = vec4(vec3(0.0), alpha);
 }
 `
 
