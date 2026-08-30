@@ -84,11 +84,12 @@ export const tokens = {
     lg: '1px',
     screen: '1px',
     dialog: '1px',
+    screenFrame: '2px',
     kindle: '20px',
   },
   shadows: {
     eink: 'inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -2px 7px rgba(0,0,0,0.08)',
-    screen: 'inset 0 0 0 2px rgba(0,0,0,0.08), inset 0 2px 8px rgba(0,0,0,0.18)',
+    screen: 'inset 0 0 4px rgba(0,0,0,0.75)',
     screenBorder: 'inset 0 0 0 1px rgba(0,0,0,0.5)',
     shell: '0 0 4px rgba(0,0,0,0.2)',
   },

@@ -53,6 +53,7 @@ export default {
         kindle: 'var(--ku-radius-kindle)',
         screen: 'var(--ku-radius-screen)',
         dialog: 'var(--ku-radius-dialog)',
+        screenFrame: 'var(--ku-radius-screenFrame)',
       },
       boxShadow: {
         eink: 'var(--ku-shadow-eink)',
