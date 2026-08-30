@@ -47,6 +47,9 @@ export default {
         ],
       },
       borderRadius: {
+        sm: 'var(--ku-radius-sm)',
+        md: 'var(--ku-radius-md)',
+        lg: 'var(--ku-radius-lg)',
         kindle: 'var(--ku-radius-kindle)',
         screen: 'var(--ku-radius-screen)',
         dialog: 'var(--ku-radius-dialog)',
@@ -61,7 +64,7 @@ export default {
         '22': '5.5rem',
       },
       borderWidth: {
-        '3': '3px',
+        DEFAULT: '1px',
       },
       transitionDuration: {
         flash: 'var(--ku-motion-flash)',

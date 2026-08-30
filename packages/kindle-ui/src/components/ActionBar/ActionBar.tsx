@@ -72,7 +72,15 @@ export function SearchBar({
   onSubmit,
 }: SearchBarProps) {
   return (
-    <div className={cn('relative w-[150px]', className)}>
+    <div
+      className={cn(
+        'relative flex h-full w-[150px] items-center justify-center border-x border-divider',
+        className
+      )}
+    >
+      <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-ink">
+        <Icon name="search" size={18} />
+      </span>
       <input
         type="search"
         value={value}
@@ -80,13 +88,10 @@ export function SearchBar({
         onChange={(e) => onChange?.(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && onSubmit?.(e.currentTarget.value)}
         className={cn(
-          'h-[36px] w-full border-x border-divider bg-transparent pl-7 pr-2 text-sm font-sans text-ink placeholder:text-subtle',
+          'h-full w-full bg-transparent px-2 text-center text-sm font-sans text-ink placeholder:text-subtle',
           'focus-visible:ku-focus-ring'
         )}
       />
-      <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-ink">
-        <Icon name="search" size={18} />
-      </span>
     </div>
   )
 }

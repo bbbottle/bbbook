@@ -30,11 +30,11 @@ export const Button = forwardRef<HTMLElement, ButtonProps>(function Button(
   const isDisabled = disabled
 
   const baseStyles =
-    'inline-flex items-center justify-center min-w-[70px] h-12 px-6 font-sans text-sm font-semibold tracking-wide uppercase transition-colors focus-visible:ku-focus-ring disabled:opacity-50 disabled:cursor-not-allowed'
+    'inline-flex items-center justify-center min-w-[70px] h-12 px-6 rounded-md font-sans text-sm font-semibold tracking-wide uppercase transition-colors focus-visible:ku-focus-ring disabled:opacity-50 disabled:cursor-not-allowed'
 
   const variantStyles = {
-    default: 'bg-ink text-paper hover:bg-paper hover:text-ink border-3 border-ink',
-    outline: 'bg-paper text-ink border-3 border-ink hover:bg-ink hover:text-paper',
+    default: 'bg-ink text-paper hover:bg-paper hover:text-ink border border-ink active:bg-ink active:text-paper',
+    outline: 'bg-paper text-ink border border-ink hover:bg-ink hover:text-paper active:bg-ink active:text-paper',
     ghost: 'bg-transparent text-ink border-0 hover:underline underline-offset-4',
   }
 

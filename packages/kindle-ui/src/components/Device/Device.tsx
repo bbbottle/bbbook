@@ -27,48 +27,52 @@ export function Device({
   return (
     <div
       className={cn(
-        'relative mx-auto select-none overflow-hidden',
-        'rounded-kindle border border-device-bezel',
-        'bg-gradient-to-br from-[#faf8f2] via-device-shell to-[#e8e4d9]',
-        'shadow-shell',
+        'relative mx-auto w-[min(92vw,773px)] aspect-[773/1091] select-none overflow-hidden',
+        'rounded-kindle border border-device-bezel bg-device-shell shadow-shell',
         className
       )}
-      style={{
-        width: 'min(92vw, 420px)',
-        aspectRatio: '10 / 14.45',
-      }}
     >
       <div
-        className="pointer-events-none absolute inset-0 rounded-kindle opacity-[0.03]"
+        className="pointer-events-none absolute overflow-hidden border border-[#222] bg-[#8d8f8d]"
         style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
-        }}
-      />
-
-      <div className="pointer-events-none absolute inset-0 rounded-kindle bg-gradient-to-br from-white/30 via-transparent to-black/[0.03]" />
-
-      <Screen
-        ref={screenRef}
-        overlay={overlay}
-        className="absolute"
-        style={{
-          top: '38px',
-          left: '28px',
-          right: '28px',
-          bottom: '82px',
+          left: '10.0746%',
+          top: '7.0681%',
+          width: '79.8507%',
+          height: '75.3927%',
         }}
       >
-        {children}
-      </Screen>
+        <Screen
+          ref={screenRef}
+          overlay={overlay}
+          className="absolute"
+          style={{
+            left: '1.4019%',
+            top: '1.3889%',
+            width: '97.1963%',
+            height: '97.2222%',
+          }}
+        >
+          {children}
+        </Screen>
+        <img
+          src="/assets/figma-screen-frame.svg"
+          alt=""
+          className="pointer-events-none absolute inset-0 z-10 h-full w-full"
+          aria-hidden="true"
+        />
+      </div>
 
       <div
-        className="absolute left-0 right-0 flex items-center justify-center"
-        style={{ bottom: '28px', height: '28px' }}
+        className="absolute left-1/2 -translate-x-1/2 text-device-logo"
+        style={{ top: '87.44%' }}
       >
         <span
-          className="text-[17px] font-normal tracking-[0.14em] text-device-logo"
-          style={{ fontFamily: "'Amazon Ember', 'Helvetica Neue', Arial, sans-serif" }}
+          className="font-normal lowercase"
+          style={{
+            fontFamily: "'Amazon Ember', 'Helvetica Neue', Arial, sans-serif",
+            fontSize: '20px',
+            letterSpacing: '-1.2px',
+          }}
         >
           kindle
         </span>
@@ -79,7 +83,11 @@ export function Device({
           type="button"
           onClick={handleHomeClick}
           className="absolute left-1/2 -translate-x-1/2 cursor-pointer rounded-full"
-          style={{ bottom: '6px', width: '38px', height: '10px' }}
+          style={{
+            bottom: '1%',
+            width: '38px',
+            height: '10px',
+          }}
           aria-label="Home"
         >
           <span

@@ -1,4 +1,16 @@
-import { cn } from '../../utils/cn.js'
+import type { ComponentType } from 'react'
+import {
+  AirplaneIcon,
+  BackIcon,
+  BatteryChargingIcon,
+  BatteryFullIcon,
+  CloseIcon,
+  HomeIcon,
+  MenuIcon,
+  SearchIcon,
+  SettingsIcon,
+  WifiIcon,
+} from '../../icons/index.js'
 
 export type IconName =
   | 'home'
@@ -12,44 +24,27 @@ export type IconName =
   | 'close'
   | 'menu'
 
-const paths: Record<IconName, string> = {
-  home: 'M4 21V9.75l8-6.25 8 6.25V21h-6v-6h-4v6H4z',
-  back: 'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z',
-  settings:
-    'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.42h-3.84a.484.484 0 0 0-.48.42l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.488.488 0 0 0-.59.22L2.74 8.87c-.12.22-.08.49.12.61l2.03 1.58c-.05.3-.07.62-.07.94 0 .32.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.27.42.48.42h3.84c.24 0 .43-.18.47-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.08-.49-.12-.61l-2.01-1.58zM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2z',
-  battery:
-    'M15.67 4H14V2h-4v2H8.33A1.34 1.34 0 0 0 7 5.33v13.34C7 19.4 7.6 20 8.33 20h7.34c.73 0 1.33-.6 1.33-1.33V5.33C17 4.6 16.4 4 15.67 4z',
-  'battery-charging':
-    'M15.67 4H14V2h-4v2H8.33A1.34 1.34 0 0 0 7 5.33v13.34C7 19.4 7.6 20 8.33 20h7.34c.73 0 1.33-.6 1.33-1.33V5.33C17 4.6 16.4 4 15.67 4zM12 18h-1v-4H8.5l3.5-7v4h2.5l-3.5 7z',
-  wifi:
-    'M12 3C7.5 3 3.5 5.1 1 8.4l11 13.6 11-13.6C20.5 5.1 16.5 3 12 3zM4.8 9.7c1.9-2.3 4.8-3.7 7.9-3.9l.3 6-8.2-2.1zM12 18.5L5.8 10.8l6.2 1.6v6.1z',
-  airplane:
-    'M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z',
-  search:
-    'M15.5 14h-.79l-.28-.27a6.5 6.5 0 0 0 1.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 0 0-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 0 0 5.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z',
-  close:
-    'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z',
-  menu:
-    'M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z',
-}
-
 export interface IconProps {
   name: IconName
   className?: string
   size?: number
 }
 
+const icons: Record<IconName, ComponentType<{ size?: number; className?: string }>> = {
+  home: HomeIcon,
+  back: BackIcon,
+  settings: SettingsIcon,
+  battery: BatteryFullIcon,
+  'battery-charging': BatteryChargingIcon,
+  wifi: WifiIcon,
+  airplane: AirplaneIcon,
+  search: SearchIcon,
+  close: CloseIcon,
+  menu: MenuIcon,
+}
+
 export function Icon({ name, className, size = 24 }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={cn('shrink-0', className)}
-      aria-hidden="true"
-    >
-      <path d={paths[name]} />
-    </svg>
-  )
+  const IconComponent = icons[name]
+  if (!IconComponent) return null
+  return <IconComponent size={size} className={className} />
 }

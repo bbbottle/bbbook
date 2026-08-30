@@ -1,5 +1,6 @@
 import { useState, type MouseEvent } from 'react'
 import { ActionItem } from '../ActionBar/index.js'
+import { Icon } from '../Icon/index.js'
 import { Menu, MenuItem, type MenuItemProps } from '../Menu/index.js'
 
 export interface ActionBarMenuProps {
@@ -19,7 +20,7 @@ export function ActionBarMenu({ items }: ActionBarMenuProps) {
 
   return (
     <>
-      <ActionItem onClick={handleClick} icon={<MoreIcon />} />
+      <ActionItem onClick={handleClick} icon={<Icon name="menu" size={20} />} />
       <Menu open={Boolean(anchorEl)} onClose={handleClose} anchorEl={anchorEl}>
         {items?.map((item, i) => (
           <MenuItem
@@ -36,12 +37,4 @@ export function ActionBarMenu({ items }: ActionBarMenuProps) {
   )
 }
 
-function MoreIcon() {
-  return (
-    <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor">
-      <circle cx="12" cy="5" r="2" />
-      <circle cx="12" cy="12" r="2" />
-      <circle cx="12" cy="19" r="2" />
-    </svg>
-  )
-}
+

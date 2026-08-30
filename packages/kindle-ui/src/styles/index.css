@@ -28,20 +28,23 @@
   --ku-accent: #000000;
   --ku-focus: #000000;
 
-  --ku-device-shell: #f4f1e9;
-  --ku-device-bezel: #ebe7dd;
-  --ku-device-inset: #d8d4cc;
-  --ku-device-screen: #d6d2cb;
-  --ku-device-screen-border: rgba(0, 0, 0, 0.32);
-  --ku-device-logo: #8a8478;
+  --ku-device-shell: #ddd9ce;
+  --ku-device-bezel: #b9b5ae;
+  --ku-device-inset: #d0ccc3;
+  --ku-device-screen: #8d8f8d;
+  --ku-device-screen-border: #222222;
+  --ku-device-logo: #736a56;
 
-  --ku-radius-screen: 6px;
-  --ku-radius-dialog: 6px;
-  --ku-radius-kindle: 40px;
+  --ku-radius-sm: 1px;
+  --ku-radius-md: 1px;
+  --ku-radius-lg: 1px;
+  --ku-radius-screen: 1px;
+  --ku-radius-dialog: 1px;
+  --ku-radius-kindle: 20px;
 
   --ku-shadow-eink: inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -2px 7px rgba(0,0,0,0.08);
   --ku-shadow-screen: inset 0 0 0 2px rgba(0,0,0,0.08), inset 0 2px 8px rgba(0,0,0,0.18);
-  --ku-shadow-shell: 0 24px 60px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.1);
+  --ku-shadow-shell: 0 0 4px rgba(0,0,0,0.2);
 
   --ku-motion-flash: 150ms;
   --ku-motion-fast: 100ms;

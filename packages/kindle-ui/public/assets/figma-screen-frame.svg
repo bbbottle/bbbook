@@ -1,0 +1,8 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="214" height="288" viewBox="0 0 214 288" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Group 1" opacity="0.9">
+<path id="top" d="M0 0H214L211 4H3L0 0Z" fill="#989287"/>
+<path id="bottom" d="M0 288H214L211 284H3L0 288Z" fill="#B6B4A1"/>
+<path id="left" d="M0 0L0 288L3 283.963L3 4L0 0Z" fill="#C4C5B1"/>
+<path id="right" d="M214 0L214 288L211 283.963L211 4L214 0Z" fill="#908775"/>
+</g>
+</svg>

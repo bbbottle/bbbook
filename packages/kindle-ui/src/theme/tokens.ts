@@ -12,12 +12,12 @@ export const tokens = {
     },
   },
   device: {
-    shell: '#f4f1e9',
-    bezel: '#ebe7dd',
-    inset: '#d8d4cc',
-    screen: '#d6d2cb',
-    screenBorder: 'rgba(0, 0, 0, 0.32)',
-    logo: '#8a8478',
+    shell: '#ddd9ce',
+    bezel: '#b9b5ae',
+    inset: '#d0ccc3',
+    screen: '#8d8f8d',
+    screenBorder: '#222222',
+    logo: '#736a56',
   },
   typography: {
     sans: [
@@ -79,12 +79,12 @@ export const tokens = {
   },
   radii: {
     none: '0',
-    sm: '2px',
-    md: '4px',
-    lg: '8px',
-    screen: '6px',
-    dialog: '6px',
-    kindle: '40px',
+    sm: '1px',
+    md: '1px',
+    lg: '1px',
+    screen: '1px',
+    dialog: '1px',
+    kindle: '20px',
   },
   shadows: {
     eink: 'inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -2px 7px rgba(0,0,0,0.08)',
