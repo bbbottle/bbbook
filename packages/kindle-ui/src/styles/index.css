@@ -3,16 +3,16 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: 'Bookerly';
-  src: url('../fonts/Bookerly/Bookerly.ttf') format('truetype');
+  font-family: "Bookerly";
+  src: url("../fonts/Bookerly/Bookerly.ttf") format("truetype");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Amazon Ember';
-  src: url('../fonts/AmazonEmber/AmazonEmber_Rg.ttf') format('truetype');
+  font-family: "Amazon Ember";
+  src: url("../fonts/AmazonEmber/AmazonEmber_Rg.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -56,7 +56,15 @@ html,
 body {
   background-color: var(--ku-surface);
   color: var(--ku-ink);
-  font-family: 'Amazon Ember', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    "Amazon Ember",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
