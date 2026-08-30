@@ -41,6 +41,10 @@ float hash(vec2 p) {
   return fract((p.x + p.y) * p.x);
 }
 
+float hash2(vec2 p) {
+  return hash(p + vec2(12.9898, 78.233));
+}
+
 void main() {
   vec2 uv = v_uv;
 
@@ -48,9 +52,13 @@ void main() {
   // is present but never competes with the content on top of it.
   float grain = (hash(uv * u_resolution) - 0.5) * 0.008;
 
-  // Almost invisible horizontal bands. The period is ~30 px, safely above the
-  // pixel grid, and the amplitude is small enough to read as a sub-pixel haze.
-  float scan = sin(uv.y * u_resolution.y * 0.2) * 0.002;
+  // An extremely faint, non-periodic vertical drift instead of hard scanlines.
+  // It is derived from 1D hash samples along y, so no visible wave bands form.
+  float y = uv.y * u_resolution.y;
+  float scanNoise = mix(hash2(vec2(0.0, floor(y * 0.05))),
+                        hash2(vec2(0.0, floor(y * 0.05) + 1.0)),
+                        fract(y * 0.05));
+  float scan = (scanNoise - 0.5) * 0.002;
 
   // Vignette only modulates the texture term; the uniform screen tone stays flat.
   vec2 cc = uv - 0.5;
