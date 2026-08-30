@@ -29,10 +29,10 @@ void main() {
 
 const FRAGMENT_SHADER = `
 precision mediump float;
+uniform float u_time;
 uniform float u_flash;
+uniform vec2 u_resolution;
 varying vec2 v_uv;
-
-const vec3 panel = vec3(0.5537, 0.5608, 0.5537); // #8D8F8D
 
 float hash(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -52,28 +52,36 @@ float noise(vec2 p) {
 void main() {
   vec2 uv = v_uv;
 
-  // Very subtle, low-frequency paper grain. The amplitude is kept tiny so the
-  // texture is fine and almost invisible, while a stable panel tone gives the
-  // whole screen the distinct off-white look of real e-ink paper.
-  float n1 = noise(uv * 32.0 + vec2(12.34, 56.78));
-  float n2 = noise(uv * 64.0 - vec2(34.12, 9.87)) * 0.5;
-  float grain = ((n1 * 0.667 + n2 * 0.333) - 0.5) * 0.03;
+  // Ordered dither pattern (Bayer-like via noise).
+  // Keep the frequency low and use smoothstep instead of a hard step threshold
+  // so the dots stay fine and do not beat against the device pixel grid.
+  float dither = noise(uv * 48.0 + vec2(12.34, 56.78)) - 0.5;
+  float dotPattern = smoothstep(0.42, 0.58, dither + 0.5) * 0.015;
 
-  // Faint, irregular vertical banding.
-  float band = ((sin(uv.y * 16.0 + uv.x * 4.0 + noise(uv * 6.0) * 2.0) * 0.5 + 0.5) - 0.5) * 0.012;
+  // Faint horizontal scan lines. The sine period is ~25 px, well above
+  // the pixel Nyquist limit, and the amplitude is tiny so it reads as a
+  // sub-pixel paper texture rather than visible bands.
+  float scan = uv.y * u_resolution.y * 0.25;
+  float ghost = (sin(scan) * 0.5 + 0.5) * 0.004;
 
+  // Vignette: apply only to the texture term so the screen tone stays uniform.
   vec2 cc = uv - 0.5;
   float dist = dot(cc, cc);
-  float vig = smoothstep(0.85, 0.20, dist);
+  float vig = smoothstep(0.9, 0.25, dist);
 
-  // Refresh flash: e-ink has no backlight, so flash darkens rather than brightens.
-  // We use mix-blend-mode: multiply on the canvas, so this color is multiplied
-  // with the HTML content underneath. White content × panel = #8D8F8D.
-  vec3 tint = panel + grain + band;
-  tint *= mix(1.0, 0.92, vig * 0.25);
-  tint = mix(tint, vec3(0.25), u_flash);
+  // The base tone is chosen so that, with alpha = 0.5 over white, the final
+  // color matches the Figma screen fill #8D8F8D (0.5537). The almost-invisible
+  // dither + scanline texture is modulated by the original vignette term.
+  // target = 0.5 + 0.5 * (base + avg_texture * avg_vig);
+  // avg_texture ≈ 0.0115, avg_vig ≈ 0.71, so base ≈ 0.0975.
+  float overlay = 0.0975 + (dotPattern + ghost) * mix(1.0, 0.0, vig * 0.3);
 
-  gl_FragColor = vec4(tint, 1.0);
+  // Refresh flash: e-ink has no backlight, so refresh darkens rather than brightens.
+  float alpha = (1.0 - u_flash) * 0.5 + u_flash;
+  vec3 color = mix(vec3(overlay), vec3(0.0), u_flash);
+
+  // Output premultiplied alpha so the canvas composites correctly over the HTML content.
+  gl_FragColor = vec4(color * alpha, alpha);
 }
 `
 
@@ -157,10 +165,10 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
       gl.enableVertexAttribArray(positionLocation)
       gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0)
 
-      // Canvas is composited with mix-blend-mode: multiply, so the shader can
-      // output an opaque tint color and the browser multiplies it with the
-      // underlying page content.
-      gl.disable(gl.BLEND)
+      // Standard alpha blending. The canvas draws a semi-transparent darkening
+      // overlay over the HTML content, with premultipliedAlpha for correct compositing.
+      gl.enable(gl.BLEND)
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
 
       return () => {
         cancelAnimationFrame(rafRef.current)
@@ -176,7 +184,11 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
       const program = programRef.current
       if (!canvas || !gl || !program) return
 
+      const uTime = gl.getUniformLocation(program, 'u_time')
       const uFlash = gl.getUniformLocation(program, 'u_flash')
+      const uResolution = gl.getUniformLocation(program, 'u_resolution')
+
+      const startTime = performance.now()
 
       const render = () => {
         const dpr = Math.min(window.devicePixelRatio || 1, 2)
@@ -191,6 +203,9 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
         gl.viewport(0, 0, canvas.width, canvas.height)
         gl.clearColor(0, 0, 0, 0)
         gl.clear(gl.COLOR_BUFFER_BIT)
+
+        if (uTime) gl.uniform1f(uTime, (performance.now() - startTime) / 1000.0)
+        if (uResolution) gl.uniform2f(uResolution, canvas.width, canvas.height)
 
         if (!paused) {
           flashRef.current = Math.max(0, flashRef.current - 0.03)
@@ -216,7 +231,7 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
         <canvas
           ref={canvasRef}
           className="pointer-events-none absolute inset-0 z-40 h-full w-full"
-          style={{ width: '100%', height: '100%', mixBlendMode: 'multiply' }}
+          style={{ width: '100%', height: '100%' }}
         />
       </div>
     )

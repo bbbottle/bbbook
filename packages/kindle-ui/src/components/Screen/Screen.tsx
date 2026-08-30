@@ -1,5 +1,4 @@
 import {
-  useEffect,
   useImperativeHandle,
   useRef,
   forwardRef,
@@ -33,10 +32,8 @@ export const Screen = forwardRef<ScreenHandle, ScreenProps>(function Screen(
     },
   }))
 
-  useEffect(() => {
-    const id = setTimeout(() => einkRef.current?.refresh(), 50)
-    return () => clearTimeout(id)
-  }, [])
+  // No automatic flash on mount: the e-ink overlay starts at its steady-state
+  // screen tone so the Device renders at the intended #8D8F8D immediately.
 
   const hasWallpaper = Boolean(wallpaper)
   const contentClass = cn(
