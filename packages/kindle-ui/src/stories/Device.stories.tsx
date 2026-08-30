@@ -38,26 +38,12 @@ const headerMenu = [
 
 export const Playground: Story = {
   args: { overlay: true },
-  render: (args) => (
-    <Device {...args}>
-      <div className="flex h-full flex-col items-center justify-center p-8 text-center text-ink">
-        <p className="font-serif text-lg">The Little Prince</p>
-        <p className="mt-1 font-sans text-xs text-muted">Swipe to unlock</p>
-      </div>
-    </Device>
-  ),
+  render: (args) => <Device {...args} />,
 }
 
 export const LockScreen: Story = {
   args: { overlay: true },
-  render: (args) => (
-    <Device {...args}>
-      <div className="flex h-full flex-col items-center justify-center p-8 text-center text-ink">
-        <p className="font-serif text-lg">The Little Prince</p>
-        <p className="mt-1 font-sans text-xs text-muted">Swipe to unlock</p>
-      </div>
-    </Device>
-  ),
+  render: (args) => <Device {...args} />,
 }
 
 export const Library: Story = {
