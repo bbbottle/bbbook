@@ -40,7 +40,7 @@ export function Device({
         }}
       >
         {/* Figma node 3:4 — screen; black border, inset shadow, grey off-state fill */}
-        <div className="pointer-events-none absolute top-[4px] bottom-[4px] left-[3px] right-[3px] border border-device-screen-border bg-device-screen">
+        <div className="pointer-events-none absolute left-1/2 top-[1.38888888888889%] h-[97.22222222222221%] w-[97.19626168224299%] -translate-x-1/2 border border-device-screen-border bg-device-screen">
           <Screen ref={screenRef} overlay={overlay} className="absolute inset-0" wallpaper={wallpaper}>
             {children}
           </Screen>
