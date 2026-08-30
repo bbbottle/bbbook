@@ -5,33 +5,27 @@ import { cn } from '../../utils/cn.js'
 export interface DeviceProps {
   children?: ReactNode
   className?: string
-  onHomeClick?: () => void
-  homeButton?: boolean
   overlay?: boolean
 }
 
 export function Device({
   children,
   className,
-  onHomeClick,
-  homeButton = false,
   overlay = true,
 }: DeviceProps) {
   const screenRef = useRef<ScreenHandle>(null)
 
-  const handleHomeClick = () => {
-    screenRef.current?.refresh()
-    onHomeClick?.()
-  }
-
   return (
     <div
       className={cn(
-        'relative mx-auto w-[min(92vw,776px)] aspect-[776/1094] select-none overflow-hidden',
+        'relative mx-auto aspect-[268/382] select-none overflow-hidden',
         'rounded-kindle border border-device-bezel bg-device-shell shadow-shell',
         className
       )}
-      style={{ containerType: 'inline-size' }}
+      style={{
+        containerType: 'inline-size',
+        width: 'min(92vw, calc(90vh * 268 / 382), 772px)',
+      }}
     >
       {/* Figma node 6:12 — screen-frame; radius 2px, no border */}
       <div
@@ -78,30 +72,6 @@ export function Device({
           kindle
         </span>
       </div>
-
-      {homeButton && (
-        <button
-          type="button"
-          onClick={handleHomeClick}
-          className="absolute left-1/2 -translate-x-1/2 cursor-pointer rounded-full"
-          style={{
-            bottom: '1%',
-            width: '14.17910447761194cqw',
-            height: '3.73134328358209cqw',
-          }}
-          aria-label="Home"
-        >
-          <span
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-            style={{
-              width: '6.71641791044776cqw',
-              height: '1.49253731343284cqw',
-              background: 'linear-gradient(#aaa8a2, #e3e1db)',
-              boxShadow: 'inset 0 1px 1px rgba(0,0,0,0.24)',
-            }}
-          />
-        </button>
-      )}
     </div>
   )
 }

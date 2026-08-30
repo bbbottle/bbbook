@@ -23,7 +23,6 @@ const meta: Meta<typeof Device> = {
   component: Device,
   parameters: { layout: 'centered' },
   argTypes: {
-    homeButton: { control: 'boolean' },
     overlay: { control: 'boolean' },
   },
 }
@@ -52,7 +51,7 @@ const headerMenu = [
 ]
 
 export const Playground: Story = {
-  args: { homeButton: false, overlay: true },
+  args: { overlay: true },
   render: (args) => (
     <Device {...args}>
       <div className="flex h-full flex-col items-center justify-center p-8 text-center text-ink">
@@ -65,7 +64,7 @@ export const Playground: Story = {
 }
 
 export const LockScreen: Story = {
-  args: { homeButton: false, overlay: true },
+  args: { overlay: true },
   render: (args) => (
     <Device {...args}>
       <div className="flex h-full flex-col items-center justify-center p-8 text-center text-ink">
@@ -78,7 +77,7 @@ export const LockScreen: Story = {
 }
 
 export const Library: Story = {
-  args: { homeButton: false, overlay: true },
+  args: { overlay: true },
   render: () => {
     const [query, setQuery] = useState('')
     const [active, setActive] = useState<string | null>('1984')
@@ -134,7 +133,7 @@ export const Library: Story = {
 }
 
 export const Store: Story = {
-  args: { homeButton: false, overlay: true },
+  args: { overlay: true },
   render: () => {
     const [query, setQuery] = useState('')
     const [tab, setTab] = useState('all')
@@ -188,7 +187,7 @@ export const Store: Story = {
 }
 
 export const Components: Story = {
-  args: { homeButton: false, overlay: true },
+  args: { overlay: true },
   render: () => {
     const [airplane, setAirplane] = useState(false)
     const [wifi, setWifi] = useState(false)
@@ -218,17 +217,6 @@ export const Components: Story = {
       </Device>
     )
   },
-}
-
-export const HomeButton: Story = {
-  args: { homeButton: true, overlay: true },
-  render: (args) => (
-    <Device {...args}>
-      <div className="flex h-full items-center justify-center p-8 text-center">
-        <p className="font-serif text-lg text-ink">Press the home button to refresh the screen.</p>
-      </div>
-    </Device>
-  ),
 }
 
 
