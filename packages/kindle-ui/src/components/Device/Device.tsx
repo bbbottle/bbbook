@@ -31,7 +31,7 @@ export function Device({
     >
       {/* Figma node 6:12 — screen-frame; radius 2px, no border */}
       <div
-        className="pointer-events-none absolute overflow-hidden rounded-screenFrame"
+        className="pointer-events-none absolute overflow-hidden rounded-screenFrame px-[3px] py-[4px]"
         style={{
           left: '10.07462686567164%',
           top: '7.06806282722513%',
@@ -40,7 +40,7 @@ export function Device({
         }}
       >
         {/* Figma node 3:4 — screen; black border, inset shadow, grey off-state fill */}
-        <div className="pointer-events-none absolute left-1/2 top-[1.38888888888889%] h-[97.22222222222221%] w-[97.19626168224299%] -translate-x-1/2 border border-device-screen-border bg-device-screen">
+        <div className="pointer-events-none absolute inset-0 border border-device-screen-border bg-device-screen">
           <Screen ref={screenRef} overlay={overlay} className="absolute inset-0" wallpaper={wallpaper}>
             {children}
           </Screen>

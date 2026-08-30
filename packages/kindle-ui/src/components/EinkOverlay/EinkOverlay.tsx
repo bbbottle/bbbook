@@ -52,9 +52,12 @@ float noise(vec2 p) {
 void main() {
   vec2 uv = v_uv;
 
-  float dither = noise(uv * u_resolution * 0.8) - 0.5;
-  float dotPattern = step(0.5, dither + 0.5) * 0.04;
-  float ghost = step(0.5, fract(uv.y * 600.0)) * 0.006;
+  // Use a lower, physical-pixel-relative frequency and smooth thresholds
+  // to avoid the high-frequency moiré seen on high-DPI mobile screens.
+  float dither = noise(uv * u_resolution * 0.2) - 0.5;
+  float dotPattern = smoothstep(0.45, 0.55, dither + 0.5) * 0.035;
+
+  float ghost = (sin(uv.y * u_resolution.y * 0.06 * 6.28318530718) * 0.5 + 0.5) * 0.006;
 
   vec2 cc = uv - 0.5;
   float dist = dot(cc, cc);
