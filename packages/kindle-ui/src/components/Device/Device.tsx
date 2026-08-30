@@ -1,13 +1,13 @@
-import { useRef, type ReactNode } from "react";
-import { Screen, type ScreenHandle } from "../Screen/index.js";
-import { cn } from "../../utils/cn.js";
+import { useRef, type ReactNode } from 'react'
+import { Screen, type ScreenHandle } from '../Screen/index.js'
+import { cn } from '../../utils/cn.js'
 
 export interface DeviceProps {
-  children?: ReactNode;
-  className?: string;
-  onHomeClick?: () => void;
-  homeButton?: boolean;
-  overlay?: boolean;
+  children?: ReactNode
+  className?: string
+  onHomeClick?: () => void
+  homeButton?: boolean
+  overlay?: boolean
 }
 
 export function Device({
@@ -17,12 +17,12 @@ export function Device({
   homeButton = false,
   overlay = true,
 }: DeviceProps) {
-  const screenRef = useRef<ScreenHandle>(null);
+  const screenRef = useRef<ScreenHandle>(null)
 
   const handleHomeClick = () => {
-    screenRef.current?.refresh();
-    onHomeClick?.();
-  };
+    screenRef.current?.refresh()
+    onHomeClick?.()
+  }
 
   return (
     <div
@@ -93,14 +93,14 @@ export function Device({
           <span
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
             style={{
-              width: "18px",
-              height: "4px",
-              background: "linear-gradient(#aaa8a2, #e3e1db)",
-              boxShadow: "inset 0 1px 1px rgba(0,0,0,0.24)",
+              width: '18px',
+              height: '4px',
+              background: 'linear-gradient(#aaa8a2, #e3e1db)',
+              boxShadow: 'inset 0 1px 1px rgba(0,0,0,0.24)',
             }}
           />
         </button>
       )}
     </div>
-  );
+  )
 }

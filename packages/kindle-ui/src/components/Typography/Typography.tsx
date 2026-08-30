@@ -16,7 +16,7 @@ export function Typography({ children, className, greyImage = true }: Typography
         '[&>h3]:text-xl [&>h3]:font-normal [&>h3]:my-3',
         '[&>p]:my-3',
         '[&>a]:text-ink [&>a]:underline',
-        '[&>blockquote]:border-l-4 [&>blockquote]:border-subtle [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-muted',
+        '[&>blockquote]:border-l [&>blockquote]:border-subtle [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-muted',
         greyImage && 'ku-grey-image',
         className
       )}
