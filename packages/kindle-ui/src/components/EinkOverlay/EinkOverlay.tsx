@@ -29,58 +29,44 @@ void main() {
 
 const FRAGMENT_SHADER = `
 precision mediump float;
-uniform float u_time;
 uniform float u_flash;
 uniform vec2 u_resolution;
 varying vec2 v_uv;
 
 float hash(vec2 p) {
-  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-}
-
-float noise(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-  vec2 u = f * f * (3.0 - 2.0 * f);
-  return mix(
-    mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
-    mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
-    u.y
-  );
+  // Stable hash for any input size; the initial fract avoids precision issues
+  // when p comes from large screen-pixel coordinates.
+  p = fract(p * vec2(0.1031, 0.1030));
+  p += dot(p, p.yx + 33.33);
+  return fract((p.x + p.y) * p.x);
 }
 
 void main() {
   vec2 uv = v_uv;
 
-  // Ordered dither pattern (Bayer-like via noise).
-  // Keep the frequency low and use smoothstep instead of a hard step threshold
-  // so the dots stay fine and do not beat against the device pixel grid.
-  float dither = noise(uv * 48.0 + vec2(12.34, 56.78)) - 0.5;
-  float dotPattern = smoothstep(0.42, 0.58, dither + 0.5) * 0.015;
+  // Ultra-fine, per-pixel paper grain. Amplitude is kept tiny so the texture
+  // is present but never competes with the content on top of it.
+  float grain = (hash(uv * u_resolution) - 0.5) * 0.008;
 
-  // Faint horizontal scan lines. The sine period is ~25 px, well above
-  // the pixel Nyquist limit, and the amplitude is tiny so it reads as a
-  // sub-pixel paper texture rather than visible bands.
-  float scan = uv.y * u_resolution.y * 0.25;
-  float ghost = (sin(scan) * 0.5 + 0.5) * 0.004;
+  // Almost invisible horizontal bands. The period is ~30 px, safely above the
+  // pixel grid, and the amplitude is small enough to read as a sub-pixel haze.
+  float scan = sin(uv.y * u_resolution.y * 0.2) * 0.002;
 
-  // Vignette: apply only to the texture term so the screen tone stays uniform.
+  // Vignette only modulates the texture term; the uniform screen tone stays flat.
   vec2 cc = uv - 0.5;
   float dist = dot(cc, cc);
   float vig = smoothstep(0.9, 0.25, dist);
 
-  // The base tone is chosen so that, with alpha = 0.5 over white, the final
-  // color matches the Figma screen fill #8D8F8D (0.5537). The almost-invisible
-  // dither + scanline texture is modulated by the original vignette term.
-  // target = 0.5 + 0.5 * (base + avg_texture * avg_vig);
-  // avg_texture ≈ 0.0115, avg_vig ≈ 0.71, so base ≈ 0.0975.
-  float overlay = 0.0975 + (dotPattern + ghost) * mix(1.0, 0.0, vig * 0.3);
+  // Base tone chosen so that, with alpha = 0.5 over white, the final composited
+  // color is #8D8F8D (0.5537). The grain/scan terms are zero-mean, so they only
+  // add an imperceptible variance around that target tone.
+  // 0.5537 = 0.5 + 0.5 * base  =>  base = 0.1074
+  float overlay = 0.1074 + (grain + scan) * mix(1.0, 0.0, vig * 0.3);
 
-  // Refresh flash: e-ink has no backlight, so refresh darkens rather than brightens.
+  // Refresh flash: no backlight, so the screen briefly darkens instead of brightening.
   float alpha = (1.0 - u_flash) * 0.5 + u_flash;
   vec3 color = mix(vec3(overlay), vec3(0.0), u_flash);
 
-  // Output premultiplied alpha so the canvas composites correctly over the HTML content.
   gl_FragColor = vec4(color * alpha, alpha);
 }
 `
@@ -184,11 +170,8 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
       const program = programRef.current
       if (!canvas || !gl || !program) return
 
-      const uTime = gl.getUniformLocation(program, 'u_time')
       const uFlash = gl.getUniformLocation(program, 'u_flash')
       const uResolution = gl.getUniformLocation(program, 'u_resolution')
-
-      const startTime = performance.now()
 
       const render = () => {
         const dpr = Math.min(window.devicePixelRatio || 1, 2)
@@ -204,7 +187,6 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
         gl.clearColor(0, 0, 0, 0)
         gl.clear(gl.COLOR_BUFFER_BIT)
 
-        if (uTime) gl.uniform1f(uTime, (performance.now() - startTime) / 1000.0)
         if (uResolution) gl.uniform2f(uResolution, canvas.width, canvas.height)
 
         if (!paused) {
