@@ -7,6 +7,7 @@ export interface WifiTransportConfig extends KindleConnectionOptions {
   readonly queueSize?: number
   readonly maxRetries?: number
   readonly retryDelayMs?: number
+  readonly localCacheDir?: string
 }
 
 export const defaultWifiTransportConfig = (config: WifiTransportConfig): WifiTransportConfig => ({
@@ -22,6 +23,7 @@ export const defaultWifiTransportConfig = (config: WifiTransportConfig): WifiTra
   queueSize: config.queueSize ?? 50,
   maxRetries: config.maxRetries ?? 3,
   retryDelayMs: config.retryDelayMs ?? 1000,
+  localCacheDir: config.localCacheDir,
 })
 
 export type TransportState =

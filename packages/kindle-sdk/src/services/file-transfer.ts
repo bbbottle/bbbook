@@ -1,5 +1,7 @@
 import { Effect, Context } from 'effect'
 import { randomUUID } from 'node:crypto'
+import * as NodePath from 'node:path'
+import * as NodeFs from 'node:fs'
 import type { Client } from 'ssh2'
 import * as Executor from '../core/executor.js'
 import type { WifiTransportService } from '../core/wifi-transport.js'
@@ -9,9 +11,15 @@ import { shellQuote } from '../commands/utils.js'
 
 export interface FileTransferService {
   readonly upload: (localPath: string, remotePath: string) => Effect.Effect<void, KindleError>
-  readonly download: (remotePath: string, localPath: string) => Effect.Effect<void, KindleError>
+  readonly download: (remotePath: string, localPath?: string) => Effect.Effect<void, KindleError>
   readonly remove: (remotePath: string) => Effect.Effect<void, KindleError>
   readonly restore: (remotePath: string) => Effect.Effect<void, KindleError>
+}
+
+const resolveLocalPath = (localCacheDir: string | undefined, remotePath: string, localPath?: string) => {
+  if (localPath) return NodePath.resolve(localPath)
+  if (!localCacheDir) throw new Error('localCacheDir is required when localPath is not provided')
+  return NodePath.join(localCacheDir, NodePath.basename(remotePath))
 }
 
 export class FileTransfer extends Context.Service<FileTransfer, FileTransferService>()(
@@ -54,7 +62,11 @@ const cleanTemp = (client: Client, tempPath: string) =>
       )
     : Effect.void
 
-export const make = (wifi: WifiTransportService, throttler: ResourceThrottlerService) =>
+export const make = (
+  wifi: WifiTransportService,
+  throttler: ResourceThrottlerService,
+  localCacheDir?: string
+) =>
   Effect.gen(function* () {
     const upload = (localPath: string, remotePath: string) =>
       throttler.withPermit(
@@ -128,10 +140,16 @@ export const make = (wifi: WifiTransportService, throttler: ResourceThrottlerSer
         )
       )
 
-    const download = (remotePath: string, localPath: string) =>
+    const download = (remotePath: string, localPath?: string) =>
       throttler.withPermit(
         wifi.withConnection((client) =>
-          Executor.downloadFile(client, remotePath, localPath)
+          Effect.gen(function* () {
+            const targetPath = resolveLocalPath(localCacheDir, remotePath, localPath)
+            yield* Effect.try(() => {
+              NodeFs.mkdirSync(NodePath.dirname(targetPath), { recursive: true })
+            }).pipe(Effect.catch(() => Effect.void))
+            return yield* Executor.downloadFile(client, remotePath, targetPath)
+          })
         )
       )
 

@@ -1,0 +1,15 @@
+node_modules
+**/node_modules
+dist
+**/dist
+.git
+.github
+.repos
+repos
+.devin
+*.md
+!README.md
+*.log
+.DS_Store
+.env
+.env.*

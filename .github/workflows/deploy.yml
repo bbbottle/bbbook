@@ -1,0 +1,40 @@
+name: Build and deploy to ONCE
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: bbbook
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set image tags
+        id: vars
+        run: |
+          echo "image=localhost:5000/bbbook" >> "$GITHUB_OUTPUT"
+          echo "sha_tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build Docker image
+        run: |
+          docker build -t "${{ steps.vars.outputs.image }}:${{ steps.vars.outputs.sha_tag }}" -t "${{ steps.vars.outputs.image }}:latest" .
+
+      - name: Push to local registry
+        run: |
+          docker push --all-tags "${{ steps.vars.outputs.image }}"
+
+      - name: Verify catalog
+        run: |
+          curl -sS http://127.0.0.1:5000/v2/_catalog
+
+      - name: Deploy with ONCE
+        run: |
+          once deploy "${{ steps.vars.outputs.image }}:latest" --host kindle.bbki.ng
+
+      - name: Prune local Docker artifacts
+        if: always()
+        run: docker system prune -f
