@@ -21,6 +21,7 @@ import { TimeBar } from '../components/TimeBar/TimeBar.js'
 
 const meta: Meta = {
   title: 'Kindle UI/Primitives',
+  parameters: { layout: 'centered' },
 }
 export default meta
 
@@ -29,7 +30,7 @@ type Story = StoryObj
 export const CardStory: Story = {
   name: 'Card',
   render: () => (
-    <Device>
+    <Device wallpaper="">
       <div className="flex h-full flex-col items-center justify-center p-4">
         <Card className="w-full">
           <CardMedia />
@@ -49,7 +50,7 @@ export const SwitchStory: Story = {
   render: () => {
     const [on, setOn] = useState(false)
     return (
-      <Device>
+      <Device wallpaper="">
         <div className="flex h-full flex-col items-center justify-center p-4">
           <Switch checked={on} onChange={(v) => setOn(v)} ariaLabel="Airplane mode" />
           <p className="mt-4 text-sm text-muted">{on ? 'On' : 'Off'}</p>
@@ -64,7 +65,7 @@ export const TabStory: Story = {
   render: () => {
     const [active, setActive] = useState('all')
     return (
-      <Device>
+      <Device wallpaper="">
         <div className="flex h-full flex-col p-4">
           <Tab>
             <TabItem active={active === 'all'} onClick={() => setActive('all')}>All</TabItem>
@@ -83,7 +84,7 @@ export const MenuStory: Story = {
   render: () => {
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
     return (
-      <Device>
+      <Device wallpaper="">
         <div className="flex h-full flex-col items-center justify-center p-4">
           <Button onClick={(e) => setAnchorEl(e.currentTarget)}>Open menu</Button>
           <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
@@ -102,7 +103,7 @@ export const ActionBarMenuStory: Story = {
   render: () => {
     const [query, setQuery] = useState('')
     return (
-      <Device>
+      <Device wallpaper="">
         <div className="flex h-full flex-col p-4">
           <ActionBar>
             <ActionGroup>
@@ -128,7 +129,7 @@ export const ActionBarMenuStory: Story = {
 export const DividerStory: Story = {
   name: 'Divider',
   render: () => (
-    <Device>
+    <Device wallpaper="">
       <div className="flex h-full flex-col p-8">
         <p className="text-sm text-ink">Section A</p>
         <Divider className="my-4" />
@@ -141,7 +142,7 @@ export const DividerStory: Story = {
 export const GridStory: Story = {
   name: 'Grid',
   render: () => (
-    <Device>
+    <Device wallpaper="">
       <div className="flex h-full flex-col p-4">
         <Grid dense>
           <GridItem><div className="h-full w-full bg-muted" /></GridItem>
@@ -157,7 +158,7 @@ export const GridStory: Story = {
 export const SectionStory: Story = {
   name: 'Section',
   render: () => (
-    <Device>
+    <Device wallpaper="">
       <div className="flex h-full flex-col p-4">
         <TimeBar className="mb-2" />
         <Section>
@@ -172,7 +173,7 @@ export const SectionStory: Story = {
 export const ListItemStory: Story = {
   name: 'ListItem',
   render: () => (
-    <Device>
+    <Device wallpaper="">
       <div className="flex h-full flex-col p-4">
         <ListItem title="The Great Gatsby" subtitle="F. Scott Fitzgerald" meta="32%" />
         <Divider />
@@ -192,7 +193,7 @@ export const DialogStory: Story = {
   render: () => {
     const [open, setOpen] = useState(false)
     return (
-      <Device>
+      <Device wallpaper="">
         <div className="flex h-full flex-col items-center justify-center p-4">
           <Button onClick={() => setOpen(true)}>Open dialog</Button>
           <Dialog
@@ -217,10 +218,14 @@ export const DialogStory: Story = {
 export const ContainerStory: Story = {
   name: 'Container',
   render: () => (
-    <Container className="p-8">
-      <h2 className="text-lg font-semibold">Container</h2>
-      <p className="text-sm text-muted">Provides surface and typography defaults.</p>
-    </Container>
+    <Device wallpaper="">
+      <div className="flex h-full flex-col p-8">
+        <Container>
+          <h2 className="text-lg font-semibold">Container</h2>
+          <p className="text-sm text-muted">Provides surface and typography defaults.</p>
+        </Container>
+      </div>
+    </Device>
   ),
 }
 
@@ -235,7 +240,7 @@ export const Catalog: Story = {
     const menuBtnRef = useRef<HTMLButtonElement>(null)
 
     return (
-      <Device>
+      <Device wallpaper="">
         <div className="h-full space-y-2 p-3 text-sm">
           <h1 className="mb-1 text-base font-serif font-semibold text-ink">Kindle UI Primitives</h1>
 

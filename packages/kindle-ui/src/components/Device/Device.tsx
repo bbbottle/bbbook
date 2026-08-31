@@ -28,6 +28,7 @@ export function Device({
         containerType: 'inline-size',
         width: 'min(92vw, calc(90vh * 268 / 382), 772px)',
         ['--device-width' as string]: 'min(92vw, calc(90vh * 268 / 382), 772px)',
+        ['--ku-radius-kindle' as string]: 'calc(20 / 268 * var(--device-width))',
       }}
     >
       {/* Figma node 6:12 — screen-frame.
@@ -45,9 +46,9 @@ export function Device({
           width: '79.85074626865672%',
           height: '75.39267015706806%',
           borderTopWidth: 'calc(4 / 268 * var(--device-width))',
-          borderRightWidth: 'calc(3 / 268 * var(--device-width))',
+          borderRightWidth: 'calc(4 / 268 * var(--device-width))',
           borderBottomWidth: 'calc(4 / 268 * var(--device-width))',
-          borderLeftWidth: 'calc(3 / 268 * var(--device-width))',
+          borderLeftWidth: 'calc(4 / 268 * var(--device-width))',
           borderRadius: 'calc(2 / 268 * var(--device-width))',
         }}
       >

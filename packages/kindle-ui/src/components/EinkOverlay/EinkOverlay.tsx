@@ -66,10 +66,10 @@ void main() {
   float vig = smoothstep(0.9, 0.25, dist);
 
   // Base tone chosen so that, with alpha = 0.5 over white, the final composited
-  // color is #8D8F8D (0.5537). The grain/scan terms are zero-mean, so they only
+  // color is #999999 (0.6). The grain/scan terms are zero-mean, so they only
   // add an imperceptible variance around that target tone.
-  // 0.5537 = 0.5 + 0.5 * base  =>  base = 0.1074
-  float overlay = 0.1074 + (grain + scan) * mix(1.0, 0.0, vig * 0.3);
+  // 0.6 = 0.5 + 0.5 * base  =>  base = 0.2
+  float overlay = 0.2 + (grain + scan) * mix(1.0, 0.0, vig * 0.3);
 
   // Refresh flash: no backlight, so the screen briefly darkens instead of brightening.
   float alpha = (1.0 - u_flash) * 0.5 + u_flash;

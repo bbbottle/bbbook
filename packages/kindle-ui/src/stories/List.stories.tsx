@@ -1,11 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { useState } from 'react'
+import { Device } from '../components/Device/Device.js'
 import { List } from '../components/List/List.js'
 import { ListItem } from '../components/ListItem/ListItem.js'
 
 const meta: Meta<typeof List> = {
   title: 'Kindle UI/List',
   component: List,
+  parameters: { layout: 'centered' },
 }
 export default meta
 
@@ -22,28 +24,36 @@ export const Default: Story = {
   render: () => {
     const [active, setActive] = useState<string | null>('1984')
     return (
-      <List className="max-w-md border border-divider">
-        {books.map((book) => (
-          <ListItem
-            key={book.title}
-            title={book.title}
-            subtitle={book.subtitle}
-            meta={book.meta}
-            active={active === book.title}
-            onClick={() => setActive(book.title)}
-          />
-        ))}
-      </List>
+      <Device wallpaper="">
+        <div className="flex h-full flex-col p-4">
+          <List>
+            {books.map((book) => (
+              <ListItem
+                key={book.title}
+                title={book.title}
+                subtitle={book.subtitle}
+                meta={book.meta}
+                active={active === book.title}
+                onClick={() => setActive(book.title)}
+              />
+            ))}
+          </List>
+        </div>
+      </Device>
     )
   },
 }
 
 export const WithBadge: Story = {
   render: () => (
-    <List className="max-w-md border border-divider">
-      {['Home', 'Library', 'Store', 'Settings'].map((item, i) => (
-        <ListItem key={item} title={item} meta={i === 1 ? '12' : undefined} />
-      ))}
-    </List>
+    <Device wallpaper="">
+      <div className="flex h-full flex-col p-4">
+        <List>
+          {['Home', 'Library', 'Store', 'Settings'].map((item, i) => (
+            <ListItem key={item} title={item} meta={i === 1 ? '12' : undefined} />
+          ))}
+        </List>
+      </div>
+    </Device>
   ),
 }
