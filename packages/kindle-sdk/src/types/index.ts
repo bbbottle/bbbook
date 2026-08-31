@@ -1,23 +1,28 @@
-import type { KindleConnectionOptions as SharedKindleConnectionOptions } from '@bbbook/shared-types'
+import type { KindleConnectionOptions as SharedKindleConnectionOptions, KindleDeviceInfo as SharedKindleDeviceInfo } from '@bbbook/shared-types'
 
 export type KindleConnectionOptions = SharedKindleConnectionOptions
 
-export class KindleTimeoutError {
-  readonly _tag = 'KindleTimeoutError' as const
-  constructor(
-    readonly command: string,
-    readonly cause?: unknown
-  ) {}
+export interface DeviceInfo extends SharedKindleDeviceInfo {
+  readonly serialNumber: string
+  readonly freeMemoryMb: number
+  readonly freeStorageMb: number
+  readonly uptimeSeconds: number
 }
 
-export class KindleDeviceBusyError {
-  readonly _tag = 'KindleDeviceBusyError' as const
-  constructor(readonly message: string) {}
+export interface QueueItem {
+  readonly command: string
+  readonly timeoutMs?: number
+  readonly retries: number
 }
 
-export class KindlePermissionError {
-  readonly _tag = 'KindlePermissionError' as const
-  constructor(readonly message: string) {}
+export interface Font {
+  readonly id: string
+  readonly name: string
+  readonly path: string
 }
 
-export type KindleError = KindleTimeoutError | KindleDeviceBusyError | KindlePermissionError
+export interface Wallpaper {
+  readonly id: string
+  readonly localPath: string
+  readonly remotePath: string
+}

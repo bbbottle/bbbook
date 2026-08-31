@@ -1,21 +1,15 @@
-:root {
-  --ink-black: #1a1a1a;
-  --paper-white: #f4f1ea;
-  --kindle-gray: #b4b4b4;
-}
-
-* {
-  box-sizing: border-box;
-}
+@import '@bbbook/kindle-ui/styles';
 
 html,
 body,
 #root {
-  margin: 0;
-  padding: 0;
   width: 100%;
   height: 100%;
-  background: #222;
-  color: var(--paper-white);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+#root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--ku-surface);
 }

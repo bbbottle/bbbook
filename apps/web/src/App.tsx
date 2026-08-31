@@ -1,21 +1,9 @@
-import type { Book } from '@bbbook/shared-types'
-
-const sampleBooks: Book[] = [
-  { id: '1', title: 'Sample Book', author: 'Author' },
-]
+import { Device } from '@bbbook/kindle-ui'
 
 function App() {
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>bbbook</h1>
-      <p>Kindle 管理平台骨架已就绪。</p>
-      <ul>
-        {sampleBooks.map((book) => (
-          <li key={book.id}>
-            {book.title} - {book.author}
-          </li>
-        ))}
-      </ul>
+    <div className="flex min-h-full w-full items-center justify-center p-4">
+      <Device />
     </div>
   )
 }

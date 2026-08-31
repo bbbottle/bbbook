@@ -1,5 +1,6 @@
-const shellQuote = (value: string | number) =>
-  typeof value === 'number' ? String(value) : `'${value.replace(/'/g, "'\\''")}'`
+import { shellQuote } from './utils.js'
+
+export { shellQuote }
 
 export const setPreventScreenSaver = (prevent: boolean) =>
   `lipc-set-prop com.lab126.powerd preventScreenSaver ${prevent ? 1 : 0}`
