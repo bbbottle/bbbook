@@ -22,7 +22,7 @@ export interface KindleSDK {
   readonly isAvailable: () => Promise<boolean>
   readonly waitForAvailable: () => Promise<void>
   readonly lockScreen: () => Promise<void>
-  readonly takeScreenshot: (localPath: string) => Promise<void>
+  readonly takeScreenshot: (localPath?: string) => Promise<void>
   readonly listBooks: () => Promise<ReadonlyArray<import('@bbbook/shared-types').Book>>
   readonly addBook: (localPath: string, fileName: string) => Promise<void>
   readonly removeBook: (fileName: string) => Promise<void>
@@ -67,7 +67,7 @@ class KindleSDKImpl implements KindleSDK {
     return this.runtime.runPromise(PowerManager.use((s) => s.lockScreen()))
   }
 
-  takeScreenshot(localPath: string) {
+  takeScreenshot(localPath?: string) {
     return this.runtime.runPromise(Screenshot.use((s) => s.takeScreenshot(localPath)))
   }
 
@@ -132,11 +132,11 @@ const makeLayer = (config: WifiTransportConfig) =>
       const commandExecutor = yield* makeCommandExecutor(config, wifi, throttler)
       const deviceAvailability = yield* makeDeviceAvailability(config, wifi)
       const commandQueue = yield* makeCommandQueue(config, commandExecutor, deviceAvailability)
-      const fileTransfer = yield* makeFileTransfer(wifi, throttler)
+      const fileTransfer = yield* makeFileTransfer(wifi, throttler, config.localCacheDir)
       const powerManager = yield* makePowerManager(commandQueue)
       const deviceInfo = yield* makeDeviceInfo(commandQueue)
       const library = yield* makeLibrary(commandQueue, fileTransfer)
-      const screenshot = yield* makeScreenshot(commandQueue, fileTransfer)
+      const screenshot = yield* makeScreenshot(commandQueue, fileTransfer, config.localCacheDir)
       const wallpaper = yield* makeWallpaperManager(commandQueue, fileTransfer)
       const fontManager = yield* makeFontManager(commandQueue, fileTransfer)
 

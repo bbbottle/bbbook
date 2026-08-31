@@ -1,0 +1,30 @@
+name: Build and deploy to ONCE
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set image tag
+        id: vars
+        run: echo "image=127.0.0.1:5000/bbbook:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build Docker image
+        run: |
+          docker build -t "${{ steps.vars.outputs.image }}" .
+
+      - name: Push to local registry
+        run: |
+          docker push "${{ steps.vars.outputs.image }}"
+
+      - name: Deploy with ONCE
+        run: |
+          once deploy "${{ steps.vars.outputs.image }}" --host kindle.bbki.ng
