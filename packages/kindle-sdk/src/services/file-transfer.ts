@@ -9,6 +9,7 @@ export interface FileTransferService {
   readonly upload: (localPath: string, remotePath: string) => Effect.Effect<void, KindleError>
   readonly download: (remotePath: string, localPath: string) => Effect.Effect<void, KindleError>
   readonly remove: (remotePath: string) => Effect.Effect<void, KindleError>
+  readonly restore: (remotePath: string) => Effect.Effect<void, KindleError>
 }
 
 export class FileTransfer extends Context.Service<FileTransfer, FileTransferService>()(
@@ -34,9 +35,16 @@ export const make = (wifi: WifiTransportService, throttler: ResourceThrottlerSer
     const remove = (remotePath: string) =>
       throttler.withPermit(
         wifi.withConnection((client) =>
-          Executor.exec(client, `rm -f ${shellQuote(remotePath)}`)
+          Executor.exec(client, `mv ${shellQuote(remotePath)} ${shellQuote(`${remotePath}-bkp`)}`)
         )
-      )
+      ).pipe(Effect.asVoid)
 
-    return { upload, download, remove }
+    const restore = (remotePath: string) =>
+      throttler.withPermit(
+        wifi.withConnection((client) =>
+          Executor.exec(client, `mv ${shellQuote(`${remotePath}-bkp`)} ${shellQuote(remotePath)}`)
+        )
+      ).pipe(Effect.asVoid)
+
+    return { upload, download, remove, restore }
   })

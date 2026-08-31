@@ -26,11 +26,13 @@ export interface KindleSDK {
   readonly listBooks: () => Promise<ReadonlyArray<import('@bbbook/shared-types').Book>>
   readonly addBook: (localPath: string, fileName: string) => Promise<void>
   readonly removeBook: (fileName: string) => Promise<void>
+  readonly restoreBook: (fileName: string) => Promise<void>
   readonly refreshLibrary: () => Promise<void>
   readonly applyWallpapers: (wallpapers: ReadonlyArray<import('./types/index.js').Wallpaper>) => Promise<void>
   readonly listFonts: () => Promise<ReadonlyArray<import('./types/index.js').Font>>
   readonly addFont: (localPath: string, fileName: string) => Promise<void>
   readonly removeFont: (fileName: string) => Promise<void>
+  readonly restoreFont: (fileName: string) => Promise<void>
   readonly refreshFontCache: () => Promise<void>
   readonly getDeviceInfo: () => Promise<import('./types/index.js').DeviceInfo>
   readonly dispose: () => Promise<void>
@@ -81,6 +83,10 @@ class KindleSDKImpl implements KindleSDK {
     return this.runtime.runPromise(Library.use((s) => s.removeBook(fileName)))
   }
 
+  restoreBook(fileName: string) {
+    return this.runtime.runPromise(Library.use((s) => s.restoreBook(fileName)))
+  }
+
   refreshLibrary() {
     return this.runtime.runPromise(Library.use((s) => s.refreshLibrary()))
   }
@@ -99,6 +105,10 @@ class KindleSDKImpl implements KindleSDK {
 
   removeFont(fileName: string) {
     return this.runtime.runPromise(FontManager.use((s) => s.removeFont(fileName)))
+  }
+
+  restoreFont(fileName: string) {
+    return this.runtime.runPromise(FontManager.use((s) => s.restoreFont(fileName)))
   }
 
   refreshFontCache() {

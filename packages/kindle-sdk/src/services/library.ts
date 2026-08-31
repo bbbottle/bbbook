@@ -14,6 +14,7 @@ export interface LibraryService {
   readonly listBooks: () => Effect.Effect<ReadonlyArray<Book>, KindleError>
   readonly addBook: (localPath: string, fileName: string) => Effect.Effect<void, KindleError>
   readonly removeBook: (fileName: string) => Effect.Effect<void, KindleError>
+  readonly restoreBook: (fileName: string) => Effect.Effect<void, KindleError>
   readonly refreshLibrary: () => Effect.Effect<void, KindleError>
 }
 
@@ -56,11 +57,18 @@ export const make = (commandQueue: CommandQueueService, fileTransfer: FileTransf
         return void 0
       })
 
+    const restoreBook = (fileName: string) =>
+      Effect.gen(function* () {
+        const remotePath = `${DOCUMENTS_FOLDER}/${fileName}`
+        yield* commandQueue.enqueue(Remove.restoreBook(remotePath))
+        return void 0
+      })
+
     const refreshLibrary = () =>
       Effect.gen(function* () {
         yield* commandQueue.enqueue(Refresh.refreshLibrary())
         return void 0
       })
 
-    return { listBooks, addBook, removeBook, refreshLibrary }
+    return { listBooks, addBook, removeBook, restoreBook, refreshLibrary }
   })

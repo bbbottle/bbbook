@@ -17,6 +17,7 @@ export interface FontManagerService {
   readonly listFonts: () => Effect.Effect<ReadonlyArray<Font>, KindleError>
   readonly addFont: (localPath: string, fileName: string) => Effect.Effect<void, KindleError>
   readonly removeFont: (fileName: string) => Effect.Effect<void, KindleError>
+  readonly restoreFont: (fileName: string) => Effect.Effect<void, KindleError>
   readonly refreshFontCache: () => Effect.Effect<void, KindleError>
 }
 
@@ -75,11 +76,18 @@ export const make = (commandQueue: CommandQueueService, fileTransfer: FileTransf
         return void 0
       })
 
+    const restoreFont = (fileName: string) =>
+      Effect.gen(function* () {
+        const remotePath = `${FONT_FOLDER}/${fileName}`
+        yield* commandQueue.enqueue(FontRemove.restoreFont(remotePath))
+        return void 0
+      })
+
     const refreshFontCache = () =>
       Effect.gen(function* () {
         yield* commandQueue.enqueue(FontRefresh.refreshFontCache())
         return void 0
       })
 
-    return { listFonts, addFont, removeFont, refreshFontCache }
+    return { listFonts, addFont, removeFont, restoreFont, refreshFontCache }
   })
