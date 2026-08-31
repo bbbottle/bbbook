@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from 'react'
+import { forwardRef, useImperativeHandle, useRef, type ReactNode } from 'react'
 import { Screen, type ScreenHandle } from '../Screen/index.js'
 import { cn } from '../../utils/cn.js'
 
@@ -9,13 +9,20 @@ export interface DeviceProps {
   wallpaper?: string | false
 }
 
-export function Device({
-  children,
-  className,
-  overlay = true,
-  wallpaper = '/assets/wallpaper.png',
-}: DeviceProps) {
+export const Device = forwardRef<ScreenHandle, DeviceProps>(function Device(
+  {
+    children,
+    className,
+    overlay = true,
+    wallpaper = '/assets/wallpaper.png',
+  }: DeviceProps,
+  ref
+) {
   const screenRef = useRef<ScreenHandle>(null)
+
+  useImperativeHandle(ref, () => ({
+    refresh: () => screenRef.current?.refresh(),
+  }))
 
   return (
     <div
@@ -54,11 +61,11 @@ export function Device({
       >
         {/* Figma node 3:4 — screen; black 1px border, inset shadow, grey off-state fill */}
         <div className="pointer-events-auto absolute inset-0 z-10 border border-device-screen-border bg-device-screen">
-          <Screen ref={screenRef} overlay={overlay} className="absolute inset-0" wallpaper={wallpaper}>
+          <Screen ref={screenRef} overlay={overlay} className="absolute inset-0 z-10" wallpaper={wallpaper}>
             {children}
           </Screen>
           <div
-            className="pointer-events-none absolute inset-0 shadow-screen"
+            className="pointer-events-none absolute inset-0 z-20 shadow-screen"
             aria-hidden="true"
           />
         </div>
@@ -82,4 +89,4 @@ export function Device({
       </div>
     </div>
   )
-}
+})
