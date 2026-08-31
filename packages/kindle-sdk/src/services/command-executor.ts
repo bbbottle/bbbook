@@ -4,6 +4,7 @@ import {
   TimeoutError,
   DeviceBusyError,
   PermissionDeniedError,
+  CommandRejectedError,
   type KindleError,
 } from '../errors/kindle-errors.js'
 import type { WifiTransportConfig } from '../core/transport-config.js'
@@ -30,10 +31,41 @@ const classifyError = (result: Executor.ExecResult, command: string): Effect.Eff
   return Effect.fail(new DeviceBusyError({ command }))
 }
 
+// Disallow command families that can cause irreversible damage or network/Wi-Fi manipulation.
+// This is a defence-in-depth guard on the internal command executor; all commands should
+// still be constructed through the typed command builders exported by the package.
+const FORBIDDEN_KEYWORDS = [
+  'rm', 'dd', 'mkfs', 'reboot', 'shutdown', 'poweroff', 'halt', 'kill', 'umount', 'fsck',
+  'fdisk', 'parted', 'mkswap', 'swapon', 'swapoff', 'curl', 'wget', 'nc', 'bash', 'sh',
+  'python', 'perl', 'wpa_cli'
+]
+
+const validateCommand = (command: string): string | undefined => {
+  for (const keyword of FORBIDDEN_KEYWORDS) {
+    const pattern = new RegExp(`\\\\b${keyword}\\\\b`, 'i')
+    if (pattern.test(command)) {
+      return `Forbidden command keyword '${keyword}'`
+    }
+  }
+  if (/\blipc-set-prop\b[\s\S]*?\bcom\.lab126\.wifid\b/i.test(command)) {
+    return 'Wi-Fi manipulation commands are prohibited'
+  }
+  return undefined
+}
+
+const validateCommandEffect = (command: string): Effect.Effect<void, CommandRejectedError> => {
+  const reason = validateCommand(command)
+  if (reason) {
+    return Effect.fail(new CommandRejectedError({ command, reason }))
+  }
+  return Effect.void
+}
+
 export const make = (config: WifiTransportConfig, wifi: WifiTransportService, throttler: ResourceThrottlerService) =>
   Effect.gen(function* () {
-    const execute = (command: string) =>
-      throttler.withPermit(
+    const execute = Effect.fn(function* (command: string) {
+      yield* validateCommandEffect(command)
+      const result = yield* throttler.withPermit(
         wifi.withConnection((client) =>
           Executor.exec(client, command).pipe(
             Effect.timeout(Duration.millis(config.commandTimeout ?? 30000)),
@@ -46,6 +78,8 @@ export const make = (config: WifiTransportConfig, wifi: WifiTransportService, th
           )
         )
       )
+      return result
+    })
 
     return { execute } satisfies CommandExecutorService
   })

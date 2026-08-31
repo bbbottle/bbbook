@@ -142,32 +142,16 @@ export const make = (config: WifiTransportConfig) =>
           return void 0
         }
         yield* setState({ _tag: 'Recovering' })
-        const steps: Array<readonly [number, string]> = [
-          [0, 'wpa_cli reassociate'],
-          [10000, 'wpa_cli disconnect && wpa_cli reconnect'],
-          [30000, 'lipc-set-prop com.lab126.wifid enable 0 && lipc-set-prop com.lab126.wifid enable 1'],
-        ]
-        for (const [delay, command] of steps) {
-          const elapsed = Date.now() - startedAt
-          const wait = delay - elapsed
-          if (wait > 0) {
-            yield* Effect.sleep(Duration.millis(wait))
-          }
-          const recovered = yield* doConnect.pipe(
-            Effect.timeoutOrElse({
-              duration: Duration.millis(5000),
-              orElse: () => Effect.fail(new ConnectionLostError({})),
-            }),
-            Effect.option
-          )
-          if (Option.isSome(recovered)) {
-            const client = recovered.value
-            const result = yield* Executor.exec(client, command).pipe(Effect.option)
-            if (Option.isSome(result)) {
-              yield* setState({ _tag: 'Connected' })
-              return void 0
-            }
-          }
+        const recovered = yield* doConnect.pipe(
+          Effect.timeoutOrElse({
+            duration: Duration.millis(10000),
+            orElse: () => Effect.fail(new ConnectionLostError({})),
+          }),
+          Effect.option
+        )
+        if (Option.isSome(recovered)) {
+          yield* setState({ _tag: 'Connected' })
+          return void 0
         }
         yield* setState({ _tag: 'Disconnected' })
         return yield* Effect.fail(new DeviceUnavailableError({ lastSeenAt: startedAt }))

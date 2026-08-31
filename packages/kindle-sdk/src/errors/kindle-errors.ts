@@ -43,6 +43,11 @@ export class FontValidationError extends Schema.TaggedError<FontValidationError>
   reason: Schema.String,
 }) {}
 
+export class CommandRejectedError extends Schema.TaggedError<CommandRejectedError>()("CommandRejectedError", {
+  command: Schema.String,
+  reason: Schema.String,
+}) {}
+
 export type KindleError =
   | TimeoutError
   | DeviceBusyError
@@ -54,3 +59,4 @@ export type KindleError =
   | ResourceExhaustedError
   | ParseError
   | FontValidationError
+  | CommandRejectedError

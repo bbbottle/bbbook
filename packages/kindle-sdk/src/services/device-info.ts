@@ -20,7 +20,7 @@ const parseNumber = (text: string) => {
 
 export const make = (commandQueue: CommandQueueService) =>
   Effect.gen(function* () {
-    const exec = (command: string) =>
+    const run = (command: string) =>
       commandQueue.enqueue(command).pipe(
         Effect.map((r) => r.stdout.trim())
       )
@@ -28,14 +28,14 @@ export const make = (commandQueue: CommandQueueService) =>
     const getDeviceInfo = () =>
       Effect.gen(function* () {
         const [firmware, model, serial, uptime, memory, storage, battery, charging] = yield* Effect.all([
-          exec(DeviceInfoCommands.getFirmwareVersion()),
-          exec(DeviceInfoCommands.getModel()),
-          exec(DeviceInfoCommands.getSerial()),
-          exec(DeviceInfoCommands.getUptime()),
-          exec(DeviceInfoCommands.getFreeMemory()),
-          exec(DeviceInfoCommands.getFreeStorage()),
-          exec(Lipc.getBatteryLevel()),
-          exec(Lipc.getBatteryCharging()),
+          run(DeviceInfoCommands.getFirmwareVersion()),
+          run(DeviceInfoCommands.getModel()),
+          run(DeviceInfoCommands.getSerial()),
+          run(DeviceInfoCommands.getUptime()),
+          run(DeviceInfoCommands.getFreeMemory()),
+          run(DeviceInfoCommands.getFreeStorage()),
+          run(Lipc.getBatteryLevel()),
+          run(Lipc.getBatteryCharging()),
         ])
 
         const info: DeviceInfoShape = {
