@@ -4,7 +4,6 @@ import {
   KindleError,
   ResourceExhaustedError,
   TimeoutError,
-  ConnectionLostError,
 } from '../errors/kindle-errors.js'
 import * as Executor from './executor.js'
 import type { WifiTransportConfig } from './transport-config.js'
@@ -22,7 +21,6 @@ export class ResourceThrottler extends Context.Service<ResourceThrottler, Resour
 ) {}
 
 const freeMemoryCommand = "free -m | awk 'NR==2{print $7}'"
-const dropCachesCommand = 'sync && echo 3 > /proc/sys/vm/drop_caches'
 
 const parseFreeMemory = (stdout: string) => {
   const value = Number.parseInt(stdout.trim(), 10)
@@ -45,35 +43,13 @@ export const make = (config: WifiTransportConfig, wifi: WifiTransportService) =>
         )
         const freeMb = parseFreeMemory(result.stdout)
         if (freeMb < (config.minMemoryMb ?? 10)) {
-          yield* Effect.log('Memory low, dropping caches')
-          const dropResult = yield* wifi.withConnection((client) =>
-            Executor.exec(client, dropCachesCommand).pipe(
-              Effect.timeoutOrElse({
-                duration: Duration.millis(10000),
-                orElse: () => Effect.fail(new TimeoutError({ command: dropCachesCommand, timeoutMs: 10000 })),
-              })
-            )
+          return yield* Effect.fail(
+            new ResourceExhaustedError({
+              resource: 'memory',
+              current: freeMb,
+              threshold: config.minMemoryMb ?? 10,
+            })
           )
-          yield* Effect.sleep(Duration.millis(500))
-          const recheck = yield* wifi.withConnection((client) =>
-            Executor.exec(client, freeMemoryCommand).pipe(
-              Effect.timeoutOrElse({
-                duration: Duration.millis(5000),
-                orElse: () => Effect.fail(new TimeoutError({ command: freeMemoryCommand, timeoutMs: 5000 })),
-              })
-            )
-          )
-          const recheckMb = parseFreeMemory(recheck.stdout)
-          if (recheckMb < (config.minMemoryMb ?? 10)) {
-            return yield* Effect.fail(
-              new ResourceExhaustedError({
-                resource: 'memory',
-                current: recheckMb,
-                threshold: config.minMemoryMb ?? 10,
-              })
-            )
-          }
-          return void 0
         }
         return void 0
       })
