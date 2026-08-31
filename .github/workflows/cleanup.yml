@@ -1,0 +1,21 @@
+name: Weekly disk cleanup
+
+on:
+  schedule:
+    - cron: '0 4 * * 0'
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: bbbook
+    steps:
+      - name: Prune Docker build cache and dangling artifacts
+        run: |
+          docker builder prune -f
+          docker system prune -f
+
+      - name: Registry garbage collect (best-effort)
+        run: |
+          if docker inspect registry >/dev/null 2>&1; then
+            docker exec registry /bin/registry garbage-collect --delete-untagged /etc/docker/registry/config.yml || true
+          fi
