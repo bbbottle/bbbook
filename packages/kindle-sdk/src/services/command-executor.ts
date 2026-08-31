@@ -42,7 +42,7 @@ const FORBIDDEN_KEYWORDS = [
 
 const validateCommand = (command: string): string | undefined => {
   for (const keyword of FORBIDDEN_KEYWORDS) {
-    const pattern = new RegExp(`\\\\b${keyword}\\\\b`, 'i')
+    const pattern = new RegExp(`\\b${keyword}\\b`, 'i')
     if (pattern.test(command)) {
       return `Forbidden command keyword '${keyword}'`
     }
