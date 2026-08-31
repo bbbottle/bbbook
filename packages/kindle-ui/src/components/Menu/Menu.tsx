@@ -1,5 +1,11 @@
-import { useMemo, type ReactNode, type ElementType, type MouseEventHandler } from 'react'
-import { Popover } from '../Popover/index.js'
+import {
+  useLayoutEffect,
+  useState,
+  type ReactNode,
+  type ElementType,
+  type MouseEventHandler,
+} from 'react'
+import { Popover, usePopoverContainer } from '../Popover/index.js'
 import { cn } from '../../utils/cn.js'
 
 export interface MenuProps {
@@ -12,30 +18,66 @@ export interface MenuProps {
 
 const MENU_WIDTH = 230
 
-export function Menu({ anchorEl, open, onClose, children, className }: MenuProps) {
-  const position = useMemo(() => {
-    if (!anchorEl) return { top: 0, left: 0 }
-    const el = typeof anchorEl === 'function' ? anchorEl(document.body) : anchorEl
-    const rect = el.getBoundingClientRect()
-    return {
-      top: rect.bottom + 2,
-      left: Math.max(8, rect.right - MENU_WIDTH),
-    }
-  }, [anchorEl])
-
+export function Menu({
+  anchorEl,
+  open,
+  onClose,
+  children,
+  className,
+}: MenuProps) {
   return (
     <Popover open={open} onClose={onClose}>
-      <div
-        className={cn(
-          'fixed z-50 min-w-[230px] overflow-hidden rounded-dialog border border-ink bg-paper shadow-eink',
-          className
-        )}
-        style={{ top: position.top, left: position.left }}
-        onClick={(e) => e.stopPropagation()}
+      <MenuContent
+        anchorEl={anchorEl}
+        className={className}
+        onClose={onClose}
       >
         {children}
-      </div>
+      </MenuContent>
     </Popover>
+  )
+}
+
+interface MenuContentProps {
+  anchorEl?: Element | null | ((element: Element) => Element)
+  children?: ReactNode
+  className?: string
+  onClose?: () => void
+}
+
+function MenuContent({
+  anchorEl,
+  children,
+  className,
+}: MenuContentProps) {
+  const container = usePopoverContainer()
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
+
+  useLayoutEffect(() => {
+    if (!container || !anchorEl) return
+    const el = typeof anchorEl === 'function' ? anchorEl(document.body) : anchorEl
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const containerRect = container.getBoundingClientRect()
+    setPosition({
+      top: rect.bottom - containerRect.top + 2,
+      left: Math.max(8, rect.right - containerRect.left - MENU_WIDTH),
+    })
+  }, [anchorEl, container])
+
+  if (!container || position === null) return null
+
+  return (
+    <div
+      className={cn(
+        'absolute z-30 min-w-[230px] overflow-hidden rounded-dialog border border-ink bg-paper shadow-eink',
+        className
+      )}
+      style={position}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {children}
+    </div>
   )
 }
 

@@ -27,7 +27,7 @@ export function Dialog({ open, onClose, title, children, actions, className }: D
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4"
+      className="absolute inset-0 z-30 flex items-center justify-center bg-black/20 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose?.()
       }}

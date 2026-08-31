@@ -211,7 +211,12 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
     }, [paused])
 
     return (
-      <div className={cn('pointer-events-none relative h-full w-full', className)}>
+      <div
+        className={cn(
+          'pointer-events-none relative z-20 h-full w-full',
+          className
+        )}
+      >
         <div
           className="pointer-events-auto ku-scrollbar-hide h-full w-full overflow-auto"
           style={{ filter: 'grayscale(100%) contrast(1.08)' }}
@@ -220,7 +225,7 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
         </div>
         <canvas
           ref={canvasRef}
-          className="pointer-events-none absolute inset-0 z-40 h-full w-full"
+          className="pointer-events-none absolute inset-0 z-50 h-full w-full"
           style={{ width: '100%', height: '100%' }}
         />
       </div>
