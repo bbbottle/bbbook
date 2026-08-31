@@ -3,12 +3,12 @@ name: Build and deploy to ONCE
 on:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: bbbook
     steps:
       - name: Checkout
         uses: actions/checkout@v4
