@@ -15,7 +15,7 @@ jobs:
 
       - name: Set image tag
         id: vars
-        run: echo "image=127.0.0.1:5000/bbbook:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+        run: echo "image=localhost:5000/bbbook:${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
       - name: Build Docker image
         run: |
@@ -24,6 +24,10 @@ jobs:
       - name: Push to local registry
         run: |
           docker push "${{ steps.vars.outputs.image }}"
+
+      - name: Verify catalog
+        run: |
+          curl -sS http://127.0.0.1:5000/v2/_catalog
 
       - name: Deploy with ONCE
         run: |
