@@ -1,14 +1,20 @@
-import { Option, Schema } from 'effect'
+import { Model } from 'effect/unstable/schema'
+import { Schema } from 'effect'
 
-export interface User {
-  readonly id: string
-  readonly username: string
-  readonly passwordHash: string
-  readonly totpSecret: Option.Option<string>
-  readonly totpEnabled: boolean
-  readonly backupCodes: ReadonlyArray<string>
-  readonly backupCodesUsed: ReadonlyArray<boolean>
-}
+const UserId = Schema.String.pipe(Schema.brand('UserId'))
+export type UserId = typeof UserId.Type
+
+export class User extends Model.Class<User>('User')({
+  id: Model.UuidV4Insert(UserId),
+  username: Schema.String,
+  passwordHash: Schema.String,
+  totpSecret: Model.FieldOption(Schema.String),
+  totpEnabled: Model.BooleanSqlite,
+  backupCodes: Model.JsonFromString(Schema.Array(Schema.String)),
+  backupCodesUsed: Model.JsonFromString(Schema.Array(Schema.Boolean)),
+  createdAt: Model.DateTimeInsert,
+  updatedAt: Model.DateTimeUpdate,
+}) {}
 
 const Username = Schema.String.check(Schema.isMinLength(1)).check(Schema.isMaxLength(64))
 const Password = Schema.String.check(Schema.isMinLength(1)).check(Schema.isMaxLength(256))
