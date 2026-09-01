@@ -36,4 +36,4 @@ ENV API_PORT=80
 ENV STORAGE_PATH=/storage/bbbook
 EXPOSE 80
 
-CMD ["node", "apps/api/dist/index.js"]
+CMD ["node", "apps/api/dist/main.js"]
