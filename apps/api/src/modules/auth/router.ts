@@ -1,5 +1,7 @@
 import { Schema } from 'effect'
-import type { ManagedRuntime } from 'effect'
+import type { Effect, ManagedRuntime } from 'effect'
+import type { Context } from 'hono'
+import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { Hono } from 'hono'
 import { handleExit } from '../../shared/middleware/error-handler.js'
 import {
@@ -34,40 +36,30 @@ export const createAuthRouter = (
   const decodeTotpVerify = Schema.decodeUnknownSync(TotpVerifyRequestSchema)
   const decodeBackupCode = Schema.decodeUnknownSync(BackupCodeRequestSchema)
 
-  router.post('/login', async (c) => {
-    const body = await c.req.json()
-    const request = decodeLogin(body)
-    const exit = await runtime.runPromiseExit(login(request))
+  const runAuth = async <A>(
+    c: Context,
+    decode: (body: unknown) => A,
+    program: (request: A) => Effect.Effect<unknown, unknown, TokenService | TotpService | UserRepository>
+  ) => {
+    let request: A
+    try {
+      request = decode(await c.req.json())
+    } catch {
+      return c.json({ error: 'Invalid request body' }, 400 as ContentfulStatusCode)
+    }
+    const exit = await runtime.runPromiseExit(program(request))
     return handleExit(exit, c, (res) => c.json(res))
-  })
+  }
 
-  router.post('/totp/setup', async (c) => {
-    const body = await c.req.json()
-    const request = decodeTotpSetup(body)
-    const exit = await runtime.runPromiseExit(setup(request))
-    return handleExit(exit, c, (res) => c.json(res))
-  })
+  router.post('/login', (c) => runAuth(c, decodeLogin, login))
 
-  router.post('/totp/confirm', async (c) => {
-    const body = await c.req.json()
-    const request = decodeTotpConfirm(body)
-    const exit = await runtime.runPromiseExit(confirm(request))
-    return handleExit(exit, c, (res) => c.json(res))
-  })
+  router.post('/totp/setup', (c) => runAuth(c, decodeTotpSetup, setup))
 
-  router.post('/totp/verify', async (c) => {
-    const body = await c.req.json()
-    const request = decodeTotpVerify(body)
-    const exit = await runtime.runPromiseExit(verify(request))
-    return handleExit(exit, c, (res) => c.json(res))
-  })
+  router.post('/totp/confirm', (c) => runAuth(c, decodeTotpConfirm, confirm))
 
-  router.post('/backup-code', async (c) => {
-    const body = await c.req.json()
-    const request = decodeBackupCode(body)
-    const exit = await runtime.runPromiseExit(backupCode(request))
-    return handleExit(exit, c, (res) => c.json(res))
-  })
+  router.post('/totp/verify', (c) => runAuth(c, decodeTotpVerify, verify))
+
+  router.post('/backup-code', (c) => runAuth(c, decodeBackupCode, backupCode))
 
   return router
 }

@@ -45,6 +45,7 @@ export interface TotpSetupResponse {
 
 export interface TotpConfirmRequest {
   tempToken: string
+  secret: string
   token: string
 }
 

@@ -10,7 +10,11 @@ import {
 } from './errors.js'
 
 export class TotpService extends Context.Service<TotpService, {
-  generateSetup(username: string): Effect.Effect<
+  generateSecret(): Effect.Effect<string, TotpGenerationError>
+  generateSetup(
+    username: string,
+    existingSecret?: string
+  ): Effect.Effect<
     { secret: string; uri: string; qrCodeDataUrl: string },
     TotpGenerationError | QrCodeError
   >
@@ -19,11 +23,18 @@ export class TotpService extends Context.Service<TotpService, {
 }>()("@bbbook/api/modules/auth/TotpService") {}
 
 const generateSecret = Effect.fn('TotpService.generateSecret')(function*() {
-  return yield* Effect.try({
+  const secret = yield* Effect.try({
     try: () => new Secret({ size: 20 }),
     catch: (cause) => new TotpGenerationError({ message: 'Failed to generate TOTP secret', cause }),
   })
+  return secret.base32
 })
+
+const makeSecret = (secretBase32: string) =>
+  Effect.try({
+    try: () => Secret.fromBase32(secretBase32),
+    catch: (cause) => new TotpGenerationError({ message: 'Invalid TOTP secret format', cause }),
+  })
 
 const makeTotp = (secret: Secret, username: string) =>
   new TOTP({
@@ -35,8 +46,16 @@ const makeTotp = (secret: Secret, username: string) =>
     period: 30,
   })
 
-const generateSetup = Effect.fn('TotpService.generateSetup')(function*(username: string) {
-  const secret = yield* generateSecret()
+const generateSetup = Effect.fn('TotpService.generateSetup')(function*(
+  username: string,
+  existingSecret?: string
+) {
+  const secret = existingSecret
+    ? yield* makeSecret(existingSecret)
+    : yield* Effect.try({
+        try: () => new Secret({ size: 20 }),
+        catch: (cause) => new TotpGenerationError({ message: 'Failed to generate TOTP secret', cause }),
+      })
   const totp = makeTotp(secret, username)
   const uri = totp.toString()
   const qrCodeDataUrl = yield* Effect.tryPromise({
@@ -51,15 +70,15 @@ const verify = Effect.fn('TotpService.verify')(function*(
   token: string,
   window = 1
 ) {
-  const secret = yield* Effect.try({
-    try: () => Secret.fromBase32(secretBase32),
-    catch: () => new InvalidTotpTokenError({ message: 'Invalid TOTP secret format' }),
-  })
+  const secret = yield* makeSecret(secretBase32).pipe(
+    Effect.catchTag('TotpGenerationError', () => new InvalidTotpTokenError({ message: 'Invalid TOTP secret' }))
+  )
   const totp = makeTotp(secret, '')
   const delta = totp.validate({ token, window })
   if (delta === null) {
     return yield* new InvalidTotpTokenError({ message: 'Invalid TOTP token' })
   }
+  return
 })
 
 const generateBackupCodes = Effect.fn('TotpService.generateBackupCodes')(function*(count: number) {
@@ -74,6 +93,7 @@ export const TotpServiceLive = Layer.effect(
   TotpService,
   Effect.gen(function*() {
     return TotpService.of({
+      generateSecret,
       generateSetup,
       verify,
       generateBackupCodes,
