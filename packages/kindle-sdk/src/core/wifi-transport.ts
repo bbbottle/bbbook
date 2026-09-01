@@ -166,7 +166,9 @@ export const make = (config: WifiTransportConfig) =>
       }),
     }
 
-    yield* Effect.forkScoped(startHeartbeat)
+    if ((config.heartbeatInterval ?? 5000) > 0) {
+      yield* Effect.forkScoped(startHeartbeat)
+    }
 
     return service
   })

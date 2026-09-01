@@ -64,3 +64,12 @@ const ensureParentDir = (filePath: string) => {
 }
 
 ensureParentDir(AUTH_DB_FILE)
+
+const parseSyncInterval = (): number => {
+  const raw = process.env.KINDLE_SYNC_INTERVAL_MS
+  if (!raw) return 15 * 60 * 1000
+  const parsed = Number(raw)
+  return Number.isNaN(parsed) ? 15 * 60 * 1000 : Math.max(0, parsed)
+}
+
+export const KINDLE_SYNC_INTERVAL_MS = parseSyncInterval()
