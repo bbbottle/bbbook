@@ -38,11 +38,15 @@ jobs:
           AUTH_DEFAULT_ADMIN_PASSWORD: ${{ secrets.AUTH_DEFAULT_ADMIN_PASSWORD }}
           AUTH_TOTP_SECRET_KEY: ${{ secrets.AUTH_TOTP_SECRET_KEY }}
         run: |
-          once deploy "${{ steps.vars.outputs.image }}:latest" \
-            --host kdl.bbki.ng \
-            --env "AUTH_JWT_SECRET=$AUTH_JWT_SECRET" \
-            --env "AUTH_DEFAULT_ADMIN_PASSWORD=$AUTH_DEFAULT_ADMIN_PASSWORD" \
-            --env "AUTH_TOTP_SECRET_KEY=$AUTH_TOTP_SECRET_KEY"
+          if once list 2>/dev/null | grep -q "kdl.bbki.ng"; then
+            echo "应用已部署，跳过；--auto-update 会拉取新的 latest 镜像完成更新"
+          else
+            once deploy "${{ steps.vars.outputs.image }}:latest" \
+              --host kdl.bbki.ng \
+              --env "AUTH_JWT_SECRET=$AUTH_JWT_SECRET" \
+              --env "AUTH_DEFAULT_ADMIN_PASSWORD=$AUTH_DEFAULT_ADMIN_PASSWORD" \
+              --env "AUTH_TOTP_SECRET_KEY=$AUTH_TOTP_SECRET_KEY"
+          fi
 
       - name: Prune local Docker artifacts
         if: always()
