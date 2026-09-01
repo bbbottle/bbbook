@@ -4,20 +4,27 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "start": "node dist/index.js",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@bbbook/kindle-sdk": "workspace:*",
     "@bbbook/shared-types": "workspace:*",
+    "@effect/sql-sqlite-node": "4.0.0-rc.112",
     "@hono/node-server": "2.1.1",
+    "bcryptjs": "3.0.3",
     "effect": "4.0.0-rc.112",
-    "hono": "4.13.5"
+    "hono": "4.13.5",
+    "jose": "6.2.10",
+    "otpauth": "9.5.1",
+    "qrcode": "1.5.4"
   },
   "devDependencies": {
-    "@types/node": "20.14.0",
+    "@types/bcryptjs": "3.0.0",
+    "@types/node": "22.13.1",
+    "@types/qrcode": "1.5.5",
     "tsx": "4.23.12",
     "typescript": "5.9.3"
   }
