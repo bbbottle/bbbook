@@ -31,7 +31,7 @@ jobs:
         run: |
           curl -sS http://127.0.0.1:5000/v2/_catalog
 
-      - name: Deploy with ONCE
+      - name: Deploy or update with ONCE
         env:
           # Required for the API to start; keep stable across deployments so existing tokens remain valid
           AUTH_JWT_SECRET: ${{ secrets.AUTH_JWT_SECRET }}
@@ -39,7 +39,11 @@ jobs:
           AUTH_TOTP_SECRET_KEY: ${{ secrets.AUTH_TOTP_SECRET_KEY }}
         run: |
           if once list 2>/dev/null | grep -q "kdl.bbki.ng"; then
-            echo "应用已部署，跳过；--auto-update 会拉取新的 latest 镜像完成更新"
+            once update kdl.bbki.ng \
+              --image "${{ steps.vars.outputs.image }}:latest" \
+              --env "AUTH_JWT_SECRET=$AUTH_JWT_SECRET" \
+              --env "AUTH_DEFAULT_ADMIN_PASSWORD=$AUTH_DEFAULT_ADMIN_PASSWORD" \
+              --env "AUTH_TOTP_SECRET_KEY=$AUTH_TOTP_SECRET_KEY"
           else
             once deploy "${{ steps.vars.outputs.image }}:latest" \
               --host kdl.bbki.ng \
