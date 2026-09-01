@@ -1,4 +1,5 @@
 import { mkdirSync } from 'node:fs'
+import { dirname } from 'node:path'
 import { Schema } from 'effect'
 
 const requireEnv = (name: string): string => {
@@ -52,3 +53,14 @@ try {
 } catch {
   // ignore existing directory or permission errors
 }
+
+const ensureParentDir = (filePath: string) => {
+  if (!filePath || filePath === ':memory:' || filePath.startsWith('file:')) return
+  try {
+    mkdirSync(dirname(filePath), { recursive: true })
+  } catch {
+    // ignore existing directory or permission errors
+  }
+}
+
+ensureParentDir(AUTH_DB_FILE)

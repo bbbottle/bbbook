@@ -1,7 +1,13 @@
+import { randomBytes } from 'node:crypto'
+import { unlink, writeFile } from 'node:fs/promises'
 import { Context, Effect, Layer, Option, Schema } from 'effect'
 import bcrypt from 'bcryptjs'
 import { SqlClient, SqlModel, SqlSchema } from 'effect/unstable/sql'
-import { AUTH_DEFAULT_ADMIN_PASSWORD, AUTH_SEED_USERS } from '../../config.js'
+import {
+  AUTH_DEFAULT_ADMIN_PASSWORD,
+  AUTH_SEED_USERS,
+  STORAGE_PATH,
+} from '../../config.js'
 import { SqlLive } from '../../lib/db.js'
 import { logger } from '../../lib/logger.js'
 import { decryptSecret, encryptSecret } from '../../lib/totp-crypto.js'
@@ -60,6 +66,11 @@ export const UserRepositoryLive = Layer.effect(
       spanPrefix: 'Users',
     })
 
+    const inTransaction = <A, E>(effect: Effect.Effect<A, E, never>) =>
+      sql.withTransaction(effect).pipe(
+        Effect.catchTag('SqlError', (error) => Effect.die(error))
+      )
+
     const findByUsername = Effect.fn('UserRepository.findByUsername')(function* (username: string) {
       const maybeUser = yield* SqlSchema.findOneOption({
         Request: Schema.String,
@@ -100,80 +111,130 @@ export const UserRepositoryLive = Layer.effect(
       secret: string,
       backupCodes: ReadonlyArray<string>
     ) {
-      const maybeUser = yield* findById(userId)
-      if (Option.isNone(maybeUser)) {
-        return yield* new UserNotFoundError({ message: 'User not found' })
-      }
-      const user = maybeUser.value
-      if (user.totpEnabled) {
-        return yield* new TotpAlreadyEnabledError({ message: 'TOTP is already enabled for this account' })
-      }
-      const update = User.update.make({
-        ...userFields(user),
-        totpSecret: Option.some(encryptSecret(secret)),
-        totpEnabled: true,
-        backupCodes,
-        backupCodesUsed: Array(backupCodes.length).fill(false) as ReadonlyArray<boolean>,
-      })
-      yield* repo.update(update).pipe(Effect.orDie)
+      yield* inTransaction(
+        Effect.gen(function* () {
+          const maybeUser = yield* findById(userId)
+          if (Option.isNone(maybeUser)) {
+            return yield* new UserNotFoundError({ message: 'User not found' })
+          }
+          const user = maybeUser.value
+          if (user.totpEnabled) {
+            return yield* new TotpAlreadyEnabledError({ message: 'TOTP is already enabled for this account' })
+          }
+          const update = User.update.make({
+            ...userFields(user),
+            totpSecret: Option.some(encryptSecret(secret)),
+            totpEnabled: true,
+            backupCodes,
+            backupCodesUsed: Array(backupCodes.length).fill(false) as ReadonlyArray<boolean>,
+          })
+          yield* repo.update(update).pipe(Effect.orDie)
+        })
+      )
     })
 
     const markBackupCodeUsed = Effect.fn('UserRepository.markBackupCodeUsed')(function* (
       userId: string,
       index: number
     ) {
-      const maybeUser = yield* findById(userId)
-      if (Option.isNone(maybeUser)) {
-        return yield* new UserNotFoundError({ message: 'User not found' })
-      }
-      const user = maybeUser.value
-      if (index < 0 || index >= user.backupCodesUsed.length) {
-        return yield* new UserStoreError({ message: 'Backup code index out of range' })
-      }
-      const used = [...user.backupCodesUsed]
-      used[index] = true
-      const update = User.update.make({
-        ...userFields(user),
-        totpSecret: encryptOption(user.totpSecret),
-        backupCodesUsed: used as ReadonlyArray<boolean>,
-      })
-      yield* repo.update(update).pipe(Effect.orDie)
-    })
-
-    const redeemBackupCode = Effect.fn('UserRepository.redeemBackupCode')(function* (
-      userId: string,
-      code: string
-    ) {
-      const maybeUser = yield* findById(userId)
-      if (Option.isNone(maybeUser)) {
-        return yield* new UserNotFoundError({ message: 'User not found' })
-      }
-      const user = maybeUser.value
-      for (let i = 0; i < user.backupCodes.length; i++) {
-        if (user.backupCodesUsed[i]) continue
-        const match = yield* Effect.try({
-          try: () => bcrypt.compareSync(code, user.backupCodes[i]),
-          catch: (cause) => new UserStoreError({ message: 'Backup code verification failed', cause }),
-        })
-        if (match) {
+      yield* inTransaction(
+        Effect.gen(function* () {
+          const maybeUser = yield* findById(userId)
+          if (Option.isNone(maybeUser)) {
+            return yield* new UserNotFoundError({ message: 'User not found' })
+          }
+          const user = maybeUser.value
+          if (index < 0 || index >= user.backupCodesUsed.length) {
+            return yield* new UserStoreError({ message: 'Backup code index out of range' })
+          }
           const used = [...user.backupCodesUsed]
-          used[i] = true
+          used[index] = true
           const update = User.update.make({
             ...userFields(user),
             totpSecret: encryptOption(user.totpSecret),
             backupCodesUsed: used as ReadonlyArray<boolean>,
           })
           yield* repo.update(update).pipe(Effect.orDie)
-          return Option.some(i)
-        }
-      }
-      return Option.none<number>()
+        })
+      )
+    })
+
+    const redeemBackupCode = Effect.fn('UserRepository.redeemBackupCode')(function* (
+      userId: string,
+      code: string
+    ) {
+      const result = yield* inTransaction(
+        Effect.gen(function* () {
+          const maybeUser = yield* findById(userId)
+          if (Option.isNone(maybeUser)) {
+            return yield* new UserNotFoundError({ message: 'User not found' })
+          }
+          const user = maybeUser.value
+          for (let i = 0; i < user.backupCodes.length; i++) {
+            if (user.backupCodesUsed[i]) continue
+            const match = yield* Effect.try({
+              try: () => bcrypt.compareSync(code, user.backupCodes[i]),
+              catch: (cause) => new UserStoreError({ message: 'Backup code verification failed', cause }),
+            })
+            if (match) {
+              const used = [...user.backupCodesUsed]
+              used[i] = true
+              const update = User.update.make({
+                ...userFields(user),
+                totpSecret: encryptOption(user.totpSecret),
+                backupCodesUsed: used as ReadonlyArray<boolean>,
+              })
+              yield* repo.update(update).pipe(Effect.orDie)
+              return Option.some(i)
+            }
+          }
+          return Option.none<number>()
+        })
+      )
+      return result
     })
 
     const seedUsers = Effect.fn('UserRepository.seedUsers')(function* () {
       let seeds = AUTH_SEED_USERS ?? []
       if (seeds.length === 0 && AUTH_DEFAULT_ADMIN_PASSWORD) {
         seeds = [{ username: 'admin', password: AUTH_DEFAULT_ADMIN_PASSWORD }]
+      }
+      if (seeds.length === 0) {
+        const countResult = yield* sql`SELECT COUNT(*) as count FROM users`.raw.pipe(Effect.orDie)
+        const rows = countResult as ReadonlyArray<{ count: number | bigint }>
+        const count = typeof rows[0]?.count === 'bigint' ? Number(rows[0].count) : (rows[0]?.count ?? 0)
+        if (count === 0) {
+          const randomPassword = randomBytes(16).toString('base64')
+          const passwordFile = `${STORAGE_PATH}/.admin-password`
+          yield* Effect.tryPromise({
+            try: () => writeFile(passwordFile, randomPassword, { mode: 0o600 }),
+            catch: (cause) => new UserStoreError({ message: 'Failed to write default admin password file', cause }),
+          }).pipe(Effect.orDie)
+          const insertAdmin = sql.withTransaction(
+            Effect.gen(function* () {
+              const passwordHash = yield* hashPassword(randomPassword).pipe(Effect.orDie)
+              const newUser = User.insert.make({
+                username: 'admin',
+                passwordHash,
+                totpSecret: Option.none(),
+                totpEnabled: false,
+                backupCodes: [] as ReadonlyArray<string>,
+                backupCodesUsed: [] as ReadonlyArray<boolean>,
+              })
+              yield* repo.insert(newUser).pipe(Effect.orDie)
+              logger.info('Seeded user: admin (random password written to .admin-password)')
+            })
+          ).pipe(
+            Effect.catchTag('SqlError', (error) =>
+              Effect.gen(function* () {
+                yield* Effect.promise(() => unlink(passwordFile).catch(() => undefined))
+                return yield* Effect.die(error)
+              })
+            )
+          )
+          yield* insertAdmin
+          return
+        }
       }
       for (const seed of seeds) {
         const existing = yield* findByUsername(seed.username)
