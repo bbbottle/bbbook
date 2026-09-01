@@ -39,7 +39,7 @@ jobs:
           AUTH_TOTP_SECRET_KEY: ${{ secrets.AUTH_TOTP_SECRET_KEY }}
         run: |
           once deploy "${{ steps.vars.outputs.image }}:latest" \
-            --host temp.localhost \
+            --host kdl.bbki.ng \
             --env "AUTH_JWT_SECRET=$AUTH_JWT_SECRET" \
             --env "AUTH_DEFAULT_ADMIN_PASSWORD=$AUTH_DEFAULT_ADMIN_PASSWORD" \
             --env "AUTH_TOTP_SECRET_KEY=$AUTH_TOTP_SECRET_KEY"
