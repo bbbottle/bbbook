@@ -12,6 +12,7 @@
   "dependencies": {
     "@bbbook/kindle-sdk": "workspace:*",
     "@bbbook/shared-types": "workspace:*",
+    "@effect/sql-sqlite-node": "4.0.0-rc.112",
     "@hono/node-server": "2.1.1",
     "bcryptjs": "2.4.3",
     "effect": "4.0.0-rc.112",
