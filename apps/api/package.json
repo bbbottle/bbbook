@@ -13,11 +13,17 @@
     "@bbbook/kindle-sdk": "workspace:*",
     "@bbbook/shared-types": "workspace:*",
     "@hono/node-server": "2.1.1",
+    "bcryptjs": "2.4.3",
     "effect": "4.0.0-rc.112",
-    "hono": "4.13.5"
+    "hono": "4.13.5",
+    "jose": "5.9.6",
+    "otpauth": "9.3.5",
+    "qrcode": "1.5.4"
   },
   "devDependencies": {
+    "@types/bcryptjs": "2.4.6",
     "@types/node": "20.14.0",
+    "@types/qrcode": "1.5.5",
     "tsx": "4.23.12",
     "typescript": "5.9.3"
   }
