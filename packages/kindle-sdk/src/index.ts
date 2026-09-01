@@ -29,6 +29,8 @@ export interface KindleSDK {
   readonly restoreBook: (fileName: string) => Promise<void>
   readonly refreshLibrary: () => Promise<void>
   readonly applyWallpapers: (wallpapers: ReadonlyArray<import('./types/index.js').Wallpaper>) => Promise<void>
+  readonly backupWallpapers: () => Promise<void>
+  readonly restoreWallpapers: () => Promise<void>
   readonly listFonts: () => Promise<ReadonlyArray<import('./types/index.js').Font>>
   readonly addFont: (localPath: string, fileName: string) => Promise<void>
   readonly removeFont: (fileName: string) => Promise<void>
@@ -93,6 +95,14 @@ class KindleSDKImpl implements KindleSDK {
 
   applyWallpapers(wallpapers: ReadonlyArray<import('./types/index.js').Wallpaper>) {
     return this.runtime.runPromise(WallpaperManager.use((s) => s.applyWallpapers(wallpapers)))
+  }
+
+  backupWallpapers() {
+    return this.runtime.runPromise(WallpaperManager.use((s) => s.backupWallpapers()))
+  }
+
+  restoreWallpapers() {
+    return this.runtime.runPromise(WallpaperManager.use((s) => s.restoreWallpapers()))
   }
 
   listFonts() {

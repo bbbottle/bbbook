@@ -26,16 +26,6 @@ const localCacheDir = STORAGE_PATH
 const expandTilde = (p: string) => (p.startsWith('~') ? join(homedir(), p.slice(1)) : p)
 
 const resolveKindleSSHConfig = (host = 'kindle'): Partial<KindleConnectionOptions> | undefined => {
-  if (process.env.KINDLE_HOST) {
-    return {
-      host: process.env.KINDLE_HOST,
-      username: process.env.KINDLE_USERNAME ?? 'root',
-      password: process.env.KINDLE_PASSWORD,
-      privateKey: process.env.KINDLE_PRIVATE_KEY,
-      connectionTimeout: Number(process.env.KINDLE_CONNECTION_TIMEOUT ?? '10000'),
-    }
-  }
-
   const result = spawnSync('ssh', ['-G', host], { encoding: 'utf8', timeout: 5000 })
   if (result.error || result.status !== 0) return undefined
 
@@ -46,9 +36,11 @@ const resolveKindleSSHConfig = (host = 'kindle'): Partial<KindleConnectionOption
     return line ? line.slice(prefix.length).trim() : undefined
   }
 
-  const hostName = get('hostname') ?? host
-  const user = get('user') ?? 'root'
+  const hostName = get('hostname')
+  const user = get('user')
   const port = Number(get('port') ?? '22')
+
+  if (!hostName || !user) return undefined
 
   const identityFiles = lines
     .filter((l) => l.toLowerCase().startsWith('identityfile '))
@@ -66,17 +58,16 @@ const resolveKindleSSHConfig = (host = 'kindle'): Partial<KindleConnectionOption
     }
   }
 
+  if (!privateKey) return undefined
+
   return { host: hostName, username: user, port, privateKey, connectionTimeout: 10000 }
 }
 
 const kindleOptions = resolveKindleSSHConfig()
 
 app.get('/kindle/info', async (c) => {
-  if (!kindleOptions || !kindleOptions.host || !kindleOptions.username) {
-    return c.json({ error: 'Kindle SSH not configured' }, 503)
-  }
-  if (!kindleOptions.password && !kindleOptions.privateKey) {
-    return c.json({ error: 'Kindle SSH requires a password or private key' }, 503)
+  if (!kindleOptions || !kindleOptions.host || !kindleOptions.username || !kindleOptions.privateKey) {
+    return c.json({ error: 'Kindle SSH not configured. Configure `ssh kindle` with a private key.' }, 503)
   }
 
   let kindle: KindleSDK | undefined
