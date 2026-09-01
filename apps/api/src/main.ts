@@ -5,8 +5,9 @@ import { createApp } from './app.js'
 import { API_PORT } from './config.js'
 import { logger } from './lib/logger.js'
 import { KindleDeviceInfoService, Live } from './modules/kindle/index.js'
+import { AuthServicesLive } from './modules/auth/index.js'
 
-const AppLayer = Layer.mergeAll(Live)
+const AppLayer = Layer.mergeAll(Live, AuthServicesLive)
 const runtime = ManagedRuntime.make(AppLayer)
 const app = createApp(runtime)
 const port = Number(API_PORT)

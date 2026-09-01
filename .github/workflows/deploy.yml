@@ -32,6 +32,11 @@ jobs:
           curl -sS http://127.0.0.1:5000/v2/_catalog
 
       - name: Deploy with ONCE
+        env:
+          # Required for the API to start; keep stable across deployments so existing tokens remain valid
+          AUTH_JWT_SECRET: ${{ secrets.AUTH_JWT_SECRET }}
+          AUTH_DEFAULT_ADMIN_PASSWORD: ${{ secrets.AUTH_DEFAULT_ADMIN_PASSWORD }}
+          AUTH_TOTP_SECRET_KEY: ${{ secrets.AUTH_TOTP_SECRET_KEY }}
         run: |
           once deploy "${{ steps.vars.outputs.image }}:latest" --host kindle.bbki.ng
 
