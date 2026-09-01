@@ -1,6 +1,6 @@
 import { Effect, Ref, Semaphore, Option, Duration, Context } from 'effect'
-import { Client } from 'ssh2'
 import * as Executor from './executor.js'
+import type { SshClient } from './executor.js'
 import {
   KindleError,
   ConnectionLostError,
@@ -12,7 +12,7 @@ import type { WifiTransportConfig, TransportState } from './transport-config.js'
 export interface WifiTransportService {
   readonly state: Effect.Effect<TransportState>
   readonly withConnection: <A, E extends KindleError, R>(
-    f: (client: Client) => Effect.Effect<A, E, R>
+    f: (client: SshClient) => Effect.Effect<A, E, R>
   ) => Effect.Effect<A, E | ConnectionLostError | DeviceUnavailableError | DeviceSleepingError, R>
   readonly recover: Effect.Effect<void, DeviceUnavailableError>
   readonly markSleeping: Effect.Effect<void>
@@ -28,7 +28,7 @@ const heartbeatResponse = 'kindle-pong'
 
 export const make = (config: WifiTransportConfig) =>
   Effect.gen(function* () {
-    const clientRef = yield* Ref.make<Option.Option<Client>>(Option.none())
+    const clientRef = yield* Ref.make<Option.Option<SshClient>>(Option.none())
     const stateRef = yield* Ref.make<TransportState>({ _tag: 'Disconnected' })
     const connectionSemaphore = yield* Semaphore.make(1)
 
@@ -45,7 +45,7 @@ export const make = (config: WifiTransportConfig) =>
 
     const doConnect = Effect.gen(function* () {
       yield* closeCurrent
-      const client = yield* Executor.connect(config).pipe(
+      const client = yield* Executor.connect(config.sshCmdStr, config.connectionTimeout).pipe(
         Effect.timeoutOrElse({
           duration: Duration.millis(config.connectionTimeout ?? 10000),
           orElse: () => Effect.fail(new ConnectionLostError({})),

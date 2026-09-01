@@ -19,10 +19,6 @@ export interface KindleDeviceInfo {
 }
 
 export interface KindleConnectionOptions {
-  host: string
-  username: string
-  password?: string
-  privateKey?: string
-  port?: number
-  connectionTimeout?: number
+  readonly sshCmdStr: string
+  readonly connectionTimeout?: number
 }
