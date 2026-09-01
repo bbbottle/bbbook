@@ -38,7 +38,7 @@ jobs:
           AUTH_DEFAULT_ADMIN_PASSWORD: ${{ secrets.AUTH_DEFAULT_ADMIN_PASSWORD }}
           AUTH_TOTP_SECRET_KEY: ${{ secrets.AUTH_TOTP_SECRET_KEY }}
         run: |
-          once deploy "${{ steps.vars.outputs.image }}:latest" --host kindle.bbki.ng
+          once deploy "${{ steps.vars.outputs.image }}:latest" --host temp.localhost
 
       - name: Prune local Docker artifacts
         if: always()
