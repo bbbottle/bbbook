@@ -38,7 +38,11 @@ jobs:
           AUTH_DEFAULT_ADMIN_PASSWORD: ${{ secrets.AUTH_DEFAULT_ADMIN_PASSWORD }}
           AUTH_TOTP_SECRET_KEY: ${{ secrets.AUTH_TOTP_SECRET_KEY }}
         run: |
-          once deploy "${{ steps.vars.outputs.image }}:latest" --host temp.localhost
+          once deploy "${{ steps.vars.outputs.image }}:latest" \
+            --host temp.localhost \
+            --env "AUTH_JWT_SECRET=$AUTH_JWT_SECRET" \
+            --env "AUTH_DEFAULT_ADMIN_PASSWORD=$AUTH_DEFAULT_ADMIN_PASSWORD" \
+            --env "AUTH_TOTP_SECRET_KEY=$AUTH_TOTP_SECRET_KEY"
 
       - name: Prune local Docker artifacts
         if: always()
