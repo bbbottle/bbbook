@@ -10,9 +10,16 @@ export interface User {
   readonly backupCodesUsed: ReadonlyArray<boolean>
 }
 
+const Username = Schema.String.check(Schema.isMinLength(1)).check(Schema.isMaxLength(64))
+const Password = Schema.String.check(Schema.isMinLength(1)).check(Schema.isMaxLength(256))
+const TempToken = Schema.String.check(Schema.isMaxLength(4096))
+const TotpSecret = Schema.String.check(Schema.isMaxLength(128))
+const TotpToken = Schema.String.check(Schema.isLengthBetween(4, 10))
+const BackupCode = Schema.String.check(Schema.isMinLength(1)).check(Schema.isMaxLength(64))
+
 export const LoginRequestSchema = Schema.Struct({
-  username: Schema.String,
-  password: Schema.String,
+  username: Username,
+  password: Password,
 })
 export type LoginRequest = Schema.Schema.Type<typeof LoginRequestSchema>
 
@@ -23,7 +30,7 @@ export const LoginResponseSchema = Schema.Struct({
 export type LoginResponse = Schema.Schema.Type<typeof LoginResponseSchema>
 
 export const TotpSetupRequestSchema = Schema.Struct({
-  tempToken: Schema.String,
+  tempToken: TempToken,
 })
 export type TotpSetupRequest = Schema.Schema.Type<typeof TotpSetupRequestSchema>
 
@@ -35,9 +42,9 @@ export const TotpSetupResponseSchema = Schema.Struct({
 export type TotpSetupResponse = Schema.Schema.Type<typeof TotpSetupResponseSchema>
 
 export const TotpConfirmRequestSchema = Schema.Struct({
-  tempToken: Schema.String,
-  secret: Schema.String,
-  token: Schema.String,
+  tempToken: TempToken,
+  secret: TotpSecret,
+  token: TotpToken,
 })
 export type TotpConfirmRequest = Schema.Schema.Type<typeof TotpConfirmRequestSchema>
 
@@ -47,8 +54,8 @@ export const TotpConfirmResponseSchema = Schema.Struct({
 export type TotpConfirmResponse = Schema.Schema.Type<typeof TotpConfirmResponseSchema>
 
 export const TotpVerifyRequestSchema = Schema.Struct({
-  tempToken: Schema.String,
-  token: Schema.String,
+  tempToken: TempToken,
+  token: TotpToken,
 })
 export type TotpVerifyRequest = Schema.Schema.Type<typeof TotpVerifyRequestSchema>
 
@@ -58,8 +65,8 @@ export const TotpVerifyResponseSchema = Schema.Struct({
 export type TotpVerifyResponse = Schema.Schema.Type<typeof TotpVerifyResponseSchema>
 
 export const BackupCodeRequestSchema = Schema.Struct({
-  tempToken: Schema.String,
-  code: Schema.String,
+  tempToken: TempToken,
+  code: BackupCode,
 })
 export type BackupCodeRequest = Schema.Schema.Type<typeof BackupCodeRequestSchema>
 
