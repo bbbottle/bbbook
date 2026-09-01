@@ -1,17 +1,42 @@
+import { getConnInfo } from '@hono/node-server/conninfo'
 import type { Context, MiddlewareHandler } from 'hono'
 
 const WINDOW_MS = 60 * 1000
 const MAX_REQUESTS = 60
+const TRUST_PROXY = process.env.TRUST_PROXY === 'true'
 
 const store = new Map<string, Array<number>>()
 
-const getClientIp = (c: Context): string => {
-  const forwarded = c.req.header('x-forwarded-for')
-  if (forwarded) {
-    const [first] = forwarded.split(',')
-    if (first) return first.trim()
+const cleanupExpired = () => {
+  const cutoff = Date.now() - WINDOW_MS
+  for (const [ip, timestamps] of store.entries()) {
+    const fresh = timestamps.filter((t) => t > cutoff)
+    if (fresh.length === 0) {
+      store.delete(ip)
+    } else {
+      store.set(ip, fresh)
+    }
   }
-  return c.req.header('x-real-ip') ?? 'unknown'
+}
+
+const cleanupInterval = setInterval(cleanupExpired, WINDOW_MS)
+
+process.once('exit', () => {
+  clearInterval(cleanupInterval)
+})
+
+const getClientIp = (c: Context): string => {
+  if (TRUST_PROXY) {
+    const forwarded = c.req.header('x-forwarded-for')
+    if (forwarded) {
+      const [first] = forwarded.split(',')
+      if (first) return first.trim()
+    }
+    const realIp = c.req.header('x-real-ip')
+    if (realIp) return realIp.trim()
+  }
+  const connInfo = getConnInfo(c)
+  return connInfo.remote.address ?? 'unknown'
 }
 
 export const kindleRateLimiter: MiddlewareHandler = async (c, next) => {
