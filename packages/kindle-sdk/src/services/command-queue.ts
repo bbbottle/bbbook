@@ -25,7 +25,10 @@ export const make = (
   deviceAvailability: DeviceAvailabilityService
 ) =>
   Effect.gen(function* () {
-    const queue = yield* Queue.bounded<QueueItem>(config.queueSize ?? 50)
+    const queue = yield* Queue.make<QueueItem>({
+      capacity: config.queueSize ?? 50,
+      strategy: 'dropping',
+    })
 
     const worker = Effect.forever(
       Effect.gen(function* () {
