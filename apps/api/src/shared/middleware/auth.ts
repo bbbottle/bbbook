@@ -2,6 +2,7 @@ import { Effect } from 'effect'
 import { getCookie } from 'hono/cookie'
 import type { MiddlewareHandler } from 'hono'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
+import { InvalidTempTokenError } from '../../modules/auth/errors.js'
 import { TokenService, TokenServiceLive } from '../../modules/auth/token.service.js'
 
 export const auth: MiddlewareHandler = async (c, next) => {
@@ -19,7 +20,10 @@ export const auth: MiddlewareHandler = async (c, next) => {
     )
     c.set('userId', userId)
     await next()
-  } catch {
-    return c.json({ error: 'Unauthorized' }, 401 as ContentfulStatusCode)
+  } catch (error) {
+    if (error instanceof InvalidTempTokenError) {
+      return c.json({ error: 'Unauthorized' }, 401 as ContentfulStatusCode)
+    }
+    throw error
   }
 }
