@@ -2,8 +2,8 @@ import { Effect, Context } from 'effect'
 import { randomUUID } from 'node:crypto'
 import * as NodePath from 'node:path'
 import * as NodeFs from 'node:fs'
-import type { Client } from 'ssh2'
 import * as Executor from '../core/executor.js'
+import type { SshClient } from '../core/executor.js'
 import type { WifiTransportService } from '../core/wifi-transport.js'
 import type { ResourceThrottlerService } from '../core/resource-throttler.js'
 import { ConnectionLostError, CommandRejectedError, type KindleError } from '../errors/kindle-errors.js'
@@ -26,7 +26,7 @@ export class FileTransfer extends Context.Service<FileTransfer, FileTransferServ
   '@bbbook/kindle-sdk/FileTransfer'
 ) {}
 
-const execGuarded = (client: Client, command: string) =>
+const execGuarded = (client: SshClient, command: string) =>
   Executor.exec(client, command).pipe(
     Effect.flatMap((result) =>
       result.code === 0
@@ -35,10 +35,10 @@ const execGuarded = (client: Client, command: string) =>
     )
   )
 
-const remoteExists = (client: Client, path: string) =>
+const remoteExists = (client: SshClient, path: string) =>
   Executor.exec(client, `test -e ${shellQuote(path)}`).pipe(Effect.map((result) => result.code === 0))
 
-const move = (client: Client, source: string, destination: string) =>
+const move = (client: SshClient, source: string, destination: string) =>
   Executor.exec(client, `mv ${shellQuote(source)} ${shellQuote(destination)}`).pipe(
     Effect.flatMap((result) =>
       result.code === 0
@@ -54,7 +54,7 @@ const move = (client: Client, source: string, destination: string) =>
 
 const isTempPath = (path: string) => path.includes('.tmp-')
 
-const cleanTemp = (client: Client, tempPath: string) =>
+const cleanTemp = (client: SshClient, tempPath: string) =>
   isTempPath(tempPath)
     ? Executor.exec(client, `rm -f -- ${shellQuote(tempPath)}`).pipe(
         Effect.asVoid,

@@ -11,11 +11,7 @@ export interface WifiTransportConfig extends KindleConnectionOptions {
 }
 
 export const defaultWifiTransportConfig = (config: WifiTransportConfig): WifiTransportConfig => ({
-  host: config.host,
-  username: config.username,
-  password: config.password,
-  privateKey: config.privateKey,
-  port: config.port ?? 22,
+  sshCmdStr: config.sshCmdStr,
   connectionTimeout: config.connectionTimeout ?? 10000,
   heartbeatInterval: config.heartbeatInterval ?? 5000,
   commandTimeout: config.commandTimeout ?? 30000,
