@@ -25,7 +25,7 @@ import type { UserRepository } from './user.repository.js'
 export const createAuthRouter = (
   runtime: ManagedRuntime.ManagedRuntime<
     TokenService | TotpService | UserRepository,
-    never
+    unknown
   >
 ) => {
   const router = new Hono()

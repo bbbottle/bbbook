@@ -4,6 +4,10 @@ import { KINDLE_SSH_CMD, STORAGE_PATH } from '../config.js'
 import { KindleUnavailableError } from '../shared/schema/errors.js'
 
 export const makeKindleClient: Effect.Effect<KindleSDK, KindleUnavailableError> = Effect.tryPromise({
-  try: () => createKindleSDKPromise({ sshCmdStr: KINDLE_SSH_CMD }, { localCacheDir: STORAGE_PATH }),
+  try: () =>
+    createKindleSDKPromise(
+      { sshCmdStr: KINDLE_SSH_CMD },
+      { localCacheDir: STORAGE_PATH, heartbeatInterval: 0 }
+    ),
   catch: (cause) => new KindleUnavailableError({ message: String(cause), cause }),
 })
