@@ -179,15 +179,32 @@ function StorePage() {
 function LanguageCard() {
   const { t } = useTranslation()
   const [preference, setPreference] = useState<LocalePreference>(getLocalePreference())
+  const latestRef = useRef(preference)
+  const savingRef = useRef(false)
 
-  const handleChange = async (value: LocalePreference) => {
+  const syncBackend = async () => {
+    if (savingRef.current) return
+    savingRef.current = true
+    try {
+      while (true) {
+        const value = latestRef.current
+        try {
+          await updateUserPreference({ locale: value })
+        } catch {
+          // ignore backend sync failures; local preference already applied
+        }
+        if (latestRef.current === value) break
+      }
+    } finally {
+      savingRef.current = false
+    }
+  }
+
+  const handleChange = (value: LocalePreference) => {
     setLocalePreference(value)
     setPreference(value)
-    try {
-      await updateUserPreference({ locale: value })
-    } catch {
-      // ignore backend sync failures; local preference already applied
-    }
+    latestRef.current = value
+    syncBackend()
   }
 
   return (

@@ -29,21 +29,19 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (authed && !currentUser) {
+    if (authed) {
       fetchCurrentUser().then(setCurrentUser).catch(() => setCurrentUser(null))
-    }
-    if (!authed) {
+      fetchUserPreference()
+        .then((pref) => setLocalePreference(pref.locale))
+        .catch(() => {})
+    } else {
       setCurrentUser(null)
     }
-  }, [authed, currentUser])
+  }, [authed])
 
   const handleAuthed = () => {
     setAuthed(true)
     setShowLogin(false)
-    fetchCurrentUser().then(setCurrentUser).catch(() => setCurrentUser(null))
-    fetchUserPreference()
-      .then((pref) => setLocalePreference(pref.locale))
-      .catch(() => {})
   }
 
   const handleLogout = () => {
