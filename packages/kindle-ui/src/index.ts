@@ -35,6 +35,9 @@ export type { EinkOverlayHandle, EinkOverlayProps } from './components/EinkOverl
 export { Icon } from './components/Icon/index.js'
 export type { IconName, IconProps } from './components/Icon/index.js'
 
+export { Input, OtpInput } from './components/Input/index.js'
+export type { InputProps, OtpInputProps } from './components/Input/index.js'
+
 export { Grid, GridItem } from './components/Grid/index.js'
 export type { GridProps, GridItemProps } from './components/Grid/index.js'
 
