@@ -4,6 +4,7 @@ import { RateLimiter } from '../../lib/rate-limiter.js'
 import {
   BackupCodeRequest,
   BackupCodeResponse,
+  CurrentUserResponse,
   LoginRequest,
   LoginResponse,
   TotpConfirmRequest,
@@ -154,6 +155,21 @@ export const backupCode = Effect.fn('AuthProgram.backupCode')(function*(request:
   yield* RateLimiter.recordSuccess(user.username)
   const sessionToken = yield* TokenService.use((s) => s.issueSessionToken(userId))
   return { sessionToken }
+})
+
+export const me = Effect.fn('AuthProgram.me')(function*(
+  userId: string
+): Effect.fn.Return<CurrentUserResponse, UserNotFoundError | UserStoreError, UserRepository> {
+  const userOption = yield* UserRepository.use((repo) => repo.findById(userId))
+  if (Option.isNone(userOption)) {
+    return yield* new UserNotFoundError({ message: 'User not found' })
+  }
+  const user = userOption.value
+  return {
+    id: user.id,
+    username: user.username,
+    role: user.role,
+  }
 })
 
 export type AuthProgramError =

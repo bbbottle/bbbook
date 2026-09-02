@@ -43,6 +43,10 @@ export class RateLimitedError extends Schema.TaggedError<RateLimitedError>()("Ra
   retryAfter: Schema.Number,
 }) {}
 
+export class UsernameTakenError extends Schema.TaggedError<UsernameTakenError>()("UsernameTakenError", {
+  message: Schema.String,
+}) {}
+
 export class InvalidRequestError extends Schema.TaggedError<InvalidRequestError>()("InvalidRequestError", {
   message: Schema.String,
 }) {}

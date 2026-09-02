@@ -2,12 +2,14 @@ import { Schema } from 'effect'
 import type { Effect, ManagedRuntime } from 'effect'
 import type { Context } from 'hono'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
+import type { MiddlewareHandler } from 'hono'
 import { Hono } from 'hono'
 import { handleExit } from '../../shared/middleware/error-handler.js'
 import {
   backupCode,
   confirm,
   login,
+  me,
   setup,
   verify,
 } from './program.js'
@@ -26,7 +28,8 @@ export const createAuthRouter = (
   runtime: ManagedRuntime.ManagedRuntime<
     TokenService | TotpService | UserRepository,
     unknown
-  >
+  >,
+  auth: MiddlewareHandler
 ) => {
   const router = new Hono()
 
@@ -60,6 +63,12 @@ export const createAuthRouter = (
   router.post('/totp/verify', (c) => runAuth(c, decodeTotpVerify, verify))
 
   router.post('/backup-code', (c) => runAuth(c, decodeBackupCode, backupCode))
+
+  router.get('/me', auth, async (c) => {
+    const userId = c.get('userId')
+    const exit = await runtime.runPromiseExit(me(userId))
+    return handleExit(exit, c, (res) => c.json(res))
+  })
 
   return router
 }
