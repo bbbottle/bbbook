@@ -119,10 +119,11 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
     try {
       let response: LoginResponse
       if (mode === 'totp') {
-        if (!otp.trim()) {
-          throw new Error('请输入动态密码')
+        const token = otp.trim()
+        if (!/^\d{6}$/.test(token)) {
+          throw new Error('请输入 6 位动态密码')
         }
-        response = await login({ username, token: otp.trim() })
+        response = await login({ username, token })
       } else {
         if (!password) {
           throw new Error('请输入密码')
@@ -241,7 +242,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                     disabled={
                       state.loading ||
                       !username ||
-                      (mode === 'totp' ? !otp.trim() : !password)
+                      (mode === 'totp' ? !/^\d{6}$/.test(otp.trim()) : !password)
                     }
                   >
                     {state.loading ? '...' : 'Verify'}
