@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button, Device } from '@bbbook/kindle-ui'
+import { Device } from '@bbbook/kindle-ui'
 import { clearSessionToken, isAuthenticated } from './api/auth.js'
 import { AppRouter } from './app/AppRouter.js'
 import { LoginFlow } from './features/auth/LoginFlow.js'
@@ -25,37 +25,30 @@ export default function App() {
     setShowLogin(false)
   }
 
-  const handleToggleLogin = () => {
-    if (authed) {
-      handleLogout()
-    } else {
-      setShowLogin((v) => !v)
-    }
-  }
-
-  const controlLabel = authed ? '登出' : showLogin ? '取消登录' : '登录'
-
   let screenContent: React.ReactNode = null
   if (authed) {
-    screenContent = <AppRouter />
+    screenContent = <AppRouter onLogout={handleLogout} />
   } else if (showLogin) {
     screenContent = <LoginFlow onAuthed={handleAuthed} />
   }
 
+  const isBlankLock = !authed && !showLogin
+
   return (
-    <div className="relative flex min-h-full w-full flex-col items-center justify-center gap-6 p-4 md:flex-row md:items-center md:justify-center md:gap-8">
-      <Device className="order-2 md:order-1" wallpaper={false}>
-        <div className="h-full w-full transition-opacity duration-[var(--ku-motion-base)]">
+    <div className="relative flex min-h-full w-full flex-col items-center justify-center p-4">
+      <Device wallpaper={false}>
+        <div className="relative h-full w-full transition-opacity duration-[var(--ku-motion-base)]">
           {screenContent}
+          {isBlankLock && (
+            <button
+              type="button"
+              aria-label="登录"
+              className="absolute inset-0 z-10 h-full w-full cursor-pointer bg-transparent focus-visible:ku-focus-ring"
+              onClick={() => setShowLogin(true)}
+            />
+          )}
         </div>
       </Device>
-      <Button
-        variant="ghost"
-        className="order-1 self-end text-muted hover:text-ink hover:no-underline transition-colors duration-[var(--ku-motion-base)] md:order-2 md:self-start"
-        onClick={handleToggleLogin}
-      >
-        {controlLabel}
-      </Button>
     </div>
   )
 }
