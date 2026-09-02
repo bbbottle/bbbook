@@ -15,6 +15,7 @@ import {
   totpConfirm,
   totpSetup,
   totpVerify,
+  type LoginResponse,
 } from '../../api/auth.js'
 
 type Stage = 'login' | 'verify' | 'setup' | 'confirm' | 'backup' | 'authed'
@@ -105,6 +106,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
   const [password, setPassword] = useState('')
   const [otp, setOtp] = useState('')
   const [backupCodeValue, setBackupCodeValue] = useState('')
+  const [mode, setMode] = useState<'totp' | 'password'>('totp')
 
   useEffect(() => {
     if (state.stage === 'authed') {
@@ -115,11 +117,26 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
   const startLogin = async () => {
     dispatch({ type: 'SUBMIT' })
     try {
-      const response = await login({ username, password })
-      dispatch({ type: 'LOGIN_OK', stage: response.stage, tempToken: response.tempToken })
-      if (response.stage === 'setup') {
-        const setup = await totpSetup({ tempToken: response.tempToken })
-        dispatch({ type: 'SETUP_OK', ...setup })
+      let response: LoginResponse
+      if (mode === 'totp') {
+        if (otp.length !== 6) {
+          throw new Error('Enter the 6-digit code from your authenticator app')
+        }
+        response = await login({ username, token: otp })
+      } else {
+        if (!password) {
+          throw new Error('Enter your password')
+        }
+        response = await login({ username, password })
+      }
+      if (response.stage === 'authed') {
+        dispatch({ type: 'SESSION_OK', sessionToken: response.sessionToken! })
+      } else {
+        dispatch({ type: 'LOGIN_OK', stage: response.stage, tempToken: response.tempToken! })
+        if (response.stage === 'setup') {
+          const setup = await totpSetup({ tempToken: response.tempToken! })
+          dispatch({ type: 'SETUP_OK', ...setup })
+        }
       }
     } catch (err) {
       dispatch({ type: 'ERROR', message: (err as Error).message })
@@ -132,7 +149,17 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
   }
 
   const handleContinue = async () => {
-    await startLogin()
+    dispatch({ type: 'SUBMIT' })
+    try {
+      const response = await login({ username, password })
+      if (response.stage === 'authed') {
+        dispatch({ type: 'SESSION_OK', sessionToken: response.sessionToken! })
+      } else {
+        dispatch({ type: 'LOGIN_OK', stage: response.stage, tempToken: response.tempToken! })
+      }
+    } catch (err) {
+      dispatch({ type: 'ERROR', message: (err as Error).message })
+    }
   }
 
   const handleConfirm = async (e: FormEvent) => {
@@ -206,23 +233,50 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                       disabled={state.loading}
                     />
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="password" className="text-sm font-sans text-muted">
-                      Password
-                    </label>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      placeholder="password"
-                      value={password}
-                      onChange={setPassword}
-                      disabled={state.loading}
-                    />
-                  </div>
-                  <Button type="submit" disabled={state.loading || !username || !password}>
-                    {state.loading ? '...' : 'Sign in'}
+                  {mode === 'totp' ? (
+                    <>
+                      <Typography className="text-center text-sm">
+                        Enter the 6-digit code from your authenticator app
+                      </Typography>
+                      <OtpInput value={otp} onChange={setOtp} autoFocus disabled={state.loading} />
+                    </>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <label htmlFor="password" className="text-sm font-sans text-muted">
+                        Password
+                      </label>
+                      <Input
+                        id="password"
+                        name="password"
+                        type="password"
+                        placeholder="password"
+                        value={password}
+                        onChange={setPassword}
+                        disabled={state.loading}
+                      />
+                    </div>
+                  )}
+                  <Button
+                    type="submit"
+                    disabled={
+                      state.loading ||
+                      !username ||
+                      (mode === 'totp' ? otp.length !== 6 : !password)
+                    }
+                  >
+                    {state.loading ? '...' : mode === 'totp' ? 'Verify' : 'Sign in'}
                   </Button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode(mode === 'totp' ? 'password' : 'totp')
+                      setOtp('')
+                      setPassword('')
+                    }}
+                    className="self-center text-sm font-sans text-muted hover:text-ink focus-visible:ku-focus-ring"
+                  >
+                    {mode === 'totp' ? '首次登录 / 使用密码' : '使用动态码登录'}
+                  </button>
                 </form>
               )}
 

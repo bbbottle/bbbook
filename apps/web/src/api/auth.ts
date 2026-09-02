@@ -5,12 +5,14 @@ const SESSION_COOKIE = 'session'
 
 export interface LoginRequest {
   username: string
-  password: string
+  password?: string
+  token?: string
 }
 
 export interface LoginResponse {
-  stage: 'setup' | 'verify'
-  tempToken: string
+  stage: 'setup' | 'verify' | 'authed'
+  tempToken?: string
+  sessionToken?: string
 }
 
 export interface TotpSetupRequest {

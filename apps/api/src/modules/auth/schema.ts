@@ -44,14 +44,25 @@ const BackupCode = Schema.String.check(Schema.isMinLength(1)).check(Schema.isMax
 
 export const LoginRequestSchema = Schema.Struct({
   username: Username,
-  password: Password,
+  password: Schema.optional(Password),
+  token: Schema.optional(TotpToken),
 })
 export type LoginRequest = Schema.Schema.Type<typeof LoginRequestSchema>
 
-export const LoginResponseSchema = Schema.Struct({
-  stage: Schema.Union([Schema.Literal('setup'), Schema.Literal('verify')]),
-  tempToken: Schema.String,
-})
+export const LoginResponseSchema = Schema.Union([
+  Schema.Struct({
+    stage: Schema.Literal('setup'),
+    tempToken: Schema.String,
+  }),
+  Schema.Struct({
+    stage: Schema.Literal('verify'),
+    tempToken: Schema.String,
+  }),
+  Schema.Struct({
+    stage: Schema.Literal('authed'),
+    sessionToken: Schema.String,
+  }),
+])
 export type LoginResponse = Schema.Schema.Type<typeof LoginResponseSchema>
 
 export const TotpSetupRequestSchema = Schema.Struct({
