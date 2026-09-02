@@ -28,6 +28,7 @@ const MigratorLayer = SqliteMigrator.layer({
     '0002_add_user_role': Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient
       yield* sql`ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'`
+      yield* sql`UPDATE users SET role = 'admin' WHERE username = 'admin'`
     }),
   }),
 })

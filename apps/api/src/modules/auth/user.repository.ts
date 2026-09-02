@@ -220,7 +220,20 @@ export const UserRepositoryLive = Layer.effect(
         backupCodes: [] as ReadonlyArray<string>,
         backupCodesUsed: [] as ReadonlyArray<boolean>,
       })
-      const inserted = yield* repo.insert(newUser).pipe(Effect.orDie)
+      const inserted = yield* repo.insert(newUser).pipe(
+        Effect.catchTags({
+          SqlError: (error) => {
+            if (
+              error.reason._tag === 'UniqueViolation' &&
+              error.reason.constraint.includes('username')
+            ) {
+              return Effect.fail(new UsernameTakenError({ message: 'Username already taken' }))
+            }
+            return Effect.fail(new UserStoreError({ message: 'Failed to create user', cause: error }))
+          },
+          SchemaError: Effect.die,
+        })
+      )
       const publicUser: UserPublic = {
         id: inserted.id,
         username: inserted.username,
@@ -284,7 +297,10 @@ export const UserRepositoryLive = Layer.effect(
       }
       for (const seed of seeds) {
         const existing = yield* findByUsername(seed.username)
-        if (Option.isSome(existing)) continue
+        if (Option.isSome(existing)) {
+          yield* sql`UPDATE users SET role = ${'admin'} WHERE username = ${seed.username}`.pipe(Effect.orDie)
+          continue
+        }
         const passwordHash = yield* hashPassword(seed.password).pipe(Effect.orDie)
         const newUser = User.insert.make({
           username: seed.username,
