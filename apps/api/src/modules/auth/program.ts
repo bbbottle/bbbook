@@ -20,6 +20,7 @@ import { UserRepository, UserRepositoryLive } from './user.repository.js'
 import {
   InvalidBackupCodeError,
   InvalidCredentialError,
+  InvalidRequestError,
   InvalidTempTokenError,
   InvalidTotpTokenError,
   TotpAlreadyEnabledError,
@@ -40,20 +41,52 @@ export const login = Effect.fn('AuthProgram.login')(function*(request: LoginRequ
   }
 
   const user = userOption.value
-  const valid = yield* UserRepository.use((repo) => repo.verifyPassword(user, request.password))
-  if (!valid) {
-    yield* RateLimiter.recordFailure(user.username)
-    return yield* genericLoginError()
+  const token = request.token
+  const password = request.password
+
+  if (token) {
+    if (!user.totpEnabled) {
+      yield* RateLimiter.recordFailure(user.username)
+      return yield* new TotpNotConfiguredError({ message: 'TOTP is not configured for this account' })
+    }
+    const secret = Option.getOrUndefined(user.totpSecret)
+    if (secret === undefined) {
+      yield* RateLimiter.recordFailure(user.username)
+      return yield* new TotpNotConfiguredError({ message: 'TOTP is not configured for this account' })
+    }
+    const verified = yield* TotpService.use((s) => s.verify(secret, token)).pipe(
+      Effect.match({
+        onFailure: () => false,
+        onSuccess: () => true,
+      })
+    )
+    if (!verified) {
+      yield* RateLimiter.recordFailure(user.username)
+      return yield* new InvalidTotpTokenError({ message: 'Invalid TOTP token' })
+    }
+    yield* RateLimiter.recordSuccess(user.username)
+    const sessionToken = yield* TokenService.use((s) => s.issueSessionToken(user.id))
+    return { stage: 'authed' as const, sessionToken }
   }
 
-  if (user.totpEnabled) {
-    const tempToken = yield* TokenService.use((s) => s.issueTempToken(user.id, 'verify'))
-    return { stage: 'verify' as const, tempToken }
-  } else {
-    const setupSecret = yield* TotpService.use((s) => s.generateSecret())
-    const tempToken = yield* TokenService.use((s) => s.issueTempToken(user.id, 'setup', setupSecret))
-    return { stage: 'setup' as const, tempToken }
+  if (password) {
+    const valid = yield* UserRepository.use((repo) => repo.verifyPassword(user, password))
+    if (!valid) {
+      yield* RateLimiter.recordFailure(user.username)
+      return yield* genericLoginError()
+    }
+    if (user.totpEnabled) {
+      const tempToken = yield* TokenService.use((s) => s.issueTempToken(user.id, 'verify'))
+      return { stage: 'verify' as const, tempToken }
+    } else {
+      const setupSecret = yield* TotpService.use((s) => s.generateSecret())
+      const tempToken = yield* TokenService.use((s) => s.issueTempToken(user.id, 'setup', setupSecret))
+      return { stage: 'setup' as const, tempToken }
+    }
   }
+
+  yield* RateLimiter.recordFailure(request.username)
+  return yield* new InvalidRequestError({ message: 'Password or TOTP token is required' })
 })
 
 export const setup = Effect.fn('AuthProgram.setup')(function*(request: TotpSetupRequest) {
