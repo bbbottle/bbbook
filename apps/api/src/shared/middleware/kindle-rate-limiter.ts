@@ -51,7 +51,7 @@ export const kindleRateLimiter: MiddlewareHandler = async (c, next) => {
     const resetAt = timestamps[0] + WINDOW_MS
     const retryAfter = Math.max(1, Math.ceil((resetAt - now) / 1000))
     c.header('Retry-After', String(retryAfter))
-    return c.json({ error: 'Too Many Requests' }, 429)
+    return c.json({ error: { code: 'RATE_LIMITED', retryAfter } }, 429)
   }
 
   timestamps.push(now)

@@ -1,4 +1,5 @@
 import { useEffect, useReducer, useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Button,
   Card,
@@ -9,6 +10,7 @@ import {
   Typography,
 } from '@bbbook/kindle-ui'
 import {
+  AuthError,
   backupCode,
   login,
   setSessionToken,
@@ -100,7 +102,18 @@ export interface LoginFlowProps {
   onAuthed?: () => void
 }
 
+function localizeError(err: unknown, t: (key: string, options?: { defaultValue?: string }) => string): string {
+  if (err instanceof AuthError) {
+    return t(`errors.${err.code}`, { defaultValue: err.message })
+  }
+  if (err instanceof Error) {
+    return err.message
+  }
+  return t('errors.UNKNOWN_ERROR')
+}
+
 export function LoginFlow({ onAuthed }: LoginFlowProps) {
+  const { t } = useTranslation()
   const [state, dispatch] = useReducer(reducer, initialState)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -121,12 +134,12 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
       if (mode === 'totp') {
         const token = otp.trim()
         if (!/^\d{6}$/.test(token)) {
-          throw new Error('请输入 6 位动态密码')
+          throw new Error(t('auth.errorOtpLength'))
         }
         response = await login({ username, token })
       } else {
         if (!password) {
-          throw new Error('请输入密码')
+          throw new Error(t('auth.errorPasswordRequired'))
         }
         response = await login({ username, password })
       }
@@ -140,7 +153,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
         }
       }
     } catch (err) {
-      dispatch({ type: 'ERROR', message: (err as Error).message })
+      dispatch({ type: 'ERROR', message: localizeError(err, t) })
     }
   }
 
@@ -159,14 +172,14 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
         dispatch({ type: 'LOGIN_OK', stage: response.stage, tempToken: response.tempToken! })
       }
     } catch (err) {
-      dispatch({ type: 'ERROR', message: (err as Error).message })
+      dispatch({ type: 'ERROR', message: localizeError(err, t) })
     }
   }
 
   const handleConfirm = async (e: FormEvent) => {
     e.preventDefault()
     if (otp.length !== 6) {
-      dispatch({ type: 'ERROR', message: 'Enter the 6-digit code from your authenticator app' })
+      dispatch({ type: 'ERROR', message: t('auth.errorOtpLength') })
       return
     }
     dispatch({ type: 'SUBMIT' })
@@ -179,14 +192,14 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
       setOtp('')
       dispatch({ type: 'CONFIRM_OK', backupCodes: response.backupCodes })
     } catch (err) {
-      dispatch({ type: 'ERROR', message: (err as Error).message })
+      dispatch({ type: 'ERROR', message: localizeError(err, t) })
     }
   }
 
   const handleVerify = async (e: FormEvent) => {
     e.preventDefault()
     if (otp.length !== 6) {
-      dispatch({ type: 'ERROR', message: 'Enter the 6-digit code' })
+      dispatch({ type: 'ERROR', message: t('auth.errorOtpLength') })
       return
     }
     dispatch({ type: 'SUBMIT' })
@@ -194,14 +207,14 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
       const response = await totpVerify({ tempToken: state.tempToken, token: otp })
       dispatch({ type: 'SESSION_OK', sessionToken: response.sessionToken })
     } catch (err) {
-      dispatch({ type: 'ERROR', message: (err as Error).message })
+      dispatch({ type: 'ERROR', message: localizeError(err, t) })
     }
   }
 
   const handleBackup = async (e: FormEvent) => {
     e.preventDefault()
     if (!backupCodeValue.trim()) {
-      dispatch({ type: 'ERROR', message: 'Enter a backup code' })
+      dispatch({ type: 'ERROR', message: t('auth.backupCodePlaceholder') })
       return
     }
     dispatch({ type: 'SUBMIT' })
@@ -209,7 +222,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
       const response = await backupCode({ tempToken: state.tempToken, code: backupCodeValue.trim() })
       dispatch({ type: 'SESSION_OK', sessionToken: response.sessionToken })
     } catch (err) {
-      dispatch({ type: 'ERROR', message: (err as Error).message })
+      dispatch({ type: 'ERROR', message: localizeError(err, t) })
     }
   }
 
@@ -223,7 +236,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                     id="username"
                     name="username"
                     autoFocus
-                    placeholder="用户名"
+                    placeholder={t('auth.usernamePlaceholder')}
                     value={username}
                     onChange={setUsername}
                     disabled={state.loading}
@@ -232,7 +245,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                     id={mode === 'totp' ? 'otp' : 'password'}
                     name={mode === 'totp' ? 'otp' : 'password'}
                     type={mode === 'totp' ? 'text' : 'password'}
-                    placeholder={mode === 'totp' ? '动态密码' : '密码'}
+                    placeholder={mode === 'totp' ? t('auth.otpPlaceholder') : t('auth.passwordPlaceholder')}
                     value={mode === 'totp' ? otp : password}
                     onChange={mode === 'totp' ? setOtp : setPassword}
                     disabled={state.loading}
@@ -245,10 +258,10 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                       (mode === 'totp' ? !/^\d{6}$/.test(otp.trim()) : !password)
                     }
                   >
-                    {state.loading ? '...' : 'Verify'}
+                    {state.loading ? '...' : t('auth.verify')}
                   </Button>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-sans text-muted">使用动态密码</span>
+                    <span className="text-sm font-sans text-muted">{t('auth.useOtp')}</span>
                     <Switch
                       checked={mode === 'totp'}
                       onChange={(checked) => {
@@ -256,7 +269,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                         setOtp('')
                         setPassword('')
                       }}
-                      ariaLabel="使用动态密码"
+                      ariaLabel={t('auth.useOtp')}
                       disabled={state.loading}
                     />
                   </div>
@@ -266,18 +279,25 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
               {state.stage === 'verify' && (
                 <form onSubmit={handleVerify} className="flex flex-col gap-4">
                   <Typography className="text-center text-sm">
-                    Enter the 6-digit code from your authenticator app
+                    {t('auth.verifyDescription')}
                   </Typography>
-                  <OtpInput value={otp} onChange={setOtp} autoFocus disabled={state.loading} />
+                  <OtpInput
+                    value={otp}
+                    onChange={setOtp}
+                    autoFocus
+                    disabled={state.loading}
+                    ariaLabel={t('auth.otpAriaLabel')}
+                    getDigitAriaLabel={(i, len) => t('auth.otpDigitAriaLabel', { index: i + 1, length: len })}
+                  />
                   <Button type="submit" disabled={state.loading || otp.length !== 6}>
-                    Verify
+                    {t('auth.verify')}
                   </Button>
                   <button
                     type="button"
                     onClick={() => dispatch({ type: 'USE_BACKUP' })}
                     className="self-center text-sm font-sans text-muted hover:text-ink focus-visible:ku-focus-ring"
                   >
-                    Use a backup code
+                    {t('auth.useBackupCode')}
                   </button>
                 </form>
               )}
@@ -285,24 +305,24 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
               {state.stage === 'backup' && (
                 <form onSubmit={handleBackup} className="flex flex-col gap-4">
                   <Typography className="text-center text-sm">
-                    Enter one of your backup codes
+                    {t('auth.backupCodeDescription')}
                   </Typography>
                   <Input
                     autoFocus
                     value={backupCodeValue}
                     onChange={setBackupCodeValue}
                     disabled={state.loading}
-                    placeholder="backup code"
+                    placeholder={t('auth.backupCodePlaceholder')}
                   />
                   <Button type="submit" disabled={state.loading || !backupCodeValue.trim()}>
-                    Sign in
+                    {t('auth.signIn')}
                   </Button>
                   <button
                     type="button"
                     onClick={() => dispatch({ type: 'RESET' })}
                     className="self-center text-sm font-sans text-muted hover:text-ink focus-visible:ku-focus-ring"
                   >
-                    Back to sign in
+                    {t('auth.backToSignIn')}
                   </button>
                 </form>
               )}
@@ -312,23 +332,23 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                   {!state.secret ? (
                     <>
                       <Typography className="text-center text-sm">
-                        {state.loading ? 'Preparing two-factor setup…' : 'Could not load setup. Please try again.'}
+                        {state.loading ? t('auth.preparingTwoFactor') : t('auth.twoFactorLoadFailed')}
                       </Typography>
                       {!state.loading && (
                         <Button type="button" onClick={startLogin}>
-                          Try again
+                          {t('common.tryAgain')}
                         </Button>
                       )}
                     </>
                   ) : (
                     <>
                       <Typography className="text-center text-sm">
-                        Scan the QR code with your authenticator app, then enter the 6-digit code.
+                        {t('auth.scanQrDescription')}
                       </Typography>
                       {state.qrCodeDataUrl && (
                         <img
                           src={state.qrCodeDataUrl}
-                          alt="TOTP QR code"
+                          alt={t('auth.qrCodeAlt')}
                           className="mx-auto aspect-square w-40 rounded-md border border-divider bg-paper p-2"
                         />
                       )}
@@ -340,9 +360,16 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                           className="text-center text-xs"
                         />
                       )}
-                      <OtpInput value={otp} onChange={setOtp} autoFocus disabled={state.loading} />
+                      <OtpInput
+                    value={otp}
+                    onChange={setOtp}
+                    autoFocus
+                    disabled={state.loading}
+                    ariaLabel={t('auth.otpAriaLabel')}
+                    getDigitAriaLabel={(i, len) => t('auth.otpDigitAriaLabel', { index: i + 1, length: len })}
+                  />
                       <Button type="submit" disabled={state.loading || otp.length !== 6}>
-                        Confirm
+                        {t('common.confirm')}
                       </Button>
                     </>
                   )}
@@ -352,7 +379,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
               {state.stage === 'confirm' && (
                 <div className="flex flex-col gap-4">
                   <Typography className="text-sm">
-                    Your account is set up. Save these backup codes, then continue to sign in.
+                    {t('auth.setupComplete')}
                   </Typography>
                   <ul className="grid grid-cols-2 gap-2 font-mono text-xs text-ink">
                     {state.backupCodes.map((code) => (
@@ -362,13 +389,13 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                     ))}
                   </ul>
                   <Button onClick={handleContinue} disabled={state.loading}>
-                    Continue to sign in
+                    {t('auth.continueToSignIn')}
                   </Button>
                 </div>
               )}
 
               {state.stage === 'authed' && (
-                <Typography className="text-center">Signed in</Typography>
+                <Typography className="text-center">{t('auth.signedIn')}</Typography>
               )}
 
               {state.error && (

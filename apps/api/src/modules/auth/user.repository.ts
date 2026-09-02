@@ -13,7 +13,7 @@ import { logger } from '../../lib/logger.js'
 import { decryptSecret, encryptSecret } from '../../lib/totp-crypto.js'
 import { UserStoreError } from '../../shared/schema/errors.js'
 import { TotpAlreadyEnabledError, UserNotFoundError, UsernameTakenError } from './errors.js'
-import { User, UserId, UserPublic } from './schema.js'
+import { User, UserId, UserPublic, type LocalePreference } from './schema.js'
 
 export class UserRepository extends Context.Service<
   UserRepository,
@@ -27,6 +27,10 @@ export class UserRepository extends Context.Service<
       role: 'admin' | 'user'
     ): Effect.Effect<UserPublic, UserStoreError | UsernameTakenError>
     listUsers(): Effect.Effect<ReadonlyArray<UserPublic>, UserStoreError>
+    updateLocale(
+      userId: string,
+      locale: LocalePreference
+    ): Effect.Effect<void, UserStoreError | UserNotFoundError>
     updateTotp(
       userId: string,
       secret: string,
@@ -57,6 +61,7 @@ const userFields = (user: User) => ({
   username: user.username,
   passwordHash: user.passwordHash,
   role: user.role,
+  locale: user.locale,
   totpSecret: user.totpSecret,
   totpEnabled: user.totpEnabled,
   backupCodes: user.backupCodes,
@@ -215,6 +220,7 @@ export const UserRepositoryLive = Layer.effect(
         username,
         passwordHash,
         role,
+        locale: 'system',
         totpSecret: Option.none(),
         totpEnabled: false,
         backupCodes: [] as ReadonlyArray<string>,
@@ -252,6 +258,22 @@ export const UserRepositoryLive = Layer.effect(
       return users
     })
 
+    const updateLocale = Effect.fn('UserRepository.updateLocale')(function* (
+      userId: string,
+      locale: LocalePreference
+    ) {
+      const maybeUser = yield* findById(userId)
+      if (Option.isNone(maybeUser)) {
+        return yield* new UserNotFoundError({ message: 'User not found' })
+      }
+      const user = maybeUser.value
+      const update = User.update.make({
+        ...userFields(user),
+        locale,
+      })
+      yield* repo.update(update).pipe(Effect.orDie)
+    })
+
     const seedUsers = Effect.fn('UserRepository.seedUsers')(function* () {
       let seeds = AUTH_SEED_USERS ?? []
       if (seeds.length === 0 && AUTH_DEFAULT_ADMIN_PASSWORD) {
@@ -275,6 +297,7 @@ export const UserRepositoryLive = Layer.effect(
                 username: 'admin',
                 passwordHash,
                 role: 'admin',
+                locale: 'system',
                 totpSecret: Option.none(),
                 totpEnabled: false,
                 backupCodes: [] as ReadonlyArray<string>,
@@ -306,6 +329,7 @@ export const UserRepositoryLive = Layer.effect(
           username: seed.username,
           passwordHash,
           role: 'admin',
+          locale: 'system',
           totpSecret: Option.none(),
           totpEnabled: false,
           backupCodes: [] as ReadonlyArray<string>,
@@ -324,6 +348,7 @@ export const UserRepositoryLive = Layer.effect(
       verifyPassword,
       createUser,
       listUsers,
+      updateLocale,
       updateTotp,
       markBackupCodeUsed,
       redeemBackupCode,

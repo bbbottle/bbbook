@@ -30,6 +30,10 @@ const MigratorLayer = SqliteMigrator.layer({
       yield* sql`ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'`
       yield* sql`UPDATE users SET role = 'admin' WHERE username = 'admin'`
     }),
+    '0003_add_user_locale': Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient
+      yield* sql`ALTER TABLE users ADD COLUMN locale TEXT NOT NULL DEFAULT 'system' CHECK (locale IN ('system', 'zh-CN', 'zh-TW', 'en'))`
+    }),
   }),
 })
 

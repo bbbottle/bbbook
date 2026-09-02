@@ -8,9 +8,11 @@ import { handleExit } from '../../shared/middleware/error-handler.js'
 import {
   backupCode,
   confirm,
+  getPreferences,
   login,
   me,
   setup,
+  updatePreferences,
   verify,
 } from './program.js'
 import {
@@ -19,6 +21,7 @@ import {
   TotpConfirmRequestSchema,
   TotpSetupRequestSchema,
   TotpVerifyRequestSchema,
+  UserPreferenceRequestSchema,
 } from './schema.js'
 import type { TokenService } from './token.service.js'
 import type { TotpService } from './totp.service.js'
@@ -38,6 +41,7 @@ export const createAuthRouter = (
   const decodeTotpConfirm = Schema.decodeUnknownSync(TotpConfirmRequestSchema)
   const decodeTotpVerify = Schema.decodeUnknownSync(TotpVerifyRequestSchema)
   const decodeBackupCode = Schema.decodeUnknownSync(BackupCodeRequestSchema)
+  const decodeUserPreference = Schema.decodeUnknownSync(UserPreferenceRequestSchema)
 
   const runAuth = async <A>(
     c: Context,
@@ -48,7 +52,7 @@ export const createAuthRouter = (
     try {
       request = decode(await c.req.json())
     } catch {
-      return c.json({ error: 'Invalid request body' }, 400 as ContentfulStatusCode)
+      return c.json({ error: { code: 'INVALID_REQUEST_BODY' } }, 400 as ContentfulStatusCode)
     }
     const exit = await runtime.runPromiseExit(program(request))
     return handleExit(exit, c, (res) => c.json(res))
@@ -68,6 +72,24 @@ export const createAuthRouter = (
     const userId = c.get('userId')
     const exit = await runtime.runPromiseExit(me(userId))
     return handleExit(exit, c, (res) => c.json(res))
+  })
+
+  router.get('/me/preferences', auth, async (c) => {
+    const userId = c.get('userId')
+    const exit = await runtime.runPromiseExit(getPreferences(userId))
+    return handleExit(exit, c, (res) => c.json(res))
+  })
+
+  router.put('/me/preferences', auth, async (c) => {
+    const userId = c.get('userId')
+    let request
+    try {
+      request = decodeUserPreference(await c.req.json())
+    } catch {
+      return c.json({ error: { code: 'INVALID_REQUEST_BODY' } }, 400 as ContentfulStatusCode)
+    }
+    const exit = await runtime.runPromiseExit(updatePreferences(userId, request))
+    return handleExit(exit, c, () => c.json({ ok: true }))
   })
 
   return router

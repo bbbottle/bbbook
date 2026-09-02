@@ -70,3 +70,24 @@ export interface BackupCodeRequest {
 export interface BackupCodeResponse {
   sessionToken: string
 }
+
+export const Locales = ['system', 'zh-CN', 'zh-TW', 'en'] as const
+export type LocalePreference = (typeof Locales)[number]
+
+export const ErrorCodes = [
+  'INVALID_REQUEST_BODY',
+  'UNAUTHORIZED',
+  'FORBIDDEN',
+  'INVALID_CREDENTIALS',
+  'INVALID_OTP',
+  'TOTP_NOT_CONFIGURED',
+  'TOTP_ALREADY_ENABLED',
+  'USER_NOT_FOUND',
+  'USERNAME_TAKEN',
+  'INVALID_BACKUP_CODE',
+  'RATE_LIMITED',
+  'QUEUE_FULL',
+  'DEVICE_UNAVAILABLE',
+  'UNKNOWN_ERROR',
+] as const
+export type ErrorCode = (typeof ErrorCodes)[number]

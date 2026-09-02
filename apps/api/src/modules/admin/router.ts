@@ -26,7 +26,7 @@ export const createAdminRouter = (
     try {
       request = decodeCreateUser(await c.req.json())
     } catch {
-      return c.json({ error: 'Invalid request body' }, 400 as ContentfulStatusCode)
+      return c.json({ error: { code: 'INVALID_REQUEST_BODY' } }, 400 as ContentfulStatusCode)
     }
     const exit = await runtime.runPromiseExit(createUser(request))
     return handleExit(exit, c, (res) => c.json(res))

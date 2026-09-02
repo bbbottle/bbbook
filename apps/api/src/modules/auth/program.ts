@@ -5,6 +5,7 @@ import {
   BackupCodeRequest,
   BackupCodeResponse,
   CurrentUserResponse,
+  LocalePreference,
   LoginRequest,
   LoginResponse,
   TotpConfirmRequest,
@@ -13,6 +14,8 @@ import {
   TotpSetupResponse,
   TotpVerifyRequest,
   TotpVerifyResponse,
+  UserPreferenceRequest,
+  UserPreferenceResponse,
 } from './schema.js'
 import { TokenService, TokenServiceLive } from './token.service.js'
 import { TotpService, TotpServiceLive } from './totp.service.js'
@@ -203,6 +206,23 @@ export const me = Effect.fn('AuthProgram.me')(function*(
     username: user.username,
     role: user.role,
   }
+})
+
+export const getPreferences = Effect.fn('AuthProgram.getPreferences')(function*(
+  userId: string
+): Effect.fn.Return<UserPreferenceResponse, UserNotFoundError | UserStoreError, UserRepository> {
+  const userOption = yield* UserRepository.use((repo) => repo.findById(userId))
+  if (Option.isNone(userOption)) {
+    return yield* new UserNotFoundError({ message: 'User not found' })
+  }
+  return { locale: userOption.value.locale as LocalePreference }
+})
+
+export const updatePreferences = Effect.fn('AuthProgram.updatePreferences')(function*(
+  userId: string,
+  request: UserPreferenceRequest
+): Effect.fn.Return<void, UserNotFoundError | UserStoreError, UserRepository> {
+  yield* UserRepository.use((repo) => repo.updateLocale(userId, request.locale as LocalePreference))
 })
 
 export type AuthProgramError =
