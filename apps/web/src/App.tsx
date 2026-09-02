@@ -43,13 +43,17 @@ export default function App() {
   }
 
   return (
-    <div className="flex min-h-full w-full flex-col items-center justify-center gap-6 p-4 md:flex-row md:gap-8">
-      <Device wallpaper={false}>
+    <div className="relative flex min-h-full w-full flex-col items-center justify-center gap-6 p-4 md:flex-row md:items-center md:justify-center md:gap-8">
+      <Device className="order-2 md:order-1" wallpaper={false}>
         <div className="h-full w-full transition-opacity duration-[var(--ku-motion-base)]">
           {screenContent}
         </div>
       </Device>
-      <Button variant="outline" onClick={handleToggleLogin}>
+      <Button
+        variant="ghost"
+        className="order-1 self-end md:order-2 md:self-start"
+        onClick={handleToggleLogin}
+      >
         {controlLabel}
       </Button>
     </div>
