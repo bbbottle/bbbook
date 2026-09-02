@@ -102,6 +102,7 @@ function Layout() {
 
 function LibraryPage() {
   const [active, setActive] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   return (
     <List className="flex-1">
@@ -112,7 +113,10 @@ function LibraryPage() {
           subtitle={book.subtitle}
           meta={book.meta}
           active={active === book.id}
-          onClick={() => setActive(book.id)}
+          onClick={() => {
+            setActive(book.id)
+            navigate(`/books/${book.id}`)
+          }}
         />
       ))}
     </List>
