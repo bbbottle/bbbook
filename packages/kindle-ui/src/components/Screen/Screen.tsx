@@ -37,7 +37,7 @@ export const Screen = forwardRef<ScreenHandle, ScreenProps>(function Screen(
 
   const hasWallpaper = Boolean(wallpaper)
   const contentClass = cn(
-    'min-h-full w-full',
+    'h-full w-full',
     hasWallpaper ? 'relative' : 'bg-paper'
   )
   const renderContent = (

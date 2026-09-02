@@ -99,12 +99,13 @@ export function OtpInput({
   }
 
   const handleChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const char = e.currentTarget.value.replace(/\D/g, '').slice(-1)
-    if (!char) return
-    const next = replaceAt(index, char)
+    const text = e.currentTarget.value.replace(/\D/g, '').slice(0, length)
+    if (!text) return
+    const next = (rawValue.slice(0, index) + text + rawValue.slice(index + text.length)).slice(0, length)
     update(next)
-    if (next.length < length) {
-      focus(index + 1)
+    const filled = index + text.length
+    if (filled < length) {
+      focus(filled)
     }
   }
 

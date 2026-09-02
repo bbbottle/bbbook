@@ -178,7 +178,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
     }
     dispatch({ type: 'SUBMIT' })
     try {
-      const response = await backupCode({ tempToken: state.tempToken, code: backupCodeValue })
+      const response = await backupCode({ tempToken: state.tempToken, code: backupCodeValue.trim() })
       dispatch({ type: 'SESSION_OK', sessionToken: response.sessionToken })
     } catch (err) {
       dispatch({ type: 'ERROR', message: (err as Error).message })
@@ -186,7 +186,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
   }
 
   return (
-    <div className="min-h-full w-full flex flex-col items-center justify-center p-4 transition-opacity duration-[var(--ku-motion-base)]">
+    <div className="h-full w-full flex flex-col items-center justify-center p-4 transition-opacity duration-[var(--ku-motion-base)]">
       <Card className="w-full max-w-xs">
             <CardTitle className="text-center">bbbook</CardTitle>
             <CardContent className="flex flex-col gap-4">
@@ -272,28 +272,43 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
 
               {state.stage === 'setup' && (
                 <form onSubmit={handleConfirm} className="flex flex-col gap-4">
-                  <Typography className="text-center text-sm">
-                    Scan the QR code with your authenticator app, then enter the 6-digit code.
-                  </Typography>
-                  {state.qrCodeDataUrl && (
-                    <img
-                      src={state.qrCodeDataUrl}
-                      alt="TOTP QR code"
-                      className="mx-auto aspect-square w-40 rounded-md border border-divider bg-paper p-2"
-                    />
+                  {!state.secret ? (
+                    <>
+                      <Typography className="text-center text-sm">
+                        {state.loading ? 'Preparing two-factor setup…' : 'Could not load setup. Please try again.'}
+                      </Typography>
+                      {!state.loading && (
+                        <Button type="button" onClick={startLogin}>
+                          Try again
+                        </Button>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <Typography className="text-center text-sm">
+                        Scan the QR code with your authenticator app, then enter the 6-digit code.
+                      </Typography>
+                      {state.qrCodeDataUrl && (
+                        <img
+                          src={state.qrCodeDataUrl}
+                          alt="TOTP QR code"
+                          className="mx-auto aspect-square w-40 rounded-md border border-divider bg-paper p-2"
+                        />
+                      )}
+                      {state.secret && (
+                        <Input
+                          id="totp-secret"
+                          value={state.secret}
+                          readOnly
+                          className="text-center text-xs"
+                        />
+                      )}
+                      <OtpInput value={otp} onChange={setOtp} autoFocus disabled={state.loading} />
+                      <Button type="submit" disabled={state.loading || otp.length !== 6}>
+                        Confirm
+                      </Button>
+                    </>
                   )}
-                  {state.secret && (
-                    <Input
-                      id="totp-secret"
-                      value={state.secret}
-                      readOnly
-                      className="text-center text-xs"
-                    />
-                  )}
-                  <OtpInput value={otp} onChange={setOtp} autoFocus disabled={state.loading} />
-                  <Button type="submit" disabled={state.loading || otp.length !== 6}>
-                    Confirm
-                  </Button>
                 </form>
               )}
 
