@@ -48,13 +48,18 @@ const storeItems = [
   { id: '3', title: 'The Pragmatic Programmer', subtitle: 'Hunt & Thomas', meta: 'PDF' },
 ]
 
-function Layout() {
+interface LayoutProps {
+  onLogout?: () => void
+}
+
+function Layout({ onLogout }: LayoutProps) {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
 
   const menuItems = [
     { textPrimary: 'Sync' },
     { textPrimary: 'Settings', onClick: () => navigate('/settings') },
+    { textPrimary: '登出', onClick: onLogout },
     { textPrimary: 'About' },
   ]
 
@@ -71,11 +76,8 @@ function Layout() {
             <ActionItem icon={<Icon name="home" size={22} />} onClick={() => navigate('/library')}>
               library
             </ActionItem>
-            <ActionItem onClick={() => navigate('/store')}>
+            <ActionItem icon={<Icon name="store" size={22} />} onClick={() => navigate('/store')}>
               store
-            </ActionItem>
-            <ActionItem icon={<Icon name="back" size={22} />} onClick={() => navigate(-1)}>
-              back
             </ActionItem>
             <ActionItem icon={<Icon name="settings" size={22} />} onClick={() => navigate('/settings')}>
               settings
@@ -218,11 +220,15 @@ function BookPage() {
   )
 }
 
-export function AppRouter() {
+export interface AppRouterProps {
+  onLogout?: () => void
+}
+
+export function AppRouter({ onLogout }: AppRouterProps) {
   return (
     <MemoryRouter initialEntries={['/library']}>
       <Routes>
-        <Route path="/" element={<Layout />}>
+        <Route path="/" element={<Layout onLogout={onLogout} />}>
           <Route index element={<Navigate to="/library" replace />} />
           <Route path="library" element={<LibraryPage />} />
           <Route path="store" element={<StorePage />} />

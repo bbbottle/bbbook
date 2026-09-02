@@ -9,6 +9,7 @@ import {
   MenuIcon,
   SearchIcon,
   SettingsIcon,
+  StoreIcon,
   WifiIcon,
 } from '../../icons/index.js'
 
@@ -23,6 +24,7 @@ export type IconName =
   | 'search'
   | 'close'
   | 'menu'
+  | 'store'
 
 export interface IconProps {
   name: IconName
@@ -41,6 +43,7 @@ const icons: Record<IconName, ComponentType<{ size?: number; className?: string 
   search: SearchIcon,
   close: CloseIcon,
   menu: MenuIcon,
+  store: StoreIcon,
 }
 
 export function Icon({ name, className, size = 24 }: IconProps) {
