@@ -4,6 +4,46 @@ export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undef
 
 const SESSION_KEY = 'bbbook_session'
 const SESSION_COOKIE = 'session'
+const SESSION_SCHEMA_VERSION = 1
+
+let cachedSessionToken: string | null | undefined = undefined
+
+function parseSessionToken(value: string): string | null {
+  if (value.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(value) as { version?: unknown; token?: unknown }
+      if (
+        parsed.version === SESSION_SCHEMA_VERSION &&
+        typeof parsed.token === 'string'
+      ) {
+        return parsed.token
+      }
+      return null
+    } catch {
+      return value
+    }
+  }
+  return value
+}
+
+function readStoredSessionToken(): string | null {
+  try {
+    const stored = localStorage.getItem(SESSION_KEY)
+    if (stored) {
+      const token = parseSessionToken(stored)
+      if (token) return token
+    }
+  } catch {
+    // ignore storage failures in restricted contexts
+  }
+  return parseCookie(SESSION_COOKIE)
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', () => {
+    cachedSessionToken = undefined
+  })
+}
 
 export interface LoginRequest {
   username: string
@@ -179,8 +219,12 @@ export function backupCode(request: BackupCodeRequest): Promise<BackupCodeRespon
 }
 
 export function setSessionToken(token: string) {
+  cachedSessionToken = token
   try {
-    localStorage.setItem(SESSION_KEY, token)
+    localStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ version: SESSION_SCHEMA_VERSION, token })
+    )
   } catch {
     // ignore storage failures in restricted contexts
   }
@@ -188,20 +232,18 @@ export function setSessionToken(token: string) {
 }
 
 export function getSessionToken(): string | null {
-  try {
-    const stored = localStorage.getItem(SESSION_KEY)
-    if (stored) return stored
-  } catch {
-    // ignore
+  if (cachedSessionToken !== undefined) {
+    return cachedSessionToken
   }
-  return parseCookie(SESSION_COOKIE)
+  return (cachedSessionToken = readStoredSessionToken())
 }
 
 export function clearSessionToken() {
+  cachedSessionToken = null
   try {
     localStorage.removeItem(SESSION_KEY)
   } catch {
-    // ignore
+    // ignore storage failures in restricted contexts
   }
   document.cookie = `${SESSION_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`
 }

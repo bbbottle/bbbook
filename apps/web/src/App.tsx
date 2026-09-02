@@ -1,22 +1,33 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Device } from '@bbbook/kindle-ui'
+import { Device } from '@bbbook/kindle-ui/components/Device'
+import '@bbbook/kindle-ui/styles'
 import {
   clearSessionToken,
   fetchCurrentUser,
   fetchUserPreference,
+  getSessionToken,
   isAuthenticated,
-  type CurrentUser,
 } from './api/auth.js'
 import { AppRouter } from './app/AppRouter.js'
 import { LoginFlow } from './features/auth/LoginFlow.js'
 import { initializeLocale, setLocalePreference } from './i18n/localePreference'
+import { useCached } from './lib/useCached.js'
 
 export default function App() {
   const { t } = useTranslation()
-  const [authed, setAuthed] = useState(isAuthenticated())
+  const [authed, setAuthed] = useState(() => isAuthenticated())
   const [showLogin, setShowLogin] = useState(false)
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+  const sessionToken = useMemo(() => (authed ? getSessionToken() : null), [authed])
+
+  const { data: currentUserData } = useCached({
+    key: sessionToken ? `current-user:${sessionToken}` : null,
+    fn: fetchCurrentUser,
+  })
+  const { data: prefData } = useCached({
+    key: sessionToken ? `user-preference:${sessionToken}` : null,
+    fn: fetchUserPreference,
+  })
 
   useEffect(() => {
     initializeLocale()
@@ -29,27 +40,23 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (authed) {
-      fetchCurrentUser().then(setCurrentUser).catch(() => setCurrentUser(null))
-      fetchUserPreference()
-        .then((pref) => setLocalePreference(pref.locale))
-        .catch(() => {})
-    } else {
-      setCurrentUser(null)
+    if (prefData) {
+      setLocalePreference(prefData.locale)
     }
-  }, [authed])
+  }, [prefData])
 
-  const handleAuthed = () => {
+  const currentUser = currentUserData ?? null
+
+  const handleAuthed = useCallback(() => {
     setAuthed(true)
     setShowLogin(false)
-  }
+  }, [])
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     clearSessionToken()
     setAuthed(false)
     setShowLogin(false)
-    setCurrentUser(null)
-  }
+  }, [])
 
   let screenContent: React.ReactNode = null
   if (authed) {

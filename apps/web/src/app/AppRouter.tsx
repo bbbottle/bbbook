@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useCached } from '../lib/useCached.js'
 import {
   MemoryRouter,
   Navigate,
@@ -9,33 +10,22 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom'
-import {
-  ActionBar,
-  ActionBarMenu,
-  ActionBarSpace,
-  ActionGroup,
-  ActionItem,
-  Button,
-  Card,
-  CardContent,
-  CardTitle,
-  Dialog,
-  Grid,
-  GridItem,
-  Icon,
-  Input,
-  List,
-  ListItem,
-  Navbar,
-  SearchBar,
-  Section,
-  SectionTitle,
-  StatuBar,
-  Switch,
-  Tab,
-  TabItem,
-  Typography,
-} from '@bbbook/kindle-ui'
+import { ActionBar, ActionGroup, ActionItem, ActionBarSpace, SearchBar } from '@bbbook/kindle-ui/components/ActionBar'
+import { ActionBarMenu } from '@bbbook/kindle-ui/components/ActionBarMenu'
+import { Button } from '@bbbook/kindle-ui/components/Button'
+import { Card, CardContent, CardTitle } from '@bbbook/kindle-ui/components/Card'
+import { Dialog } from '@bbbook/kindle-ui/components/Dialog'
+import { Grid, GridItem } from '@bbbook/kindle-ui/components/Grid'
+import { Icon } from '@bbbook/kindle-ui/components/Icon'
+import { Input } from '@bbbook/kindle-ui/components/Input'
+import { List } from '@bbbook/kindle-ui/components/List'
+import { ListItem } from '@bbbook/kindle-ui/components/ListItem'
+import { Navbar } from '@bbbook/kindle-ui/components/Navbar'
+import { Section, SectionTitle } from '@bbbook/kindle-ui/components/Section'
+import { StatuBar } from '@bbbook/kindle-ui/components/StatuBar'
+import { Switch } from '@bbbook/kindle-ui/components/Switch'
+import { Tab, TabItem } from '@bbbook/kindle-ui/components/Tab'
+import { Typography } from '@bbbook/kindle-ui/components/Typography'
 import { createUser, listUsers, type User } from '../api/admin.js'
 import {
   fetchDeviceInfo,
@@ -178,7 +168,7 @@ function StorePage() {
 
 function LanguageCard() {
   const { t } = useTranslation()
-  const [preference, setPreference] = useState<LocalePreference>(getLocalePreference())
+  const [preference, setPreference] = useState<LocalePreference>(() => getLocalePreference())
   const latestRef = useRef(preference)
   const savingRef = useRef(false)
 
@@ -233,10 +223,6 @@ function SettingsPage({ role }: SettingsPageProps) {
   const { t } = useTranslation()
   const [airplane, setAirplane] = useState(false)
   const [wifi, setWifi] = useState(false)
-  const [info, setInfo] = useState<DeviceInfo | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  const [users, setUsers] = useState<User[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [newUsername, setNewUsername] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -244,20 +230,22 @@ function SettingsPage({ role }: SettingsPageProps) {
   const [adminMessage, setAdminMessage] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
 
-  useEffect(() => {
-    fetchDeviceInfo()
-      .then(setInfo)
-      .catch((err: unknown) => setError(formatError(err)))
-  }, [])
+  const { data: info, error: infoError } = useCached<DeviceInfo>({
+    key: 'device-info',
+    fn: fetchDeviceInfo,
+  })
+  const { data: usersData, error: usersError, refresh: refreshUsers } = useCached<User[]>({
+    key: role === 'admin' ? 'admin-users' : null,
+    fn: listUsers,
+  })
+  const users = usersData ?? []
+  const deviceError = infoError ? formatError(infoError) : null
 
   useEffect(() => {
-    if (role !== 'admin') return
-    loadUsers()
-  }, [role])
-
-  const loadUsers = () => {
-    listUsers().then(setUsers).catch((err: unknown) => setAdminMessage(formatError(err)))
-  }
+    if (usersError) {
+      setAdminMessage(formatError(usersError))
+    }
+  }, [usersError])
 
   const localizedMessage = (code: string | null) => {
     if (!code) return null
@@ -274,7 +262,7 @@ function SettingsPage({ role }: SettingsPageProps) {
       setNewUsername('')
       setNewPassword('')
       setDialogOpen(false)
-      loadUsers()
+      refreshUsers()
     } catch (err: unknown) {
       setAdminMessage(localizedMessage(formatError(err)) ?? t('settings.createUserFailed'))
     } finally {
@@ -315,8 +303,8 @@ function SettingsPage({ role }: SettingsPageProps) {
               <dt className="text-muted">{t('settings.uptime')}</dt>
               <dd>{info.uptimeSeconds}s</dd>
             </dl>
-          ) : error ? (
-            <Typography className="text-sm text-muted">{localizedMessage(error)}</Typography>
+          ) : deviceError ? (
+            <Typography className="text-sm text-muted">{localizedMessage(deviceError)}</Typography>
           ) : (
             <Typography className="text-sm text-muted">{t('settings.loadingDeviceInfo')}</Typography>
           )}
@@ -338,9 +326,9 @@ function SettingsPage({ role }: SettingsPageProps) {
               ))}
             </List>
             <Button onClick={() => setDialogOpen(true)}>{t('settings.addUser')}</Button>
-            {adminMessage && (
+            {adminMessage ? (
               <Typography className="text-sm text-muted">{localizedMessage(adminMessage) ?? adminMessage}</Typography>
-            )}
+            ) : null}
           </CardContent>
         </Card>
       )}
