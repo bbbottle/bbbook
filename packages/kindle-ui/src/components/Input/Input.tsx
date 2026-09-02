@@ -48,6 +48,8 @@ export interface OtpInputProps {
   disabled?: boolean
   autoFocus?: boolean
   className?: string
+  ariaLabel?: string
+  getDigitAriaLabel?: (index: number, length: number) => string
   onChange?: (value: string) => void
   onComplete?: (value: string) => void
 }
@@ -64,6 +66,8 @@ export function OtpInput({
   disabled,
   autoFocus,
   className,
+  ariaLabel,
+  getDigitAriaLabel,
   onChange,
   onComplete,
 }: OtpInputProps) {
@@ -155,7 +159,7 @@ export function OtpInput({
     <div
       className={cn('flex w-full items-center justify-between gap-2', className)}
       role="group"
-      aria-label="One-time password"
+      aria-label={ariaLabel}
     >
       {Array.from({ length }).map((_, i) => (
         <input
@@ -167,7 +171,7 @@ export function OtpInput({
           disabled={disabled}
           autoFocus={autoFocus && i === 0}
           value={digits[i] || ''}
-          aria-label={`Digit ${i + 1} of ${length}`}
+          aria-label={getDigitAriaLabel ? getDigitAriaLabel(i, length) : undefined}
           className={cn(
             'h-12 flex-1 min-w-0 rounded-md border border-divider bg-paper text-center font-sans text-base text-ink transition-colors focus-visible:ku-focus-ring disabled:opacity-50 disabled:cursor-not-allowed'
           )}

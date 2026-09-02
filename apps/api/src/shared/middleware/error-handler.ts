@@ -2,6 +2,8 @@ import { Cause, Exit } from 'effect'
 import type { Context, ErrorHandler } from 'hono'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 
+import type { ErrorCode } from '@bbbook/shared-types'
+
 const statusByTag: Record<string, ContentfulStatusCode> = {
   InvalidRequestError: 400,
   TotpNotConfiguredError: 400,
@@ -15,6 +17,21 @@ const statusByTag: Record<string, ContentfulStatusCode> = {
   RateLimitedError: 429,
   QueueFullError: 503,
   KindleUnavailableError: 503,
+}
+
+const codeByTag: Record<string, ErrorCode> = {
+  InvalidRequestError: 'INVALID_REQUEST_BODY',
+  InvalidCredentialError: 'INVALID_CREDENTIALS',
+  InvalidTempTokenError: 'INVALID_CREDENTIALS',
+  InvalidTotpTokenError: 'INVALID_OTP',
+  TotpNotConfiguredError: 'TOTP_NOT_CONFIGURED',
+  TotpAlreadyEnabledError: 'TOTP_ALREADY_ENABLED',
+  UserNotFoundError: 'USER_NOT_FOUND',
+  UsernameTakenError: 'USERNAME_TAKEN',
+  InvalidBackupCodeError: 'INVALID_BACKUP_CODE',
+  RateLimitedError: 'RATE_LIMITED',
+  QueueFullError: 'QUEUE_FULL',
+  KindleUnavailableError: 'DEVICE_UNAVAILABLE',
 }
 
 const defaultStatus = 500
@@ -46,32 +63,38 @@ export const handleExit = <A, E = never>(
     return onSuccess(exit.value)
   }
 
-  const errors = Cause.prettyErrors(exit.cause)
-  const status = statusFromErrors(errors as ReadonlyArray<{ _tag?: string }>)
-  const message = errors.map((e) => (e as Error).message || String(e)).join('\n')
+  const errors = Cause.prettyErrors(exit.cause) as ReadonlyArray<{ _tag?: string }>
+  const status = statusFromErrors(errors)
+  const tag = errors[0]?._tag
+  const code = (tag ? codeByTag[tag] : undefined) ?? 'UNKNOWN_ERROR'
+  const retryAfter = errors[0] ? retryAfterFromError(errors[0]) : undefined
 
-  if ((status === 429 || status === 503) && errors.length > 0) {
-    const retryAfter = retryAfterFromError(errors[0])
-    if (retryAfter !== undefined) {
-      c.header('Retry-After', String(retryAfter))
-    }
+  if ((status === 429 || status === 503) && retryAfter !== undefined) {
+    c.header('Retry-After', String(retryAfter))
   }
 
-  return c.json({ error: message }, status as ContentfulStatusCode)
+  const response: { error: { code: ErrorCode; retryAfter?: number } } = { error: { code } }
+  if (retryAfter !== undefined) {
+    response.error.retryAfter = retryAfter
+  }
+
+  return c.json(response, status as ContentfulStatusCode)
 }
 
 export const errorHandler: ErrorHandler = (err, c) => {
   const tag = (err as { _tag?: string })._tag
-  if (tag && statusByTag[tag] !== undefined) {
-    const status = statusByTag[tag]!
-    if (status === 429 || status === 503) {
-      const retryAfter = retryAfterFromError(err)
-      if (retryAfter !== undefined) {
-        c.header('Retry-After', String(retryAfter))
-      }
-    }
-    return c.json({ error: err instanceof Error ? err.message : String(err) }, status as ContentfulStatusCode)
+  const status = (tag && statusByTag[tag]) ?? defaultStatus
+  const code = (tag ? codeByTag[tag] : undefined) ?? 'UNKNOWN_ERROR'
+  const retryAfter = retryAfterFromError(err)
+
+  if ((status === 429 || status === 503) && retryAfter !== undefined) {
+    c.header('Retry-After', String(retryAfter))
   }
 
-  return c.json({ error: err instanceof Error ? err.message : String(err) }, 500 as ContentfulStatusCode)
+  const response: { error: { code: ErrorCode; retryAfter?: number } } = { error: { code } }
+  if (retryAfter !== undefined) {
+    response.error.retryAfter = retryAfter
+  }
+
+  return c.json(response, status as ContentfulStatusCode)
 }

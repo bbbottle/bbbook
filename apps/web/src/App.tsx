@@ -1,13 +1,26 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Device } from '@bbbook/kindle-ui'
-import { clearSessionToken, fetchCurrentUser, isAuthenticated, type CurrentUser } from './api/auth.js'
+import {
+  clearSessionToken,
+  fetchCurrentUser,
+  fetchUserPreference,
+  isAuthenticated,
+  type CurrentUser,
+} from './api/auth.js'
 import { AppRouter } from './app/AppRouter.js'
 import { LoginFlow } from './features/auth/LoginFlow.js'
+import { initializeLocale, setLocalePreference } from './i18n/localePreference'
 
 export default function App() {
+  const { t } = useTranslation()
   const [authed, setAuthed] = useState(isAuthenticated())
   const [showLogin, setShowLogin] = useState(false)
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+
+  useEffect(() => {
+    initializeLocale()
+  }, [])
 
   useEffect(() => {
     const check = () => setAuthed(isAuthenticated())
@@ -16,18 +29,19 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (authed && !currentUser) {
+    if (authed) {
       fetchCurrentUser().then(setCurrentUser).catch(() => setCurrentUser(null))
-    }
-    if (!authed) {
+      fetchUserPreference()
+        .then((pref) => setLocalePreference(pref.locale))
+        .catch(() => {})
+    } else {
       setCurrentUser(null)
     }
-  }, [authed, currentUser])
+  }, [authed])
 
   const handleAuthed = () => {
     setAuthed(true)
     setShowLogin(false)
-    fetchCurrentUser().then(setCurrentUser).catch(() => setCurrentUser(null))
   }
 
   const handleLogout = () => {
@@ -54,7 +68,7 @@ export default function App() {
           {isBlankLock && (
             <button
               type="button"
-              aria-label="登录"
+              aria-label={t('auth.login')}
               className="absolute inset-0 z-10 h-full w-full cursor-pointer bg-transparent focus-visible:ku-focus-ring"
               onClick={() => setShowLogin(true)}
             />

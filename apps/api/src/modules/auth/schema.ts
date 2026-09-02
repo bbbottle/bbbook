@@ -7,11 +7,15 @@ export type UserId = typeof UserId.Type
 export const Role = Schema.Literals(['admin', 'user'])
 export type Role = typeof Role.Type
 
+export const LocalePreference = Schema.Literals(['system', 'zh-CN', 'zh-TW', 'en'])
+export type LocalePreference = typeof LocalePreference.Type
+
 export class User extends Model.Class<User>('User')({
   id: Model.UuidV4Insert(UserId),
   username: Schema.String,
   passwordHash: Schema.String,
   role: Role,
+  locale: LocalePreference,
   totpSecret: Model.FieldOption(Schema.String),
   totpEnabled: Model.BooleanSqlite,
   backupCodes: Model.JsonFromString(Schema.Array(Schema.String)),
@@ -110,3 +114,13 @@ export const BackupCodeResponseSchema = Schema.Struct({
   sessionToken: Schema.String,
 })
 export type BackupCodeResponse = Schema.Schema.Type<typeof BackupCodeResponseSchema>
+
+export const UserPreferenceRequestSchema = Schema.Struct({
+  locale: LocalePreference,
+})
+export type UserPreferenceRequest = Schema.Schema.Type<typeof UserPreferenceRequestSchema>
+
+export const UserPreferenceResponseSchema = Schema.Struct({
+  locale: LocalePreference,
+})
+export type UserPreferenceResponse = Schema.Schema.Type<typeof UserPreferenceResponseSchema>

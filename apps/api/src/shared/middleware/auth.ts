@@ -22,7 +22,7 @@ export const createAuthMiddleware = (
     const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : cookieToken
 
     if (!token) {
-      return c.json({ error: 'Unauthorized' }, 401 as ContentfulStatusCode)
+      return c.json({ error: { code: 'UNAUTHORIZED' } }, 401 as ContentfulStatusCode)
     }
 
     try {
@@ -41,7 +41,7 @@ export const createAuthMiddleware = (
       await next()
     } catch (error) {
       if (error instanceof InvalidTempTokenError) {
-        return c.json({ error: 'Unauthorized' }, 401 as ContentfulStatusCode)
+        return c.json({ error: { code: 'UNAUTHORIZED' } }, 401 as ContentfulStatusCode)
       }
       throw error
     }
@@ -50,7 +50,7 @@ export const createAuthMiddleware = (
 export const requireAdmin: MiddlewareHandler = async (c, next) => {
   const role = c.get('role')
   if (role !== 'admin') {
-    return c.json({ error: 'Forbidden' }, 403 as ContentfulStatusCode)
+    return c.json({ error: { code: 'FORBIDDEN' } }, 403 as ContentfulStatusCode)
   }
   await next()
 }

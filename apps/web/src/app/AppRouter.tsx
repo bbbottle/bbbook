@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   MemoryRouter,
   Navigate,
@@ -35,9 +36,18 @@ import {
   TabItem,
   Typography,
 } from '@bbbook/kindle-ui'
-import type { CurrentUser } from '../api/auth.js'
 import { createUser, listUsers, type User } from '../api/admin.js'
-import { fetchDeviceInfo, type DeviceInfo } from '../api/kindle.js'
+import {
+  fetchDeviceInfo,
+  type DeviceInfo,
+} from '../api/kindle.js'
+import {
+  type CurrentUser,
+  updateUserPreference,
+} from '../api/auth.js'
+import { type LocalePreference } from '@bbbook/shared-types'
+import { getLocalePreference, setLocalePreference } from '../i18n/localePreference'
+import { LocaleOptions } from '../i18n/systemLocale'
 
 const books = [
   { id: '1', title: 'The Great Gatsby', subtitle: 'F. Scott Fitzgerald', meta: '32%' },
@@ -53,39 +63,50 @@ const storeItems = [
   { id: '3', title: 'The Pragmatic Programmer', subtitle: 'Hunt & Thomas', meta: 'PDF' },
 ]
 
+function formatError(err: unknown): string {
+  if (err && typeof err === 'object' && 'code' in err && typeof (err as { code?: string }).code === 'string') {
+    return (err as { code: string }).code
+  }
+  if (err instanceof Error) {
+    return err.message
+  }
+  return 'UNKNOWN_ERROR'
+}
+
 interface LayoutProps {
   onLogout?: () => void
 }
 
 function Layout({ onLogout }: LayoutProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
 
   const menuItems = [
-    { textPrimary: 'Sync' },
-    { textPrimary: 'Settings', onClick: () => navigate('/settings') },
-    { textPrimary: '登出', onClick: onLogout },
-    { textPrimary: 'About' },
+    { textPrimary: t('menu.sync') },
+    { textPrimary: t('menu.settings'), onClick: () => navigate('/settings') },
+    { textPrimary: t('menu.logout'), onClick: onLogout },
+    { textPrimary: t('menu.about') },
   ]
 
   return (
     <div className="flex h-full flex-col">
       <Navbar fixed>
         <StatuBar
-          deviceName="My Kindle"
+          deviceName={t('common.deviceName')}
           battery={86}
-          celluar={{ on: true, label: 'LTE', signal: 3 }}
+          celluar={{ on: true, label: t('common.networkLabel'), signal: 3 }}
         />
         <ActionBar>
           <ActionGroup>
             <ActionItem icon={<Icon name="home" size={22} />} onClick={() => navigate('/library')}>
-              library
+              {t('nav.library')}
             </ActionItem>
             <ActionItem icon={<Icon name="store" size={22} />} onClick={() => navigate('/store')}>
-              store
+              {t('nav.store')}
             </ActionItem>
             <ActionItem icon={<Icon name="settings" size={22} />} onClick={() => navigate('/settings')}>
-              settings
+              {t('nav.settings')}
             </ActionItem>
           </ActionGroup>
           <ActionBarSpace />
@@ -94,7 +115,7 @@ function Layout({ onLogout }: LayoutProps) {
               value={query}
               onChange={setQuery}
               onSubmit={(value) => console.log('search', value)}
-              placeholder="Search"
+              placeholder={t('common.search')}
             />
             <ActionBarMenu items={menuItems} />
           </ActionGroup>
@@ -131,15 +152,16 @@ function LibraryPage() {
 }
 
 function StorePage() {
+  const { t } = useTranslation()
   const [tab, setTab] = useState('all')
 
   return (
     <Section className="flex flex-col gap-2">
       <Tab>
-        <TabItem active={tab === 'all'} onClick={() => setTab('all')}>All</TabItem>
-        <TabItem active={tab === 'downloaded'} onClick={() => setTab('downloaded')}>Downloaded</TabItem>
+        <TabItem active={tab === 'all'} onClick={() => setTab('all')}>{t('store.tabAll')}</TabItem>
+        <TabItem active={tab === 'downloaded'} onClick={() => setTab('downloaded')}>{t('store.tabDownloaded')}</TabItem>
       </Tab>
-      <SectionTitle label="Results" />
+      <SectionTitle label={t('store.sectionResults')} />
       <Grid dense className="mb-2">
         {Array.from({ length: 4 }).map((_, i) => (
           <GridItem key={i} className="bg-muted" />
@@ -154,11 +176,61 @@ function StorePage() {
   )
 }
 
+function LanguageCard() {
+  const { t } = useTranslation()
+  const [preference, setPreference] = useState<LocalePreference>(getLocalePreference())
+  const latestRef = useRef(preference)
+  const savingRef = useRef(false)
+
+  const syncBackend = async () => {
+    if (savingRef.current) return
+    savingRef.current = true
+    try {
+      while (true) {
+        const value = latestRef.current
+        try {
+          await updateUserPreference({ locale: value })
+        } catch {
+          // ignore backend sync failures; local preference already applied
+        }
+        if (latestRef.current === value) break
+      }
+    } finally {
+      savingRef.current = false
+    }
+  }
+
+  const handleChange = (value: LocalePreference) => {
+    setLocalePreference(value)
+    setPreference(value)
+    latestRef.current = value
+    syncBackend()
+  }
+
+  return (
+    <Card>
+      <CardTitle>{t('settings.language')}</CardTitle>
+      <CardContent className="flex flex-col gap-2">
+        {LocaleOptions.map((option) => (
+          <Button
+            key={option.value}
+            variant={preference === option.value ? 'default' : 'outline'}
+            onClick={() => handleChange(option.value)}
+          >
+            {t(option.labelKey)}
+          </Button>
+        ))}
+      </CardContent>
+    </Card>
+  )
+}
+
 interface SettingsPageProps {
   role?: 'admin' | 'user'
 }
 
 function SettingsPage({ role }: SettingsPageProps) {
+  const { t } = useTranslation()
   const [airplane, setAirplane] = useState(false)
   const [wifi, setWifi] = useState(false)
   const [info, setInfo] = useState<DeviceInfo | null>(null)
@@ -175,7 +247,7 @@ function SettingsPage({ role }: SettingsPageProps) {
   useEffect(() => {
     fetchDeviceInfo()
       .then(setInfo)
-      .catch((err) => setError(err.message))
+      .catch((err: unknown) => setError(formatError(err)))
   }, [])
 
   useEffect(() => {
@@ -184,7 +256,12 @@ function SettingsPage({ role }: SettingsPageProps) {
   }, [role])
 
   const loadUsers = () => {
-    listUsers().then(setUsers).catch((err) => setAdminMessage(err.message))
+    listUsers().then(setUsers).catch((err: unknown) => setAdminMessage(formatError(err)))
+  }
+
+  const localizedMessage = (code: string | null) => {
+    if (!code) return null
+    return t(`errors.${code}`, { defaultValue: code })
   }
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -193,13 +270,13 @@ function SettingsPage({ role }: SettingsPageProps) {
     setAdminMessage(null)
     try {
       await createUser({ username: newUsername, password: newPassword, role: 'user' })
-      setAdminMessage('新用户首次登录会走 TOTP 绑定流程')
+      setAdminMessage(t('settings.newUserTotpNotice'))
       setNewUsername('')
       setNewPassword('')
       setDialogOpen(false)
       loadUsers()
-    } catch (err) {
-      setAdminMessage(err instanceof Error ? err.message : '创建用户失败')
+    } catch (err: unknown) {
+      setAdminMessage(localizedMessage(formatError(err)) ?? t('settings.createUserFailed'))
     } finally {
       setCreating(false)
     }
@@ -207,60 +284,62 @@ function SettingsPage({ role }: SettingsPageProps) {
 
   return (
     <Section className="flex flex-col gap-4 p-4">
+      <LanguageCard />
+
       <Card>
-        <CardTitle>Device Options</CardTitle>
+        <CardTitle>{t('settings.deviceOptions')}</CardTitle>
         <CardContent className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-sans text-ink">Airplane mode</span>
-            <Switch checked={airplane} onChange={setAirplane} ariaLabel="Airplane mode" />
+            <span className="text-sm font-sans text-ink">{t('settings.airplaneMode')}</span>
+            <Switch checked={airplane} onChange={setAirplane} ariaLabel={t('settings.airplaneMode')} />
           </div>
           <div className="h-px bg-divider" />
           <div className="flex items-center justify-between">
-            <span className="text-sm font-sans text-ink">Wi-Fi</span>
-            <Switch checked={wifi} onChange={setWifi} ariaLabel="Wi-Fi" />
+            <span className="text-sm font-sans text-ink">{t('settings.wifi')}</span>
+            <Switch checked={wifi} onChange={setWifi} ariaLabel={t('settings.wifi')} />
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardTitle>Device Info</CardTitle>
+        <CardTitle>{t('settings.deviceInfo')}</CardTitle>
         <CardContent>
           {info ? (
             <dl className="grid grid-cols-2 gap-2 text-sm font-sans text-ink">
-              <dt className="text-muted">Serial</dt>
+              <dt className="text-muted">{t('settings.serial')}</dt>
               <dd>{info.serialNumber}</dd>
-              <dt className="text-muted">Free memory</dt>
+              <dt className="text-muted">{t('settings.freeMemory')}</dt>
               <dd>{info.freeMemoryMb} MB</dd>
-              <dt className="text-muted">Free storage</dt>
+              <dt className="text-muted">{t('settings.freeStorage')}</dt>
               <dd>{info.freeStorageMb} MB</dd>
-              <dt className="text-muted">Uptime</dt>
+              <dt className="text-muted">{t('settings.uptime')}</dt>
               <dd>{info.uptimeSeconds}s</dd>
             </dl>
           ) : error ? (
-            <Typography className="text-sm text-muted">{error}</Typography>
+            <Typography className="text-sm text-muted">{localizedMessage(error)}</Typography>
           ) : (
-            <Typography className="text-sm text-muted">Loading device info…</Typography>
+            <Typography className="text-sm text-muted">{t('settings.loadingDeviceInfo')}</Typography>
           )}
         </CardContent>
       </Card>
 
       {role === 'admin' && (
         <Card>
-          <CardTitle>User Management</CardTitle>
+          <CardTitle>{t('settings.userManagement')}</CardTitle>
           <CardContent className="flex flex-col gap-3">
             <List>
               {users.map((user) => (
                 <ListItem
                   key={user.id}
                   title={user.username}
-                  subtitle={user.totpEnabled ? 'TOTP enabled' : 'TOTP not configured'}
-                  meta={user.role}
+                  subtitle={user.totpEnabled ? t('settings.totpEnabled') : t('settings.totpNotConfigured')}
+                  meta={user.role === 'admin' ? t('common.roleAdmin') : t('common.roleUser')}
                 />
               ))}
             </List>
-            <Button onClick={() => setDialogOpen(true)}>Add User</Button>
+            <Button onClick={() => setDialogOpen(true)}>{t('settings.addUser')}</Button>
             {adminMessage && (
-              <Typography className="text-sm text-muted">{adminMessage}</Typography>
+              <Typography className="text-sm text-muted">{localizedMessage(adminMessage) ?? adminMessage}</Typography>
             )}
           </CardContent>
         </Card>
@@ -270,28 +349,28 @@ function SettingsPage({ role }: SettingsPageProps) {
         <Dialog
           open
           onClose={() => setDialogOpen(false)}
-          title="Add User"
+          title={t('settings.addUser')}
           actions={
             <>
               <Button variant="ghost" onClick={() => setDialogOpen(false)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button onClick={() => formRef.current?.requestSubmit()} disabled={creating}>
-                Add
+                {t('common.add')}
               </Button>
             </>
           }
         >
           <form ref={formRef} onSubmit={handleCreateUser} className="flex flex-col gap-3">
             <Input
-              placeholder="Username"
+              placeholder={t('settings.username')}
               value={newUsername}
               onChange={setNewUsername}
               autoFocus
             />
             <Input
               type="password"
-              placeholder="Initial password"
+              placeholder={t('settings.initialPassword')}
               value={newPassword}
               onChange={setNewPassword}
             />
@@ -303,15 +382,16 @@ function SettingsPage({ role }: SettingsPageProps) {
 }
 
 function BookPage() {
+  const { t } = useTranslation()
   const params = useParams<{ id: string }>()
   const book = books.find((b) => b.id === params.id)
   return (
     <Section className="p-4">
       <Card>
-        <CardTitle>{book?.title ?? 'Book'}</CardTitle>
+        <CardTitle>{book?.title ?? t('common.book')}</CardTitle>
         <CardContent>
           <Typography className="text-sm text-muted">
-            {book ? book.subtitle : `Book ${params.id}`}
+            {book ? book.subtitle : `${t('common.book')} ${params.id}`}
           </Typography>
         </CardContent>
       </Card>
