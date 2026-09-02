@@ -3,9 +3,9 @@ import {
   Button,
   Card,
   CardContent,
-  CardTitle,
   Input,
   OtpInput,
+  Switch,
   Typography,
 } from '@bbbook/kindle-ui'
 import {
@@ -119,13 +119,13 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
     try {
       let response: LoginResponse
       if (mode === 'totp') {
-        if (otp.length !== 6) {
-          throw new Error('Enter the 6-digit code from your authenticator app')
+        if (!otp.trim()) {
+          throw new Error('请输入动态密码')
         }
-        response = await login({ username, token: otp })
+        response = await login({ username, token: otp.trim() })
       } else {
         if (!password) {
-          throw new Error('Enter your password')
+          throw new Error('请输入密码')
         }
         response = await login({ username, password })
       }
@@ -214,69 +214,51 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
 
   return (
     <div className="h-full w-full flex flex-col items-center justify-center p-4 transition-opacity duration-[var(--ku-motion-base)]">
-      <Card className="w-full max-w-xs">
-            <CardTitle className="text-center">bbbook</CardTitle>
+      <Card className="w-full max-w-xs border-0">
             <CardContent className="flex flex-col gap-4">
               {state.stage === 'login' && (
                 <form onSubmit={handleLogin} className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="username" className="text-sm font-sans text-muted">
-                      Username
-                    </label>
-                    <Input
-                      id="username"
-                      name="username"
-                      autoFocus
-                      placeholder="username"
-                      value={username}
-                      onChange={setUsername}
-                      disabled={state.loading}
-                    />
-                  </div>
-                  {mode === 'totp' ? (
-                    <>
-                      <Typography className="text-center text-sm">
-                        Enter the 6-digit code from your authenticator app
-                      </Typography>
-                      <OtpInput value={otp} onChange={setOtp} autoFocus disabled={state.loading} />
-                    </>
-                  ) : (
-                    <div className="flex flex-col gap-2">
-                      <label htmlFor="password" className="text-sm font-sans text-muted">
-                        Password
-                      </label>
-                      <Input
-                        id="password"
-                        name="password"
-                        type="password"
-                        placeholder="password"
-                        value={password}
-                        onChange={setPassword}
-                        disabled={state.loading}
-                      />
-                    </div>
-                  )}
+                  <Input
+                    id="username"
+                    name="username"
+                    autoFocus
+                    placeholder="用户名"
+                    value={username}
+                    onChange={setUsername}
+                    disabled={state.loading}
+                  />
+                  <Input
+                    id={mode === 'totp' ? 'otp' : 'password'}
+                    name={mode === 'totp' ? 'otp' : 'password'}
+                    type={mode === 'totp' ? 'text' : 'password'}
+                    placeholder={mode === 'totp' ? '动态密码' : '密码'}
+                    value={mode === 'totp' ? otp : password}
+                    onChange={mode === 'totp' ? setOtp : setPassword}
+                    disabled={state.loading}
+                  />
                   <Button
                     type="submit"
                     disabled={
                       state.loading ||
                       !username ||
-                      (mode === 'totp' ? otp.length !== 6 : !password)
+                      (mode === 'totp' ? !otp.trim() : !password)
                     }
                   >
-                    {state.loading ? '...' : mode === 'totp' ? 'Verify' : 'Sign in'}
+                    {state.loading ? '...' : 'Verify'}
                   </Button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode(mode === 'totp' ? 'password' : 'totp')
-                      setOtp('')
-                      setPassword('')
-                    }}
-                    className="self-center text-sm font-sans text-muted hover:text-ink focus-visible:ku-focus-ring"
-                  >
-                    {mode === 'totp' ? '首次登录 / 使用密码' : '使用动态码登录'}
-                  </button>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-sans text-muted">使用动态密码</span>
+                    <Switch
+                      checked={mode === 'totp'}
+                      onChange={(checked) => {
+                        setMode(checked ? 'totp' : 'password')
+                        setOtp('')
+                        setPassword('')
+                      }}
+                      ariaLabel="使用动态密码"
+                      disabled={state.loading}
+                    />
+                  </div>
                 </form>
               )}
 
