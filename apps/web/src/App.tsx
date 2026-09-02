@@ -51,7 +51,7 @@ export default function App() {
       </Device>
       <Button
         variant="ghost"
-        className="order-1 self-end md:order-2 md:self-start"
+        className="order-1 self-end text-muted hover:text-ink hover:no-underline transition-colors duration-[var(--ku-motion-base)] md:order-2 md:self-start"
         onClick={handleToggleLogin}
       >
         {controlLabel}
