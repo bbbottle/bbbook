@@ -6,6 +6,7 @@ const statusByTag: Record<string, ContentfulStatusCode> = {
   InvalidRequestError: 400,
   TotpNotConfiguredError: 400,
   TotpAlreadyEnabledError: 400,
+  UsernameTakenError: 400,
   InvalidCredentialError: 401,
   InvalidTempTokenError: 401,
   InvalidTotpTokenError: 401,

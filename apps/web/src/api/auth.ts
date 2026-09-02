@@ -51,6 +51,12 @@ export interface BackupCodeResponse {
   sessionToken: string
 }
 
+export interface CurrentUser {
+  id: string
+  username: string
+  role: 'admin' | 'user'
+}
+
 class AuthError extends Error {
   status: number
   retryAfter?: number
@@ -62,10 +68,27 @@ class AuthError extends Error {
   }
 }
 
+async function get<T>(path: string): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({} as { error?: string }))
+    const message = payload.error || `Request failed with status ${response.status}`
+    const retryAfter = response.status === 429 ? parseRetryAfter(response.headers.get('retry-after')) : undefined
+    throw new AuthError(message, response.status, retryAfter)
+  }
+
+  return response.json()
+}
+
 async function post<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     credentials: 'include',
     body: JSON.stringify(body),
   })
@@ -78,6 +101,10 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   }
 
   return response.json()
+}
+
+export function fetchCurrentUser(): Promise<CurrentUser> {
+  return get('/auth/me')
 }
 
 function parseRetryAfter(value: string | null): number | undefined {

@@ -4,10 +4,14 @@ import { Schema } from 'effect'
 const UserId = Schema.String.pipe(Schema.brand('UserId'))
 export type UserId = typeof UserId.Type
 
+export const Role = Schema.Literals(['admin', 'user'])
+export type Role = typeof Role.Type
+
 export class User extends Model.Class<User>('User')({
   id: Model.UuidV4Insert(UserId),
   username: Schema.String,
   passwordHash: Schema.String,
+  role: Role,
   totpSecret: Model.FieldOption(Schema.String),
   totpEnabled: Model.BooleanSqlite,
   backupCodes: Model.JsonFromString(Schema.Array(Schema.String)),
@@ -15,6 +19,21 @@ export class User extends Model.Class<User>('User')({
   createdAt: Model.DateTimeInsert,
   updatedAt: Model.DateTimeUpdate,
 }) {}
+
+export const UserPublic = Schema.Struct({
+  id: Schema.String,
+  username: Schema.String,
+  role: Role,
+  totpEnabled: Schema.BooleanFromBit,
+})
+export type UserPublic = Schema.Schema.Type<typeof UserPublic>
+
+export const CurrentUserResponseSchema = Schema.Struct({
+  id: Schema.String,
+  username: Schema.String,
+  role: Role,
+})
+export type CurrentUserResponse = Schema.Schema.Type<typeof CurrentUserResponseSchema>
 
 const Username = Schema.String.check(Schema.isMinLength(1)).check(Schema.isMaxLength(64))
 const Password = Schema.String.check(Schema.isMinLength(1)).check(Schema.isMaxLength(256))

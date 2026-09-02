@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   MemoryRouter,
   Navigate,
@@ -14,12 +14,15 @@ import {
   ActionBarSpace,
   ActionGroup,
   ActionItem,
+  Button,
   Card,
   CardContent,
   CardTitle,
+  Dialog,
   Grid,
   GridItem,
   Icon,
+  Input,
   List,
   ListItem,
   Navbar,
@@ -32,6 +35,8 @@ import {
   TabItem,
   Typography,
 } from '@bbbook/kindle-ui'
+import type { CurrentUser } from '../api/auth.js'
+import { createUser, listUsers, type User } from '../api/admin.js'
 import { fetchDeviceInfo, type DeviceInfo } from '../api/kindle.js'
 
 const books = [
@@ -149,17 +154,56 @@ function StorePage() {
   )
 }
 
-function SettingsPage() {
+interface SettingsPageProps {
+  role?: 'admin' | 'user'
+}
+
+function SettingsPage({ role }: SettingsPageProps) {
   const [airplane, setAirplane] = useState(false)
   const [wifi, setWifi] = useState(false)
   const [info, setInfo] = useState<DeviceInfo | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  const [users, setUsers] = useState<User[]>([])
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [newUsername, setNewUsername] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [adminMessage, setAdminMessage] = useState<string | null>(null)
+  const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     fetchDeviceInfo()
       .then(setInfo)
       .catch((err) => setError(err.message))
   }, [])
+
+  useEffect(() => {
+    if (role !== 'admin') return
+    loadUsers()
+  }, [role])
+
+  const loadUsers = () => {
+    listUsers().then(setUsers).catch((err) => setAdminMessage(err.message))
+  }
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setCreating(true)
+    setAdminMessage(null)
+    try {
+      await createUser({ username: newUsername, password: newPassword, role: 'user' })
+      setAdminMessage('新用户首次登录会走 TOTP 绑定流程')
+      setNewUsername('')
+      setNewPassword('')
+      setDialogOpen(false)
+      loadUsers()
+    } catch (err) {
+      setAdminMessage(err instanceof Error ? err.message : '创建用户失败')
+    } finally {
+      setCreating(false)
+    }
+  }
 
   return (
     <Section className="flex flex-col gap-4 p-4">
@@ -199,6 +243,61 @@ function SettingsPage() {
           )}
         </CardContent>
       </Card>
+
+      {role === 'admin' && (
+        <Card>
+          <CardTitle>User Management</CardTitle>
+          <CardContent className="flex flex-col gap-3">
+            <List>
+              {users.map((user) => (
+                <ListItem
+                  key={user.id}
+                  title={user.username}
+                  subtitle={user.totpEnabled ? 'TOTP enabled' : 'TOTP not configured'}
+                  meta={user.role}
+                />
+              ))}
+            </List>
+            <Button onClick={() => setDialogOpen(true)}>Add User</Button>
+            {adminMessage && (
+              <Typography className="text-sm text-muted">{adminMessage}</Typography>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {dialogOpen && (
+        <Dialog
+          open
+          onClose={() => setDialogOpen(false)}
+          title="Add User"
+          actions={
+            <>
+              <Button variant="ghost" onClick={() => setDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => formRef.current?.requestSubmit()} disabled={creating}>
+                Add
+              </Button>
+            </>
+          }
+        >
+          <form ref={formRef} onSubmit={handleCreateUser} className="flex flex-col gap-3">
+            <Input
+              placeholder="Username"
+              value={newUsername}
+              onChange={setNewUsername}
+              autoFocus
+            />
+            <Input
+              type="password"
+              placeholder="Initial password"
+              value={newPassword}
+              onChange={setNewPassword}
+            />
+          </form>
+        </Dialog>
+      )}
     </Section>
   )
 }
@@ -222,9 +321,10 @@ function BookPage() {
 
 export interface AppRouterProps {
   onLogout?: () => void
+  currentUser?: CurrentUser | null
 }
 
-export function AppRouter({ onLogout }: AppRouterProps) {
+export function AppRouter({ onLogout, currentUser }: AppRouterProps) {
   return (
     <MemoryRouter initialEntries={['/library']}>
       <Routes>
@@ -232,7 +332,7 @@ export function AppRouter({ onLogout }: AppRouterProps) {
           <Route index element={<Navigate to="/library" replace />} />
           <Route path="library" element={<LibraryPage />} />
           <Route path="store" element={<StorePage />} />
-          <Route path="settings" element={<SettingsPage />} />
+          <Route path="settings" element={<SettingsPage role={currentUser?.role} />} />
           <Route path="books/:id" element={<BookPage />} />
         </Route>
       </Routes>
