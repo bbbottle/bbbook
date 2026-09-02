@@ -153,7 +153,7 @@ export function OtpInput({
 
   return (
     <div
-      className={cn('flex items-center justify-center gap-2', className)}
+      className={cn('flex w-full items-center justify-between gap-2', className)}
       role="group"
       aria-label="One-time password"
     >
@@ -169,7 +169,7 @@ export function OtpInput({
           value={digits[i] || ''}
           aria-label={`Digit ${i + 1} of ${length}`}
           className={cn(
-            'h-12 w-10 rounded-md border border-divider bg-paper text-center font-sans text-lg text-ink transition-colors focus-visible:ku-focus-ring disabled:opacity-50 disabled:cursor-not-allowed'
+            'h-12 flex-1 min-w-0 rounded-md border border-divider bg-paper text-center font-sans text-base text-ink transition-colors focus-visible:ku-focus-ring disabled:opacity-50 disabled:cursor-not-allowed'
           )}
           onChange={(e) => handleChange(i, e)}
           onKeyDown={(e) => handleKeyDown(i, e)}
