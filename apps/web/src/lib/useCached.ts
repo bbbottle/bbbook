@@ -1,11 +1,44 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const dataCache = new Map<string, unknown>()
-const promiseCache = new Map<string, Promise<unknown>>()
+interface CacheEntry<T> {
+  value: T
+  timestamp: number
+  requestId: number
+}
+
+interface PromiseEntry<T> {
+  promise: Promise<T>
+  requestId: number
+}
+
+const dataCache = new Map<string, CacheEntry<unknown>>()
+const promiseCache = new Map<string, PromiseEntry<unknown>>()
+const requestIds = new Map<string, number>()
+
+function nextRequestId(key: string): number {
+  const id = (requestIds.get(key) ?? 0) + 1
+  requestIds.set(key, id)
+  return id
+}
+
+function isCurrentRequest(key: string, requestId: number): boolean {
+  return requestIds.get(key) === requestId
+}
+
+function getCached<T>(key: string, ttl?: number): T | undefined {
+  const entry = dataCache.get(key) as CacheEntry<T> | undefined
+  if (!entry) return undefined
+  if (ttl !== undefined && Date.now() - entry.timestamp >= ttl) {
+    dataCache.delete(key)
+    return undefined
+  }
+  return entry.value
+}
 
 interface UseCachedOptions<T> {
   key: string | null | undefined
   fn: () => Promise<T>
+  ttl?: number
 }
 
 interface UseCachedResult<T> {
@@ -15,14 +48,17 @@ interface UseCachedResult<T> {
   refresh: () => void
 }
 
-export function useCached<T>({ key, fn }: UseCachedOptions<T>): UseCachedResult<T> {
+export function useCached<T>({ key, fn, ttl }: UseCachedOptions<T>): UseCachedResult<T> {
   const fnRef = useRef(fn)
   fnRef.current = fn
 
   const [tick, setTick] = useState(0)
   const [state, setState] = useState<{ data: T | undefined; error: unknown; loading: boolean }>(() => {
-    if (key && dataCache.has(key)) {
-      return { data: dataCache.get(key) as T, error: undefined, loading: false }
+    if (key) {
+      const cached = getCached<T>(key, ttl)
+      if (cached !== undefined) {
+        return { data: cached, error: undefined, loading: false }
+      }
     }
     return { data: undefined, error: undefined, loading: key != null }
   })
@@ -33,7 +69,7 @@ export function useCached<T>({ key, fn }: UseCachedOptions<T>): UseCachedResult<
       return
     }
 
-    const cached = dataCache.get(key) as T | undefined
+    const cached = getCached<T>(key, ttl)
     if (cached !== undefined) {
       setState({ data: cached, error: undefined, loading: false })
       return
@@ -41,42 +77,56 @@ export function useCached<T>({ key, fn }: UseCachedOptions<T>): UseCachedResult<
 
     setState({ data: undefined, error: undefined, loading: true })
 
-    let promise = promiseCache.get(key) as Promise<T> | undefined
-    if (!promise) {
-      promise = fnRef.current().then(
+    let promiseEntry = promiseCache.get(key) as PromiseEntry<T> | undefined
+    let requestId: number
+    if (!promiseEntry) {
+      requestId = nextRequestId(key)
+      const inner = fnRef.current()
+      const promise: Promise<T> = inner.then(
         (value) => {
-          dataCache.set(key, value)
-          promiseCache.delete(key)
+          if (isCurrentRequest(key, requestId)) {
+            dataCache.set(key, { value, timestamp: Date.now(), requestId })
+          }
           return value
         },
         (reason: unknown) => {
-          promiseCache.delete(key)
           throw reason
         }
-      )
-      promiseCache.set(key, promise)
+      ).finally(() => {
+        const current = promiseCache.get(key)
+        if (current?.promise === promise) {
+          promiseCache.delete(key)
+        }
+      })
+      promiseEntry = { promise, requestId }
+      promiseCache.set(key, promiseEntry)
+    } else {
+      requestId = promiseEntry.requestId
     }
 
     let stale = false
-    promise
+    promiseEntry.promise
       .then((value) => {
         if (stale) return
+        if (!isCurrentRequest(key, requestId)) return
         setState({ data: value, error: undefined, loading: false })
       })
       .catch((err: unknown) => {
         if (stale) return
+        if (!isCurrentRequest(key, requestId)) return
         setState({ data: undefined, error: err, loading: false })
       })
 
     return () => {
       stale = true
     }
-  }, [key, tick])
+  }, [key, tick, ttl])
 
   const refresh = useCallback(() => {
     if (!key) return
     dataCache.delete(key)
     promiseCache.delete(key)
+    nextRequestId(key)
     setTick((t) => t + 1)
   }, [key])
 

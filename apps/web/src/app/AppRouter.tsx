@@ -233,10 +233,12 @@ function SettingsPage({ role }: SettingsPageProps) {
   const { data: info, error: infoError } = useCached<DeviceInfo>({
     key: 'device-info',
     fn: fetchDeviceInfo,
+    ttl: 0,
   })
   const { data: usersData, error: usersError, refresh: refreshUsers } = useCached<User[]>({
     key: role === 'admin' ? 'admin-users' : null,
     fn: listUsers,
+    ttl: 0,
   })
   const users = usersData ?? []
   const deviceError = infoError ? formatError(infoError) : null

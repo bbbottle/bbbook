@@ -4,7 +4,7 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 import zhCN from './locales/zh-CN.json'
 import zhTW from './locales/zh-TW.json'
 import en from './locales/en.json'
-import { type LocalePreference } from '@bbbook/shared-types'
+import { getLocalePreference } from './localePreference'
 import { resolveEffectiveLocale } from './systemLocale'
 
 export const resources = {
@@ -15,19 +15,7 @@ export const resources = {
 
 export type I18nResources = typeof resources
 
-function readStoredLocale(): LocalePreference {
-  try {
-    const value = localStorage.getItem('bbbook.locale')
-    if (value === 'system' || value === 'zh-CN' || value === 'zh-TW' || value === 'en') {
-      return value as LocalePreference
-    }
-  } catch {
-    // ignore storage failures
-  }
-  return 'system'
-}
-
-const initialLng = resolveEffectiveLocale(readStoredLocale())
+const initialLng = resolveEffectiveLocale(getLocalePreference())
 
 i18n
   .use(LanguageDetector)
