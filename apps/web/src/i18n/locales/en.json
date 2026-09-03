@@ -18,10 +18,7 @@
     "settings": "settings"
   },
   "menu": {
-    "sync": "Sync",
-    "settings": "Settings",
-    "logout": "Logout",
-    "about": "About"
+    "logout": "Logout"
   },
   "store": {
     "tabAll": "All",
@@ -29,9 +26,6 @@
     "sectionResults": "Results"
   },
   "settings": {
-    "deviceOptions": "Device Options",
-    "airplaneMode": "Airplane mode",
-    "wifi": "Wi-Fi",
     "deviceInfo": "Device Info",
     "serial": "Serial",
     "freeMemory": "Free memory",
