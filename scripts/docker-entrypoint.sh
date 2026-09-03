@@ -34,6 +34,10 @@ if [ -n "${KINDLE_SSH_HOSTNAME:-}" ]; then
         exit 1
         ;;
     esac
+    if [ "${#KINDLE_SSH_PORT}" -gt 5 ]; then
+      echo "KINDLE_SSH_PORT out of range" >&2
+      exit 1
+    fi
     if [ "$KINDLE_SSH_PORT" -lt 1 ] || [ "$KINDLE_SSH_PORT" -gt 65535 ]; then
       echo "KINDLE_SSH_PORT out of range" >&2
       exit 1
