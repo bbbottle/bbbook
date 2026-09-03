@@ -46,7 +46,7 @@ export function StatuBar({
   return (
     <div
       className={cn(
-        'flex h-[22px] items-center justify-between border-b border-divider px-[18px] py-[3px] text-xs font-sans text-muted',
+        'flex h-[22px] items-center justify-between border-b border-divider px-[18px] py-[3px] text-xs font-sans text-ink',
         className
       )}
     >
@@ -58,15 +58,7 @@ export function StatuBar({
           </span>
         )}
         {celluar?.on && (
-          <span
-            className="flex h-full items-center text-[0.85em]"
-            style={{
-              opacity:
-                celluar.signal === undefined
-                  ? 1
-                  : Math.min(Math.max(0.35 + (celluar.signal / 5) * 0.65, 0.35), 1),
-            }}
-          >
+          <span className="flex h-full items-center text-[0.85em]">
             <RssIcon size={14} />
           </span>
         )}
