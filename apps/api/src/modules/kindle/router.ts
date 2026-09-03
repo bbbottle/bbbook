@@ -2,11 +2,13 @@ import { randomUUID } from 'node:crypto'
 import * as NodeFs from 'node:fs/promises'
 import { Effect, ManagedRuntime } from 'effect'
 import { Hono } from 'hono'
-import { UPLOAD_PATH } from '../../config.js'
+import { bodyLimit } from 'hono/body-limit'
+import { UPLOAD_MAX_SIZE, UPLOAD_PATH } from '../../config.js'
 import { handleExit } from '../../shared/middleware/error-handler.js'
 import { InvalidRequestError } from '../auth/errors.js'
 import { KindleUnavailableError } from '../../shared/schema/errors.js'
 import { KindleDeviceInfoService, KindleLibraryService } from './service.js'
+import { validateFileName } from './program.js'
 
 export const createKindleRouter = (
   runtime: ManagedRuntime.ManagedRuntime<
@@ -35,22 +37,34 @@ export const createKindleRouter = (
     return handleExit(exit, c, (books) => c.json({ books }))
   })
 
-  router.post('/books', async (c) => {
-    const body = await c.req.parseBody()
-    const file = body.file
-    if (!(file instanceof File)) {
-      return c.json({ error: { code: 'INVALID_REQUEST_BODY' } }, 400)
-    }
-    const fileName = file.name
-    const tempName = `${Date.now()}-${randomUUID()}-${fileName}`
-    const tempPath = `${UPLOAD_PATH}/${tempName}`
-    await NodeFs.writeFile(tempPath, new Uint8Array(await file.arrayBuffer()))
+  router.post(
+    '/books',
+    bodyLimit({
+      maxSize: UPLOAD_MAX_SIZE,
+      onError: (c) =>
+        c.json({ error: { code: 'INVALID_REQUEST_BODY', message: 'upload too large' } }, 413),
+    }),
+    async (c) => {
+      const body = await c.req.parseBody()
+      const file = body.file
+      if (!(file instanceof File)) {
+        return c.json({ error: { code: 'INVALID_REQUEST_BODY', message: 'file is required' } }, 400)
+      }
+      const fileName = file.name
+      const validationError = validateFileName(fileName)
+      if (validationError !== undefined) {
+        return c.json({ error: { code: 'INVALID_REQUEST_BODY', message: validationError.message } }, 400)
+      }
+      const tempName = `upload-${Date.now()}-${randomUUID()}`
+      const tempPath = `${UPLOAD_PATH}/${tempName}`
+      await NodeFs.writeFile(tempPath, new Uint8Array(await file.arrayBuffer()))
 
-    const exit = await runtime.runPromiseExit(
-      KindleLibraryService.use((service) => service.addBook(tempPath, fileName))
-    )
-    return handleExit(exit, c, () => c.json({ success: true }))
-  })
+      const exit = await runtime.runPromiseExit(
+        KindleLibraryService.use((service) => service.addBook(tempPath, fileName))
+      )
+      return handleExit(exit, c, () => c.json({ success: true }))
+    }
+  )
 
   router.delete('/books/:fileName', async (c) => {
     const fileName = decodeURIComponent(c.req.param('fileName'))

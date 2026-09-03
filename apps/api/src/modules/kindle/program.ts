@@ -22,7 +22,7 @@ type State = {
   readonly lastError: Option.Option<KindleUnavailableError>
 }
 
-const validateFileName = (fileName: string): InvalidRequestError | undefined => {
+export const validateFileName = (fileName: string): InvalidRequestError | undefined => {
   if (!fileName || fileName.trim() === '' || fileName.includes('/') || fileName.includes('\\') || fileName.includes('..')) {
     return new InvalidRequestError({ message: 'invalid file name' })
   }
@@ -142,8 +142,8 @@ const makeLibraryService = (sdk: KindleSDK) =>
         return yield* Effect.tryPromise({
           try: () => sdk.addBook(localPath, fileName),
           catch: mapKindleError,
-        }).pipe(Effect.ensuring(cleanupTemp(localPath)))
-      })
+        })
+      }).pipe(Effect.ensuring(cleanupTemp(localPath)))
 
     const removeBook = (fileName: string) =>
       Effect.gen(function* () {

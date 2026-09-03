@@ -74,10 +74,10 @@ export const make = (
         }
         const remotePath = `${DOCUMENTS_FOLDER}/${fileName}`
         const localBackupPath = NodePath.join(backupDir, fileName)
-        const backupExists = yield* Effect.sync(() => NodeFs.existsSync(localBackupPath))
-        if (backupExists) {
+        const remoteExists = yield* fileTransfer.exists(remotePath)
+        if (!remoteExists) {
           return yield* Effect.fail(
-            new CommandRejectedError({ command: 'removeBook', reason: 'backup already exists in storage' })
+            new CommandRejectedError({ command: 'removeBook', reason: 'file not found on device' })
           )
         }
         yield* fileTransfer.download(remotePath, localBackupPath)
@@ -109,6 +109,9 @@ export const make = (
         }
         yield* fileTransfer.upload(localBackupPath, remotePath)
         yield* commandQueue.enqueue(Refresh.refreshLibrary()).pipe(Effect.catch(() => Effect.void))
+        yield* Effect.try(() => {
+          NodeFs.unlinkSync(localBackupPath)
+        }).pipe(Effect.catch(() => Effect.void))
         return void 0
       })
 

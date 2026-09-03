@@ -4,6 +4,7 @@ import {
   KindleError,
   ResourceExhaustedError,
   TimeoutError,
+  ConnectionLostError,
 } from '../errors/kindle-errors.js'
 import * as Executor from './executor.js'
 import type { SshTransportConfig } from './transport-config.js'
@@ -41,6 +42,11 @@ export const make = (config: SshTransportConfig, transport: SshTransportService)
             })
           )
         )
+        if (result.code !== 0) {
+          return yield* Effect.fail(
+            new ConnectionLostError({ cause: new Error(result.stderr.trim() || `free exited with code ${result.code}`) })
+          )
+        }
         const freeMb = parseFreeMemory(result.stdout)
         if (freeMb < (config.minMemoryMb ?? 10)) {
           return yield* Effect.fail(

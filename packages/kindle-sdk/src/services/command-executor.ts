@@ -5,6 +5,7 @@ import {
   DeviceBusyError,
   PermissionDeniedError,
   CommandRejectedError,
+  ConnectionLostError,
   type KindleError,
 } from '../errors/kindle-errors.js'
 import type { SshTransportConfig } from '../core/transport-config.js'
@@ -21,6 +22,9 @@ export class CommandExecutor extends Context.Service<CommandExecutor, CommandExe
 ) {}
 
 const classifyError = (result: Executor.ExecResult, command: string): Effect.Effect<never, KindleError> => {
+  if (result.code === 255) {
+    return Effect.fail(new ConnectionLostError({ cause: new Error(result.stderr.trim() || 'ssh connection failed') }))
+  }
   const stderr = result.stderr.toLowerCase()
   if (stderr.includes('permission') || stderr.includes('denied')) {
     return Effect.fail(new PermissionDeniedError({ command }))
@@ -28,7 +32,7 @@ const classifyError = (result: Executor.ExecResult, command: string): Effect.Eff
   if (stderr.includes('busy') || result.code === 126 || result.code === 127) {
     return Effect.fail(new DeviceBusyError({ command }))
   }
-  return Effect.fail(new DeviceBusyError({ command }))
+  return Effect.fail(new CommandRejectedError({ command, reason: result.stderr.trim() || `exit code ${result.code}` }))
 }
 
 // Disallow command families that can cause irreversible damage or network/Wi-Fi manipulation.

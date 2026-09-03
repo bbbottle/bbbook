@@ -1,6 +1,5 @@
 import { spawn } from 'node:child_process'
-import { createReadStream, createWriteStream } from 'node:fs'
-import { mkdirSync } from 'node:fs'
+import { createReadStream, createWriteStream, mkdirSync, unlinkSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { Effect } from 'effect'
 import { ConnectionLostError } from '../errors/kindle-errors.js'
@@ -202,23 +201,16 @@ const runProcess = (
 
     child.on('error', (err) => reject(err))
     child.on('close', (code) => {
+      const exitCode = code ?? 1
       if (!stdoutFinished) {
         options.stdout?.once('finish', () => {
-          if (code === 0) {
-            resolve({ stdout, stderr, code: 0 })
-          } else {
-            reject(new Error(stderr.trim() || `ssh exited with code ${code}`))
-          }
+          resolve({ stdout, stderr, code: exitCode })
         })
         options.stdout?.end()
         return
       }
 
-      if (code === 0) {
-        resolve({ stdout, stderr, code: 0 })
-      } else {
-        reject(new Error(stderr.trim() || `ssh exited with code ${code}`))
-      }
+      resolve({ stdout, stderr, code: exitCode })
     })
   })
 
@@ -248,7 +240,12 @@ export const uploadFile = (client: SshClient, localPath: string, remotePath: str
       return runProcess(client.binary, [...sshArgs(client, timeoutMs), `cat > ${shellQuote(remotePath)}`], {
         stdin: readStream,
         signal,
-      }).then(() => undefined)
+      }).then((result) => {
+        if (result.code !== 0) {
+          throw new Error(result.stderr.trim() || `ssh exited with code ${result.code}`)
+        }
+        return undefined
+      })
     },
     catch: (error) => new ConnectionLostError({ cause: error }),
   })
@@ -261,7 +258,17 @@ export const downloadFile = (client: SshClient, remotePath: string, localPath: s
       return runProcess(client.binary, [...sshArgs(client, timeoutMs), `cat ${shellQuote(remotePath)}`], {
         stdout: writeStream,
         signal,
-      }).then(() => undefined)
+      }).then((result) => {
+        if (result.code !== 0) {
+          try {
+            unlinkSync(localPath)
+          } catch {
+            // ignore
+          }
+          throw new Error(result.stderr.trim() || `ssh exited with code ${result.code}`)
+        }
+        return undefined
+      })
     },
     catch: (error) => new ConnectionLostError({ cause: error }),
   })
