@@ -4,7 +4,7 @@ import * as NodePath from 'node:path'
 import * as NodeFs from 'node:fs'
 import * as Executor from '../core/executor.js'
 import type { SshClient } from '../core/executor.js'
-import type { WifiTransportService } from '../core/wifi-transport.js'
+import type { SshTransportService } from '../core/ssh-transport.js'
 import type { ResourceThrottlerService } from '../core/resource-throttler.js'
 import { ConnectionLostError, CommandRejectedError, type KindleError } from '../errors/kindle-errors.js'
 import { shellQuote } from '../commands/utils.js'
@@ -63,14 +63,14 @@ const cleanTemp = (client: SshClient, tempPath: string) =>
     : Effect.void
 
 export const make = (
-  wifi: WifiTransportService,
+  transport: SshTransportService,
   throttler: ResourceThrottlerService,
   localCacheDir?: string
 ) =>
   Effect.gen(function* () {
     const upload = (localPath: string, remotePath: string) =>
       throttler.withPermit(
-        wifi.withConnection((client) =>
+        transport.withConnection((client) =>
           Effect.gen(function* () {
             const backupPath = `${remotePath}-bkp`
             const tempPath = `${remotePath}.tmp-${randomUUID()}`
@@ -142,7 +142,7 @@ export const make = (
 
     const download = (remotePath: string, localPath?: string) =>
       throttler.withPermit(
-        wifi.withConnection((client) =>
+        transport.withConnection((client) =>
           Effect.gen(function* () {
             const targetPath = resolveLocalPath(localCacheDir, remotePath, localPath)
             yield* Effect.try(() => {
@@ -155,7 +155,7 @@ export const make = (
 
     const remove = (remotePath: string) =>
       throttler.withPermit(
-        wifi.withConnection((client) =>
+        transport.withConnection((client) =>
           Effect.gen(function* () {
             const backupPath = `${remotePath}-bkp`
             const guard = `if [ -e ${shellQuote(backupPath)} ]; then echo 'backup already exists' >&2; exit 1; fi; mv ${shellQuote(remotePath)} ${shellQuote(backupPath)}`
@@ -166,7 +166,7 @@ export const make = (
 
     const restore = (remotePath: string) =>
       throttler.withPermit(
-        wifi.withConnection((client) =>
+        transport.withConnection((client) =>
           Effect.gen(function* () {
             const backupPath = `${remotePath}-bkp`
             const guard = `if [ -e ${shellQuote(remotePath)} ]; then echo 'origin already exists' >&2; exit 1; fi; mv ${shellQuote(backupPath)} ${shellQuote(remotePath)}`

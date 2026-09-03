@@ -2,7 +2,7 @@ import { Effect, Context, Queue, Deferred, Duration, Cause } from 'effect'
 import type { CommandExecutorService } from './command-executor.js'
 import type { DeviceAvailabilityService } from './device-availability.js'
 import { TimeoutError, QueueFullError, type KindleError } from '../errors/kindle-errors.js'
-import type { WifiTransportConfig } from '../core/transport-config.js'
+import type { SshTransportConfig } from '../core/transport-config.js'
 import type { ExecResult } from '../core/executor.js'
 
 export interface CommandQueueService {
@@ -20,7 +20,7 @@ interface QueueItem {
 }
 
 export const make = (
-  config: WifiTransportConfig,
+  config: SshTransportConfig,
   commandExecutor: CommandExecutorService,
   deviceAvailability: DeviceAvailabilityService
 ) =>

@@ -5,9 +5,9 @@ import { vi } from 'vitest'
 import * as Executor from '../core/executor.js'
 import { make as makeCommandExecutor } from './command-executor.js'
 import {
-  defaultWifiConfig,
+  defaultSshConfig,
   makeFakeResourceThrottler,
-  makeFakeWifiTransport,
+  makeFakeSshTransport,
 } from '../../test/fakes.js'
 
 vi.mock('../core/executor.js', async () => {
@@ -32,11 +32,11 @@ describe('CommandExecutor', () => {
       execMock().mockImplementation((client: unknown, command: string) =>
         Effect.succeed({ stdout: command, stderr: '', code: 0 })
       )
-      const wifi = makeFakeWifiTransport()
+      const transport = makeFakeSshTransport()
       const throttler = makeFakeResourceThrottler()
       const executor = yield* makeCommandExecutor(
-        defaultWifiConfig({ commandTimeout: 100 }),
-        wifi,
+        defaultSshConfig({ commandTimeout: 100 }),
+        transport,
         throttler
       )
       const result = yield* executor.execute('echo hello')
@@ -50,11 +50,11 @@ describe('CommandExecutor', () => {
       execMock().mockImplementation(() =>
         Effect.succeed({ stdout: '', stderr: '', code: 0 })
       )
-      const wifi = makeFakeWifiTransport()
+      const transport = makeFakeSshTransport()
       const throttler = makeFakeResourceThrottler()
       const executor = yield* makeCommandExecutor(
-        defaultWifiConfig(),
-        wifi,
+        defaultSshConfig(),
+        transport,
         throttler
       )
       const error = yield* Effect.flip(executor.execute('rm -rf /'))
@@ -71,11 +71,11 @@ describe('CommandExecutor', () => {
           code: 1,
         })
       )
-      const wifi = makeFakeWifiTransport()
+      const transport = makeFakeSshTransport()
       const throttler = makeFakeResourceThrottler()
       const executor = yield* makeCommandExecutor(
-        defaultWifiConfig(),
-        wifi,
+        defaultSshConfig(),
+        transport,
         throttler
       )
       const error = yield* Effect.flip(executor.execute('ls /secret'))
@@ -87,11 +87,11 @@ describe('CommandExecutor', () => {
       execMock().mockImplementation(() =>
         Effect.succeed({ stdout: '', stderr: 'device is busy', code: 1 })
       )
-      const wifi = makeFakeWifiTransport()
+      const transport = makeFakeSshTransport()
       const throttler = makeFakeResourceThrottler()
       const executor = yield* makeCommandExecutor(
-        defaultWifiConfig(),
-        wifi,
+        defaultSshConfig(),
+        transport,
         throttler
       )
       const error = yield* Effect.flip(executor.execute('some command'))
@@ -105,11 +105,11 @@ describe('CommandExecutor', () => {
           Effect.as({ stdout: '', stderr: '', code: 0 })
         )
       )
-      const wifi = makeFakeWifiTransport()
+      const transport = makeFakeSshTransport()
       const throttler = makeFakeResourceThrottler()
       const executor = yield* makeCommandExecutor(
-        defaultWifiConfig({ commandTimeout: 100 }),
-        wifi,
+        defaultSshConfig({ commandTimeout: 100 }),
+        transport,
         throttler
       )
       const fiber = yield* Effect.forkScoped(

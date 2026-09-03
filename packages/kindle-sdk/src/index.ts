@@ -1,6 +1,6 @@
 import { Effect, Context, Layer, ManagedRuntime } from 'effect'
-import { type WifiTransportConfig, defaultWifiTransportConfig } from './core/transport-config.js'
-import { WifiTransport, make as makeWifiTransport } from './core/wifi-transport.js'
+import { type SshTransportConfig, defaultSshTransportConfig } from './core/transport-config.js'
+import { SshTransport, make as makeSshTransport } from './core/ssh-transport.js'
 import { ResourceThrottler, make as makeResourceThrottler } from './core/resource-throttler.js'
 import { CommandExecutor, make as makeCommandExecutor } from './services/command-executor.js'
 import { DeviceAvailability, make as makeDeviceAvailability } from './services/device-availability.js'
@@ -41,7 +41,7 @@ export interface KindleSDK {
 }
 
 type KindleSDKServices =
-  | WifiTransport
+  | SshTransport
   | ResourceThrottler
   | CommandExecutor
   | DeviceAvailability
@@ -134,15 +134,15 @@ class KindleSDKImpl implements KindleSDK {
   }
 }
 
-const makeLayer = (config: WifiTransportConfig) =>
+const makeLayer = (config: SshTransportConfig) =>
   Layer.effectContext(
     Effect.gen(function* () {
-      const wifi = yield* makeWifiTransport(config)
-      const throttler = yield* makeResourceThrottler(config, wifi)
-      const commandExecutor = yield* makeCommandExecutor(config, wifi, throttler)
-      const deviceAvailability = yield* makeDeviceAvailability(config, wifi)
+      const transport = yield* makeSshTransport(config)
+      const throttler = yield* makeResourceThrottler(config, transport)
+      const commandExecutor = yield* makeCommandExecutor(config, transport, throttler)
+      const deviceAvailability = yield* makeDeviceAvailability(config, transport)
       const commandQueue = yield* makeCommandQueue(config, commandExecutor, deviceAvailability)
-      const fileTransfer = yield* makeFileTransfer(wifi, throttler, config.localCacheDir)
+      const fileTransfer = yield* makeFileTransfer(transport, throttler, config.localCacheDir)
       const powerManager = yield* makePowerManager(commandQueue)
       const deviceInfo = yield* makeDeviceInfo(commandQueue)
       const library = yield* makeLibrary(commandQueue, fileTransfer)
@@ -150,7 +150,7 @@ const makeLayer = (config: WifiTransportConfig) =>
       const wallpaper = yield* makeWallpaperManager(commandQueue, fileTransfer)
       const fontManager = yield* makeFontManager(commandQueue, fileTransfer)
 
-      return Context.make(WifiTransport, wifi).pipe(
+      return Context.make(SshTransport, transport).pipe(
         Context.add(ResourceThrottler, throttler),
         Context.add(CommandExecutor, commandExecutor),
         Context.add(DeviceAvailability, deviceAvailability),
@@ -168,10 +168,10 @@ const makeLayer = (config: WifiTransportConfig) =>
 
 export const createKindleSDK = (
   options: KindleConnectionOptions,
-  configOverrides?: Partial<Omit<WifiTransportConfig, keyof KindleConnectionOptions>>
+  configOverrides?: Partial<Omit<SshTransportConfig, keyof KindleConnectionOptions>>
 ): Effect.Effect<KindleSDK, never, never> =>
   Effect.gen(function* () {
-    const config = defaultWifiTransportConfig({ ...options, ...configOverrides })
+    const config = defaultSshTransportConfig({ ...options, ...configOverrides })
     const runtime = ManagedRuntime.make(makeLayer(config))
     yield* Effect.promise(() => runtime.context())
     return new KindleSDKImpl(runtime)
@@ -179,6 +179,6 @@ export const createKindleSDK = (
 
 export const createKindleSDKPromise = async (
   options: KindleConnectionOptions,
-  configOverrides?: Partial<Omit<WifiTransportConfig, keyof KindleConnectionOptions>>
+  configOverrides?: Partial<Omit<SshTransportConfig, keyof KindleConnectionOptions>>
 ): Promise<KindleSDK> =>
   Effect.runPromise(createKindleSDK(options, configOverrides))

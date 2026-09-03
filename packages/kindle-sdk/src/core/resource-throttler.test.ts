@@ -4,7 +4,7 @@ import { TestClock } from 'effect/testing'
 import { vi } from 'vitest'
 import * as Executor from './executor.js'
 import { make as makeResourceThrottler } from './resource-throttler.js'
-import { defaultWifiConfig, makeFakeWifiTransport } from '../../test/fakes.js'
+import { defaultSshConfig, makeFakeSshTransport } from '../../test/fakes.js'
 
 vi.mock('./executor.js', async () => {
   const { Effect } = await import('effect')
@@ -27,10 +27,10 @@ describe('ResourceThrottler', () => {
       execMock().mockImplementation(() =>
         Effect.succeed({ stdout: '20', stderr: '', code: 0 })
       )
-      const wifi = makeFakeWifiTransport()
+      const transport = makeFakeSshTransport()
       const throttler = yield* makeResourceThrottler(
-        defaultWifiConfig({ minMemoryMb: 10 }),
-        wifi
+        defaultSshConfig({ minMemoryMb: 10 }),
+        transport
       )
       yield* throttler.checkMemory
     }))
@@ -40,10 +40,10 @@ describe('ResourceThrottler', () => {
       execMock().mockImplementation(() =>
         Effect.succeed({ stdout: '5', stderr: '', code: 0 })
       )
-      const wifi = makeFakeWifiTransport()
+      const transport = makeFakeSshTransport()
       const throttler = yield* makeResourceThrottler(
-        defaultWifiConfig({ minMemoryMb: 10 }),
-        wifi
+        defaultSshConfig({ minMemoryMb: 10 }),
+        transport
       )
       const error = yield* Effect.flip(throttler.checkMemory)
       assert.strictEqual(error._tag, 'ResourceExhaustedError')
@@ -58,10 +58,10 @@ describe('ResourceThrottler', () => {
           Effect.as({ stdout: '20', stderr: '', code: 0 })
         )
       )
-      const wifi = makeFakeWifiTransport()
+      const transport = makeFakeSshTransport()
       const throttler = yield* makeResourceThrottler(
-        defaultWifiConfig({ minMemoryMb: 10 }),
-        wifi
+        defaultSshConfig({ minMemoryMb: 10 }),
+        transport
       )
       const fiber = yield* Effect.forkScoped(throttler.checkMemory)
       yield* TestClock.adjust(5000)
@@ -75,10 +75,10 @@ describe('ResourceThrottler', () => {
       execMock().mockImplementation(() =>
         Effect.succeed({ stdout: '20', stderr: '', code: 0 })
       )
-      const wifi = makeFakeWifiTransport()
+      const transport = makeFakeSshTransport()
       const throttler = yield* makeResourceThrottler(
-        defaultWifiConfig({ minMemoryMb: 10 }),
-        wifi
+        defaultSshConfig({ minMemoryMb: 10 }),
+        transport
       )
       const fiber = yield* Effect.forkScoped(
         throttler.withPermit(Effect.succeed('done'))

@@ -1,8 +1,8 @@
 import { Effect } from 'effect'
 import type { ExecResult, SshClient } from '../src/core/executor.js'
 import type { ResourceThrottlerService } from '../src/core/resource-throttler.js'
-import type { TransportState, WifiTransportConfig } from '../src/core/transport-config.js'
-import type { WifiTransportService } from '../src/core/wifi-transport.js'
+import type { TransportState, SshTransportConfig } from '../src/core/transport-config.js'
+import type { SshTransportService } from '../src/core/ssh-transport.js'
 import {
   DeviceSleepingError,
   DeviceUnavailableError,
@@ -16,9 +16,9 @@ export const fakeSshClient: SshClient = {
   args: ['kindle'],
 }
 
-export const defaultWifiConfig = (
-  overrides?: Partial<WifiTransportConfig>
-): WifiTransportConfig => ({
+export const defaultSshConfig = (
+  overrides?: Partial<SshTransportConfig>
+): SshTransportConfig => ({
   sshCmdStr: 'ssh kindle',
   connectionTimeout: 1000,
   heartbeatInterval: 5000,
@@ -31,17 +31,17 @@ export const defaultWifiConfig = (
   ...overrides,
 })
 
-export interface FakeWifiTransportOptions {
+export interface FakeSshTransportOptions {
   readonly state?: TransportState
   readonly recover?: Effect.Effect<void, DeviceUnavailableError>
 }
 
-export const makeFakeWifiTransport = (
-  options: FakeWifiTransportOptions = {}
-): WifiTransportService => ({
+export const makeFakeSshTransport = (
+  options: FakeSshTransportOptions = {}
+): SshTransportService => ({
   state: Effect.succeed(options.state ?? { _tag: 'Connected' }),
   withConnection: ((f: (client: SshClient) => unknown) =>
-    f(fakeSshClient)) as unknown as WifiTransportService['withConnection'],
+    f(fakeSshClient)) as unknown as SshTransportService['withConnection'],
   recover: options.recover ?? Effect.void,
   markSleeping: Effect.void,
   markDisconnected: Effect.void,

@@ -7,9 +7,9 @@ import {
   DeviceUnavailableError,
   DeviceSleepingError,
 } from '../errors/kindle-errors.js'
-import type { WifiTransportConfig, TransportState } from './transport-config.js'
+import type { SshTransportConfig, TransportState } from './transport-config.js'
 
-export interface WifiTransportService {
+export interface SshTransportService {
   readonly state: Effect.Effect<TransportState>
   readonly withConnection: <A, E extends KindleError, R>(
     f: (client: SshClient) => Effect.Effect<A, E, R>
@@ -19,14 +19,14 @@ export interface WifiTransportService {
   readonly markDisconnected: Effect.Effect<void>
 }
 
-export class WifiTransport extends Context.Service<WifiTransport, WifiTransportService>()(
-  '@bbbook/kindle-sdk/WifiTransport'
+export class SshTransport extends Context.Service<SshTransport, SshTransportService>()(
+  '@bbbook/kindle-sdk/SshTransport'
 ) {}
 
 const heartbeatCommand = 'echo kindle-pong'
 const heartbeatResponse = 'kindle-pong'
 
-export const make = (config: WifiTransportConfig) =>
+export const make = (config: SshTransportConfig) =>
   Effect.gen(function* () {
     const clientRef = yield* Ref.make<Option.Option<SshClient>>(Option.none())
     const stateRef = yield* Ref.make<TransportState>({ _tag: 'Disconnected' })
@@ -105,7 +105,7 @@ export const make = (config: WifiTransportConfig) =>
       )
     )
 
-    const service: WifiTransportService = {
+    const service: SshTransportService = {
       state: getState,
       withConnection: (f) =>
         Effect.gen(function* () {
