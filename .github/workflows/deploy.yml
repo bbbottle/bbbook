@@ -37,19 +37,35 @@ jobs:
           AUTH_JWT_SECRET: ${{ secrets.AUTH_JWT_SECRET }}
           AUTH_DEFAULT_ADMIN_PASSWORD: ${{ secrets.AUTH_DEFAULT_ADMIN_PASSWORD }}
           AUTH_TOTP_SECRET_KEY: ${{ secrets.AUTH_TOTP_SECRET_KEY }}
+          # Semantic SSH connection values for the entrypoint to assemble /root/.ssh/config
+          KINDLE_SSH_HOSTNAME: ${{ secrets.KINDLE_SSH_HOSTNAME }}
+          KINDLE_SSH_USER: ${{ secrets.KINDLE_SSH_USER }}
+          KINDLE_SSH_PORT: ${{ secrets.KINDLE_SSH_PORT }}
+          KINDLE_SSH_KEY: ${{ secrets.KINDLE_SSH_KEY }}
         run: |
+          KINDLE_SSH_KEY_B64=$(printf '%s' "$KINDLE_SSH_KEY" | base64 -w0)
+          echo "::add-mask::$KINDLE_SSH_KEY_B64"
+
           if once list 2>/dev/null | grep -q "kdl.bbki.ng"; then
             once update kdl.bbki.ng \
               --image "${{ steps.vars.outputs.image }}:latest" \
               --env "AUTH_JWT_SECRET=$AUTH_JWT_SECRET" \
               --env "AUTH_DEFAULT_ADMIN_PASSWORD=$AUTH_DEFAULT_ADMIN_PASSWORD" \
-              --env "AUTH_TOTP_SECRET_KEY=$AUTH_TOTP_SECRET_KEY"
+              --env "AUTH_TOTP_SECRET_KEY=$AUTH_TOTP_SECRET_KEY" \
+              --env "KINDLE_SSH_HOSTNAME=$KINDLE_SSH_HOSTNAME" \
+              --env "KINDLE_SSH_USER=$KINDLE_SSH_USER" \
+              --env "KINDLE_SSH_PORT=$KINDLE_SSH_PORT" \
+              --env "KINDLE_SSH_KEY=$KINDLE_SSH_KEY_B64"
           else
             once deploy "${{ steps.vars.outputs.image }}:latest" \
               --host kdl.bbki.ng \
               --env "AUTH_JWT_SECRET=$AUTH_JWT_SECRET" \
               --env "AUTH_DEFAULT_ADMIN_PASSWORD=$AUTH_DEFAULT_ADMIN_PASSWORD" \
-              --env "AUTH_TOTP_SECRET_KEY=$AUTH_TOTP_SECRET_KEY"
+              --env "AUTH_TOTP_SECRET_KEY=$AUTH_TOTP_SECRET_KEY" \
+              --env "KINDLE_SSH_HOSTNAME=$KINDLE_SSH_HOSTNAME" \
+              --env "KINDLE_SSH_USER=$KINDLE_SSH_USER" \
+              --env "KINDLE_SSH_PORT=$KINDLE_SSH_PORT" \
+              --env "KINDLE_SSH_KEY=$KINDLE_SSH_KEY_B64"
           fi
 
       - name: Prune local Docker artifacts
