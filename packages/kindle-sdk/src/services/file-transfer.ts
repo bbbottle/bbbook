@@ -14,6 +14,8 @@ export interface FileTransferService {
   readonly download: (remotePath: string, localPath?: string) => Effect.Effect<void, KindleError>
   readonly remove: (remotePath: string) => Effect.Effect<void, KindleError>
   readonly restore: (remotePath: string) => Effect.Effect<void, KindleError>
+  readonly exists: (remotePath: string) => Effect.Effect<boolean, KindleError>
+  readonly delete: (remotePath: string) => Effect.Effect<void, KindleError>
 }
 
 const resolveLocalPath = (localCacheDir: string | undefined, remotePath: string, localPath?: string) => {
@@ -26,30 +28,36 @@ export class FileTransfer extends Context.Service<FileTransfer, FileTransferServ
   '@bbbook/kindle-sdk/FileTransfer'
 ) {}
 
+const classifyCommandResult = (result: Executor.ExecResult, command: string): Effect.Effect<void, KindleError> => {
+  if (result.code === 0) return Effect.void
+  if (result.code === 255) {
+    return Effect.fail(new ConnectionLostError({ cause: new Error(result.stderr.trim() || 'ssh connection failed') }))
+  }
+  return Effect.fail(new CommandRejectedError({ command, reason: result.stderr.trim() || `exit code ${result.code}` }))
+}
+
 const execGuarded = (client: SshClient, command: string) =>
-  Executor.exec(client, command).pipe(
-    Effect.flatMap((result) =>
-      result.code === 0
-        ? Effect.void
-        : Effect.fail(new CommandRejectedError({ command, reason: result.stderr.trim() || `exit code ${result.code}` }))
-    )
-  )
+  Executor.exec(client, command).pipe(Effect.flatMap((result) => classifyCommandResult(result, command)))
 
 const remoteExists = (client: SshClient, path: string) =>
-  Executor.exec(client, `test -e ${shellQuote(path)}`).pipe(Effect.map((result) => result.code === 0))
+  Executor.exec(client, `test -e ${shellQuote(path)}; echo $?`).pipe(
+    Effect.flatMap((result) => {
+      if (result.code !== 0) {
+        return Effect.fail(new ConnectionLostError({ cause: new Error(result.stderr.trim() || `ssh exited with code ${result.code}`) }))
+      }
+      const exitCode = Number.parseInt(result.stdout.trim(), 10)
+      if (Number.isNaN(exitCode)) {
+        return Effect.fail(new ConnectionLostError({ cause: new Error(`unexpected test output: ${result.stdout}`) }))
+      }
+      if (exitCode === 0) return Effect.succeed(true)
+      if (exitCode === 1) return Effect.succeed(false)
+      return Effect.fail(new ConnectionLostError({ cause: new Error(result.stderr.trim() || `test exited with code ${exitCode}`) }))
+    })
+  )
 
 const move = (client: SshClient, source: string, destination: string) =>
   Executor.exec(client, `mv ${shellQuote(source)} ${shellQuote(destination)}`).pipe(
-    Effect.flatMap((result) =>
-      result.code === 0
-        ? Effect.void
-        : Effect.fail(
-            new CommandRejectedError({
-              command: `mv ${source} ${destination}`,
-              reason: result.stderr.trim() || `exit code ${result.code}`,
-            })
-          )
-    )
+    Effect.flatMap((result) => classifyCommandResult(result, `mv ${source} ${destination}`))
   )
 
 const isTempPath = (path: string) => path.includes('.tmp-')
@@ -102,12 +110,7 @@ export const make = (
               )
               if (moveBackupResult.code !== 0) {
                 yield* cleanTemp(client, tempPath)
-                return yield* Effect.fail(
-                  new CommandRejectedError({
-                    command: `mv ${remotePath} ${backupPath}`,
-                    reason: moveBackupResult.stderr.trim() || 'failed to move original to backup',
-                  })
-                )
+                return yield* classifyCommandResult(moveBackupResult, `mv ${remotePath} ${backupPath}`)
               }
             }
 
@@ -126,12 +129,7 @@ export const make = (
                 }
               }
               yield* cleanTemp(client, tempPath)
-              return yield* Effect.fail(
-                new CommandRejectedError({
-                  command: `mv ${tempPath} ${remotePath}`,
-                  reason: moveFinalResult.stderr.trim() || 'failed to move temp to final path',
-                })
-              )
+              return yield* classifyCommandResult(moveFinalResult, `mv ${tempPath} ${remotePath}`)
             }
 
             // Success: the temp path no longer exists; this is a no-op.
@@ -142,15 +140,34 @@ export const make = (
 
     const download = (remotePath: string, localPath?: string) =>
       throttler.withPermit(
-        transport.withConnection((client) =>
-          Effect.gen(function* () {
-            const targetPath = resolveLocalPath(localCacheDir, remotePath, localPath)
+        transport.withConnection((client) => {
+          const targetPath = resolveLocalPath(localCacheDir, remotePath, localPath)
+          const tempPath = `${targetPath}.tmp-${randomUUID()}`
+          const cleanTemp = Effect.try(() => {
+            if (NodeFs.existsSync(tempPath)) {
+              NodeFs.unlinkSync(tempPath)
+            }
+          }).pipe(Effect.catch(() => Effect.void))
+          return Effect.gen(function* () {
             yield* Effect.try(() => {
               NodeFs.mkdirSync(NodePath.dirname(targetPath), { recursive: true })
             }).pipe(Effect.catch(() => Effect.void))
-            return yield* Executor.downloadFile(client, remotePath, targetPath)
-          })
-        )
+            yield* Executor.downloadFile(client, remotePath, tempPath)
+            yield* Effect.try(() => {
+              NodeFs.renameSync(tempPath, targetPath)
+            }).pipe(
+              Effect.catch((error) =>
+                Effect.fail(
+                  new CommandRejectedError({
+                    command: `rename ${tempPath} ${targetPath}`,
+                    reason: error instanceof Error ? error.message : 'failed to finalize download',
+                  })
+                )
+              )
+            )
+            return void 0
+          }).pipe(Effect.ensuring(cleanTemp))
+        })
       )
 
     const remove = (remotePath: string) =>
@@ -175,5 +192,17 @@ export const make = (
         )
       )
 
-    return { upload, download, remove, restore }
+    const exists = (remotePath: string) =>
+      throttler.withPermit(
+        transport.withConnection((client) => remoteExists(client, remotePath))
+      )
+
+    const deleteFile = (remotePath: string) =>
+      throttler.withPermit(
+        transport.withConnection((client) =>
+          execGuarded(client, `rm -f -- ${shellQuote(remotePath)}`)
+        )
+      )
+
+    return { upload, download, remove, restore, exists, delete: deleteFile }
   })

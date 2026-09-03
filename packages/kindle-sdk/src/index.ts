@@ -28,6 +28,7 @@ export interface KindleSDK {
   readonly removeBook: (fileName: string) => Promise<void>
   readonly restoreBook: (fileName: string) => Promise<void>
   readonly refreshLibrary: () => Promise<void>
+  readonly openBook: (fileName: string) => Promise<void>
   readonly applyWallpapers: (wallpapers: ReadonlyArray<import('./types/index.js').Wallpaper>) => Promise<void>
   readonly backupWallpapers: () => Promise<void>
   readonly restoreWallpapers: () => Promise<void>
@@ -93,6 +94,10 @@ class KindleSDKImpl implements KindleSDK {
     return this.runtime.runPromise(Library.use((s) => s.refreshLibrary()))
   }
 
+  openBook(fileName: string) {
+    return this.runtime.runPromise(Library.use((s) => s.openBook(fileName)))
+  }
+
   applyWallpapers(wallpapers: ReadonlyArray<import('./types/index.js').Wallpaper>) {
     return this.runtime.runPromise(WallpaperManager.use((s) => s.applyWallpapers(wallpapers)))
   }
@@ -145,7 +150,8 @@ const makeLayer = (config: SshTransportConfig) =>
       const fileTransfer = yield* makeFileTransfer(transport, throttler, config.localCacheDir)
       const powerManager = yield* makePowerManager(commandQueue)
       const deviceInfo = yield* makeDeviceInfo(commandQueue)
-      const library = yield* makeLibrary(commandQueue, fileTransfer)
+      const backupDir = config.localCacheDir ? `${config.localCacheDir}/backups` : undefined
+      const library = yield* makeLibrary(commandQueue, fileTransfer, backupDir)
       const screenshot = yield* makeScreenshot(commandQueue, fileTransfer, config.localCacheDir)
       const wallpaper = yield* makeWallpaperManager(commandQueue, fileTransfer)
       const fontManager = yield* makeFontManager(commandQueue, fileTransfer)

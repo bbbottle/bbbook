@@ -9,6 +9,7 @@ export interface Book {
   author?: string
   path?: string
   coverUrl?: string
+  fileName: string
 }
 
 export interface KindleDeviceInfo {

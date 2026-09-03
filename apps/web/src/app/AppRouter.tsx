@@ -1,56 +1,53 @@
 import { useEffect, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useCached } from '../lib/useCached.js'
 import {
   MemoryRouter,
   Navigate,
   Outlet,
   Route,
   Routes,
+  useLocation,
   useNavigate,
+  useOutletContext,
   useParams,
 } from 'react-router-dom'
-import { ActionBar, ActionGroup, ActionItem, ActionBarSpace, SearchBar } from '@bbbook/kindle-ui/components/ActionBar'
-import { ActionBarMenu } from '@bbbook/kindle-ui/components/ActionBarMenu'
-import { Button } from '@bbbook/kindle-ui/components/Button'
-import { Card, CardContent, CardTitle } from '@bbbook/kindle-ui/components/Card'
-import { Dialog } from '@bbbook/kindle-ui/components/Dialog'
-import { Grid, GridItem } from '@bbbook/kindle-ui/components/Grid'
-import { Icon } from '@bbbook/kindle-ui/components/Icon'
-import { Input } from '@bbbook/kindle-ui/components/Input'
-import { List } from '@bbbook/kindle-ui/components/List'
-import { ListItem } from '@bbbook/kindle-ui/components/ListItem'
-import { Navbar } from '@bbbook/kindle-ui/components/Navbar'
-import { Section, SectionTitle } from '@bbbook/kindle-ui/components/Section'
-import { StatuBar } from '@bbbook/kindle-ui/components/StatuBar'
-import { Tab, TabItem } from '@bbbook/kindle-ui/components/Tab'
-import { Typography } from '@bbbook/kindle-ui/components/Typography'
+import { useTranslation } from 'react-i18next'
+import { type LocalePreference } from '@bbbook/shared-types'
+import {
+  ActionBar,
+  ActionBarMenu,
+  ActionBarSpace,
+  ActionGroup,
+  ActionItem,
+  Button,
+  Card,
+  CardContent,
+  CardTitle,
+  Dialog,
+  Icon,
+  Input,
+  List,
+  ListItem,
+  Navbar,
+  SearchBar,
+  Section,
+  StatuBar,
+  Typography,
+} from '@bbbook/kindle-ui'
+import { useCached } from '../lib/useCached.js'
 import { createUser, listUsers, type User } from '../api/admin.js'
 import {
+  deleteBook,
+  fetchBooks,
   fetchDeviceInfo,
+  openBook,
+  type Book,
+  type BooksResponse,
   type DeviceInfo,
+  uploadBook,
 } from '../api/kindle.js'
-import {
-  type CurrentUser,
-  updateUserPreference,
-} from '../api/auth.js'
-import { type LocalePreference } from '@bbbook/shared-types'
-import { getLocalePreference, setLocalePreference } from '../i18n/localePreference'
-import { LocaleOptions } from '../i18n/systemLocale'
-
-const books = [
-  { id: '1', title: 'The Great Gatsby', subtitle: 'F. Scott Fitzgerald', meta: '32%' },
-  { id: '2', title: '1984', subtitle: 'George Orwell', meta: 'New' },
-  { id: '3', title: 'Moby Dick', subtitle: 'Herman Melville', meta: 'Cloud' },
-  { id: '4', title: 'Invisible Man', subtitle: 'Ralph Ellison', meta: '10%' },
-  { id: '5', title: 'Dune', subtitle: 'Frank Herbert', meta: 'Cloud' },
-]
-
-const storeItems = [
-  { id: '1', title: 'Design Patterns', subtitle: 'Gang of Four', meta: 'EPUB' },
-  { id: '2', title: 'Clean Code', subtitle: 'Robert C. Martin', meta: 'EPUB' },
-  { id: '3', title: 'The Pragmatic Programmer', subtitle: 'Hunt & Thomas', meta: 'PDF' },
-]
+import { type CurrentUser, updateUserPreference } from '../api/auth.js'
+import { getLocalePreference, setLocalePreference } from '../i18n/localePreference.js'
+import { LocaleOptions } from '../i18n/systemLocale.js'
 
 function formatError(err: unknown): string {
   if (err && typeof err === 'object' && 'code' in err && typeof (err as { code?: string }).code === 'string') {
@@ -60,117 +57,6 @@ function formatError(err: unknown): string {
     return err.message
   }
   return 'UNKNOWN_ERROR'
-}
-
-interface LayoutProps {
-  onLogout?: () => void
-}
-
-function Layout({ onLogout }: LayoutProps) {
-  const { t } = useTranslation()
-  const navigate = useNavigate()
-  const [query, setQuery] = useState('')
-  const { data: info, revalidate } = useCached<DeviceInfo>({
-    key: 'device-info',
-    fn: fetchDeviceInfo,
-    ttl: 0,
-  })
-
-  useEffect(() => {
-    const id = setInterval(revalidate, 60000)
-    return () => clearInterval(id)
-  }, [revalidate])
-
-  const menuItems = [
-    { textPrimary: t('menu.logout'), onClick: onLogout },
-  ]
-
-  return (
-    <div className="flex h-full flex-col">
-      <Navbar fixed>
-        <StatuBar
-          deviceName={info?.modelName || 'bbbook'}
-          battery={info?.batteryLevel}
-          charging={info?.isCharging}
-          celluar={info?.wifi ? { on: true, label: info.wifi.ssid, signal: info.wifi.signal } : undefined}
-        />
-        <ActionBar>
-          <ActionGroup>
-            <ActionItem icon={<Icon name="home" size={22} />} onClick={() => navigate('/library')}>
-              {t('nav.library')}
-            </ActionItem>
-            <ActionItem icon={<Icon name="store" size={22} />} onClick={() => navigate('/store')}>
-              {t('nav.store')}
-            </ActionItem>
-            <ActionItem icon={<Icon name="settings" size={22} />} onClick={() => navigate('/settings')}>
-              {t('nav.settings')}
-            </ActionItem>
-          </ActionGroup>
-          <ActionBarSpace />
-          <ActionGroup>
-            <SearchBar
-              value={query}
-              onChange={setQuery}
-              onSubmit={(value) => console.log('search', value)}
-              placeholder={t('common.search')}
-            />
-            <ActionBarMenu items={menuItems} />
-          </ActionGroup>
-        </ActionBar>
-      </Navbar>
-      <main className="flex-1 overflow-auto">
-        <Outlet />
-      </main>
-    </div>
-  )
-}
-
-function LibraryPage() {
-  const [active, setActive] = useState<string | null>(null)
-  const navigate = useNavigate()
-
-  return (
-    <List className="flex-1">
-      {books.map((book) => (
-        <ListItem
-          key={book.id}
-          title={book.title}
-          subtitle={book.subtitle}
-          meta={book.meta}
-          active={active === book.id}
-          onClick={() => {
-            setActive(book.id)
-            navigate(`/books/${book.id}`)
-          }}
-        />
-      ))}
-    </List>
-  )
-}
-
-function StorePage() {
-  const { t } = useTranslation()
-  const [tab, setTab] = useState('all')
-
-  return (
-    <Section className="flex flex-col gap-2">
-      <Tab>
-        <TabItem active={tab === 'all'} onClick={() => setTab('all')}>{t('store.tabAll')}</TabItem>
-        <TabItem active={tab === 'downloaded'} onClick={() => setTab('downloaded')}>{t('store.tabDownloaded')}</TabItem>
-      </Tab>
-      <SectionTitle label={t('store.sectionResults')} />
-      <Grid dense className="mb-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <GridItem key={i} className="bg-muted" />
-        ))}
-      </Grid>
-      <List>
-        {storeItems.map((item) => (
-          <ListItem key={item.id} title={item.title} subtitle={item.subtitle} meta={item.meta} />
-        ))}
-      </List>
-    </Section>
-  )
 }
 
 function LanguageCard() {
@@ -222,6 +108,235 @@ function LanguageCard() {
   )
 }
 
+interface LayoutProps {
+  onLogout?: () => void
+}
+
+function Layout({ onLogout }: LayoutProps) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const [query, setQuery] = useState('')
+  const { data: info, revalidate } = useCached<DeviceInfo>({
+    key: 'device-info',
+    fn: fetchDeviceInfo,
+    ttl: 0,
+  })
+
+  useEffect(() => {
+    const id = setInterval(revalidate, 60000)
+    return () => clearInterval(id)
+  }, [revalidate])
+
+  const menuItems = [{ textPrimary: t('menu.logout'), onClick: onLogout }]
+
+  return (
+    <div className="flex h-full flex-col">
+      <Navbar fixed>
+        <StatuBar
+          deviceName={info?.modelName || 'bbbook'}
+          battery={info?.batteryLevel}
+          charging={info?.isCharging}
+          celluar={info?.wifi ? { on: true, label: info.wifi.ssid, signal: info.wifi.signal } : undefined}
+        />
+        <ActionBar>
+          <ActionGroup>
+            <ActionItem icon={<Icon name="home" size={22} />} onClick={() => navigate('/library')}>
+              {t('nav.library')}
+            </ActionItem>
+            <ActionItem icon={<Icon name="settings" size={22} />} onClick={() => navigate('/settings')}>
+              {t('nav.settings')}
+            </ActionItem>
+          </ActionGroup>
+          <ActionBarSpace />
+          <ActionGroup>
+            <SearchBar value={query} onChange={setQuery} placeholder={t('common.search')} />
+            <ActionBarMenu items={menuItems} />
+          </ActionGroup>
+        </ActionBar>
+      </Navbar>
+      <main className="flex-1 overflow-auto">
+        <Outlet context={{ query, setQuery }} />
+      </main>
+    </div>
+  )
+}
+
+function LibraryPage() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { query } = useOutletContext<{ query: string }>()
+  const { data, error, loading, refresh } = useCached<BooksResponse>({ key: 'kindle-books', fn: fetchBooks, ttl: 0 })
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  const localizedMessage = (code: string | null) =>
+    code ? t(`errors.${code}`, { defaultValue: code }) : null
+
+  const books = data?.books ? [...data.books] : []
+  const filtered = query.trim()
+    ? books.filter((book) =>
+        (book.title || book.fileName).toLowerCase().includes(query.toLowerCase())
+      )
+    : books
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || uploading) return
+    setUploading(true)
+    setUploadError(null)
+    try {
+      await uploadBook(file)
+      await refresh()
+    } catch (err) {
+      setUploadError(formatError(err))
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  return (
+    <Section className="flex flex-col gap-2">
+      <div className="flex items-center gap-2 px-4">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".azw,.azw3,.mobi,.epub,.pdf"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+        <Button variant="outline" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
+          {t('library.upload')}
+        </Button>
+        <Button variant="ghost" onClick={refresh}>
+          {t('library.refresh')}
+        </Button>
+      </div>
+      {uploadError && (
+        <Typography className="px-4 text-sm text-muted">
+          {localizedMessage(uploadError)}
+        </Typography>
+      )}
+
+      {loading && (
+        <Typography className="px-4 py-6 text-sm text-muted">{t('common.loading')}</Typography>
+      )}
+      {error ? (
+        <Typography className="px-4 py-6 text-sm text-muted">
+          {localizedMessage(formatError(error))}
+        </Typography>
+      ) : null}
+      {!loading && !error && filtered.length === 0 && (
+        <Typography className="px-4 py-6 text-sm text-muted">
+          {query ? t('library.noSearchResults') : t('library.empty')}
+        </Typography>
+      )}
+
+      <List className="flex-1">
+        {filtered.map((book) => (
+          <ListItem
+            key={book.id}
+            title={book.title || book.fileName}
+            subtitle={book.author || book.fileName}
+            onClick={() => navigate(`/books/${encodeURIComponent(book.id)}`, { state: book })}
+          />
+        ))}
+      </List>
+    </Section>
+  )
+}
+
+function BookPage() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { id } = useParams<{ id: string }>()
+  const locationState = useLocation().state as Book | undefined
+  const { data, refresh } = useCached<BooksResponse>({ key: 'kindle-books', fn: fetchBooks, ttl: 0 })
+  const [deleting, setDeleting] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+
+  const localizedMessage = (code: string | null) =>
+    code ? t(`errors.${code}`, { defaultValue: code }) : null
+
+  const book = locationState ?? data?.books.find((b) => b.id === id)
+
+  const handleOpen = async () => {
+    if (!book) return
+    await openBook(book.fileName)
+  }
+
+  const handleDelete = async () => {
+    if (!book) return
+    setDeleting(true)
+    try {
+      await deleteBook(book.fileName)
+      await refresh()
+      navigate('/library')
+    } catch (err) {
+      alert(localizedMessage(formatError(err)) ?? formatError(err))
+    } finally {
+      setDeleting(false)
+      setShowConfirm(false)
+    }
+  }
+
+  if (!book) {
+    return (
+      <Section className="p-4">
+        <Typography className="text-sm text-muted">{t('library.bookNotFound')}</Typography>
+        <Button className="mt-4" onClick={() => navigate('/library')}>
+          {t('common.back')}
+        </Button>
+      </Section>
+    )
+  }
+
+  return (
+    <Section className="flex flex-col gap-4 p-4">
+      <Card>
+        <CardTitle>{book.title || book.fileName}</CardTitle>
+        <CardContent>
+          <Typography className="text-sm text-muted">
+            {t('library.fileName')}: {book.fileName}
+          </Typography>
+          {book.author && (
+            <Typography className="text-sm text-muted">
+              {t('library.author')}: {book.author}
+            </Typography>
+          )}
+          {book.path && (
+            <Typography className="text-sm text-muted">{book.path}</Typography>
+          )}
+        </CardContent>
+      </Card>
+      <div className="flex gap-3">
+        <Button onClick={handleOpen}>{t('library.open')}</Button>
+        <Button variant="outline" onClick={() => setShowConfirm(true)}>
+          {t('library.delete')}
+        </Button>
+      </div>
+      <Dialog
+        open={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        title={t('library.deleteConfirmTitle')}
+        actions={
+          <>
+            <Button variant="ghost" onClick={() => setShowConfirm(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button disabled={deleting} onClick={handleDelete}>
+              {t('common.confirm')}
+            </Button>
+          </>
+        }
+      >
+        {t('library.deleteConfirm', { fileName: book.fileName })}
+      </Dialog>
+    </Section>
+  )
+}
+
 interface SettingsPageProps {
   role?: 'admin' | 'user'
 }
@@ -236,7 +351,7 @@ function SettingsPage({ role }: SettingsPageProps) {
   const formRef = useRef<HTMLFormElement>(null)
 
   const { data: info, error: infoError } = useCached<DeviceInfo>({
-    key: 'device-info',
+    key: 'kindle-info',
     fn: fetchDeviceInfo,
     ttl: 0,
   })
@@ -248,16 +363,14 @@ function SettingsPage({ role }: SettingsPageProps) {
   const users = usersData ?? []
   const deviceError = infoError ? formatError(infoError) : null
 
+  const localizedMessage = (code: string | null) =>
+    code ? t(`errors.${code}`, { defaultValue: code }) : null
+
   useEffect(() => {
     if (usersError) {
       setAdminMessage(formatError(usersError))
     }
   }, [usersError])
-
-  const localizedMessage = (code: string | null) => {
-    if (!code) return null
-    return t(`errors.${code}`, { defaultValue: code })
-  }
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -319,7 +432,7 @@ function SettingsPage({ role }: SettingsPageProps) {
             </List>
             <Button onClick={() => setDialogOpen(true)}>{t('settings.addUser')}</Button>
             {adminMessage ? (
-              <Typography className="text-sm text-muted">{localizedMessage(adminMessage) ?? adminMessage}</Typography>
+              <Typography className="text-sm text-muted">{adminMessage}</Typography>
             ) : null}
           </CardContent>
         </Card>
@@ -361,24 +474,6 @@ function SettingsPage({ role }: SettingsPageProps) {
   )
 }
 
-function BookPage() {
-  const { t } = useTranslation()
-  const params = useParams<{ id: string }>()
-  const book = books.find((b) => b.id === params.id)
-  return (
-    <Section className="p-4">
-      <Card>
-        <CardTitle>{book?.title ?? t('common.book')}</CardTitle>
-        <CardContent>
-          <Typography className="text-sm text-muted">
-            {book ? book.subtitle : `${t('common.book')} ${params.id}`}
-          </Typography>
-        </CardContent>
-      </Card>
-    </Section>
-  )
-}
-
 export interface AppRouterProps {
   onLogout?: () => void
   currentUser?: CurrentUser | null
@@ -391,7 +486,6 @@ export function AppRouter({ onLogout, currentUser }: AppRouterProps) {
         <Route path="/" element={<Layout onLogout={onLogout} />}>
           <Route index element={<Navigate to="/library" replace />} />
           <Route path="library" element={<LibraryPage />} />
-          <Route path="store" element={<StorePage />} />
           <Route path="settings" element={<SettingsPage role={currentUser?.role} />} />
           <Route path="books/:id" element={<BookPage />} />
         </Route>
