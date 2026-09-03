@@ -34,7 +34,7 @@ import {
   Typography,
   type MenuItemProps,
 } from '@bbbook/kindle-ui'
-import { useCached } from '../lib/useCached.js'
+import { invalidateCache, useCached } from '../lib/useCached.js'
 import { createUser, listUsers, type User } from '../api/admin.js'
 import {
   deleteBook,
@@ -153,8 +153,8 @@ function Layout({ onLogout }: LayoutProps) {
       })
       setUploadStatus('done')
       setUploadOpen(false)
+      invalidateCache('kindle-books')
       navigate('/library')
-      window.dispatchEvent(new CustomEvent('bbbook:refreshLibrary'))
     } catch (err) {
       setUploadStatus('error')
       setUploadError(formatError(err))

@@ -68,6 +68,10 @@ function notifyRevalidate(key: string) {
   notifyListeners(key)
 }
 
+export function invalidateCache(key: string) {
+  notifyRefresh(key)
+}
+
 interface UseCachedOptions<T> {
   key: string | null | undefined
   fn: () => Promise<T>
