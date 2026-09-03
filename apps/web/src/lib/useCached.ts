@@ -14,6 +14,7 @@ interface PromiseEntry<T> {
 const dataCache = new Map<string, CacheEntry<unknown>>()
 const promiseCache = new Map<string, PromiseEntry<unknown>>()
 const requestIds = new Map<string, number>()
+const refreshListeners = new Map<string, Set<() => void>>()
 
 function nextRequestId(key: string): number {
   const id = (requestIds.get(key) ?? 0) + 1
@@ -33,6 +34,28 @@ function getCached<T>(key: string, ttl?: number): T | undefined {
     return undefined
   }
   return entry.value
+}
+
+function subscribeRefresh(key: string, callback: () => void) {
+  const listeners = refreshListeners.get(key) ?? new Set<() => void>()
+  listeners.add(callback)
+  refreshListeners.set(key, listeners)
+  return () => {
+    listeners.delete(callback)
+    if (listeners.size === 0) {
+      refreshListeners.delete(key)
+    }
+  }
+}
+
+function notifyRefresh(key: string) {
+  dataCache.delete(key)
+  promiseCache.delete(key)
+  nextRequestId(key)
+  const listeners = refreshListeners.get(key)
+  if (listeners) {
+    Array.from(listeners).forEach((cb) => cb())
+  }
 }
 
 interface UseCachedOptions<T> {
@@ -62,6 +85,11 @@ export function useCached<T>({ key, fn, ttl }: UseCachedOptions<T>): UseCachedRe
     }
     return { data: undefined, error: undefined, loading: key != null }
   })
+
+  useEffect(() => {
+    if (!key) return
+    return subscribeRefresh(key, () => setTick((t) => t + 1))
+  }, [key])
 
   useEffect(() => {
     if (!key) {
@@ -124,10 +152,7 @@ export function useCached<T>({ key, fn, ttl }: UseCachedOptions<T>): UseCachedRe
 
   const refresh = useCallback(() => {
     if (!key) return
-    dataCache.delete(key)
-    promiseCache.delete(key)
-    nextRequestId(key)
-    setTick((t) => t + 1)
+    notifyRefresh(key)
   }, [key])
 
   return { data: state.data, error: state.error, loading: state.loading, refresh }
