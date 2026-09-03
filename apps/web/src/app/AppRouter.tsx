@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 import {
   MemoryRouter,
   Navigate,
@@ -32,6 +32,7 @@ import {
   Section,
   StatuBar,
   Typography,
+  type MenuItemProps,
 } from '@bbbook/kindle-ui'
 import { useCached } from '../lib/useCached.js'
 import { createUser, listUsers, type User } from '../api/admin.js'
@@ -115,6 +116,7 @@ interface LayoutProps {
 function Layout({ onLogout }: LayoutProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const mainRef = useRef<HTMLElement>(null)
   const [query, setQuery] = useState('')
   const { data: info, revalidate } = useCached<DeviceInfo>({
     key: 'device-info',
@@ -127,7 +129,17 @@ function Layout({ onLogout }: LayoutProps) {
     return () => clearInterval(id)
   }, [revalidate])
 
-  const menuItems = [{ textPrimary: t('menu.logout'), onClick: onLogout }]
+  const menuItems: MenuItemProps[] = [
+    {
+      textPrimary: t('library.upload'),
+      onClick: () => {
+        sessionStorage.setItem('bbbook_trigger_upload', '1')
+        navigate('/library')
+        window.dispatchEvent(new CustomEvent('bbbook:triggerUpload'))
+      },
+    },
+    { textPrimary: t('menu.logout'), onClick: onLogout },
+  ]
 
   return (
     <div className="flex h-full flex-col">
@@ -154,8 +166,8 @@ function Layout({ onLogout }: LayoutProps) {
           </ActionGroup>
         </ActionBar>
       </Navbar>
-      <main className="flex-1 overflow-auto">
-        <Outlet context={{ query, setQuery }} />
+      <main ref={mainRef} className="flex-1 overflow-auto">
+        <Outlet context={{ query, setQuery, mainRef }} />
       </main>
     </div>
   )
@@ -164,14 +176,90 @@ function Layout({ onLogout }: LayoutProps) {
 function LibraryPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { query } = useOutletContext<{ query: string }>()
+  const { query, mainRef } = useOutletContext<{ query: string; mainRef: RefObject<HTMLElement | null> }>()
   const { data, error, loading, refresh } = useCached<BooksResponse>({ key: 'kindle-books', fn: fetchBooks, ttl: 0 })
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const pullRef = useRef<HTMLDivElement>(null)
+  const pullWillRefreshRef = useRef(false)
+  const [pullWillRefresh, setPullWillRefresh] = useState(false)
+  const [uploadOpen, setUploadOpen] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadStatus, setUploadStatus] = useState<'uploading' | 'processing' | 'done' | 'error'>('uploading')
   const [uploadError, setUploadError] = useState<string | null>(null)
+
+  const PULL_THRESHOLD = 80
+  const PULL_MAX = 120
 
   const localizedMessage = (code: string | null) =>
     code ? t(`errors.${code}`, { defaultValue: code }) : null
+
+  useEffect(() => {
+    const pending = sessionStorage.getItem('bbbook_trigger_upload')
+    if (pending) {
+      sessionStorage.removeItem('bbbook_trigger_upload')
+      fileInputRef.current?.click()
+    }
+    const handler = () => fileInputRef.current?.click()
+    window.addEventListener('bbbook:triggerUpload', handler)
+    return () => window.removeEventListener('bbbook:triggerUpload', handler)
+  }, [])
+
+  useEffect(() => {
+    const el = mainRef.current
+    if (!el) return
+    let startY = 0
+    let isPulling = false
+    const onTouchStart = (e: TouchEvent) => {
+      if (el.scrollTop === 0) {
+        startY = e.touches[0].clientY
+        isPulling = true
+      }
+    }
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isPulling) return
+      if (el.scrollTop > 0) {
+        isPulling = false
+        if (pullRef.current) pullRef.current.style.height = '0px'
+        if (pullWillRefreshRef.current) {
+          pullWillRefreshRef.current = false
+          setPullWillRefresh(false)
+        }
+        return
+      }
+      const delta = e.touches[0].clientY - startY
+      if (delta > 0) {
+        e.preventDefault()
+        const dist = Math.min(delta * 0.5, PULL_MAX)
+        if (pullRef.current) pullRef.current.style.height = `${dist}px`
+        const shouldRefresh = dist > PULL_THRESHOLD
+        if (shouldRefresh !== pullWillRefreshRef.current) {
+          pullWillRefreshRef.current = shouldRefresh
+          setPullWillRefresh(shouldRefresh)
+        }
+      }
+    }
+    const onTouchEnd = () => {
+      if (!isPulling) return
+      isPulling = false
+      if (pullRef.current) pullRef.current.style.height = '0px'
+      if (pullWillRefreshRef.current) {
+        pullWillRefreshRef.current = false
+        setPullWillRefresh(false)
+        refresh()
+      }
+    }
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    el.addEventListener('touchend', onTouchEnd)
+    el.addEventListener('touchcancel', onTouchEnd)
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove', onTouchMove)
+      el.removeEventListener('touchend', onTouchEnd)
+      el.removeEventListener('touchcancel', onTouchEnd)
+    }
+  }, [mainRef, refresh])
 
   const books = data?.books ? [...data.books] : []
   const filtered = query.trim()
@@ -184,11 +272,19 @@ function LibraryPage() {
     const file = e.target.files?.[0]
     if (!file || uploading) return
     setUploading(true)
+    setUploadOpen(true)
+    setUploadProgress(0)
+    setUploadStatus('uploading')
     setUploadError(null)
     try {
-      await uploadBook(file)
-      await refresh()
+      await uploadBook(file, (progress, status) => {
+        setUploadProgress(progress)
+        setUploadStatus(status)
+      })
+      setUploadStatus('done')
+      refresh()
     } catch (err) {
+      setUploadStatus('error')
       setUploadError(formatError(err))
     } finally {
       setUploading(false)
@@ -198,26 +294,24 @@ function LibraryPage() {
 
   return (
     <Section className="flex flex-col gap-2">
-      <div className="flex items-center gap-2 px-4">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".azw,.azw3,.mobi,.epub,.pdf"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-        <Button variant="outline" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
-          {t('library.upload')}
-        </Button>
-        <Button variant="ghost" onClick={refresh}>
-          {t('library.refresh')}
-        </Button>
+      <input
+        id="book-upload-input"
+        ref={fileInputRef}
+        type="file"
+        accept=".azw,.azw3,.mobi,.epub,.pdf"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      <div
+        ref={pullRef}
+        className="flex items-end justify-center overflow-hidden text-center text-sm text-muted transition-none"
+        style={{ height: 0 }}
+      >
+        <span className="pb-2">
+          {pullWillRefresh ? t('library.releaseToRefresh') : t('library.pullToRefresh')}
+        </span>
       </div>
-      {uploadError && (
-        <Typography className="px-4 text-sm text-muted">
-          {localizedMessage(uploadError)}
-        </Typography>
-      )}
 
       {loading && (
         <Typography className="px-4 py-6 text-sm text-muted">{t('common.loading')}</Typography>
@@ -243,6 +337,27 @@ function LibraryPage() {
           />
         ))}
       </List>
+
+      <Dialog
+        open={uploadOpen}
+        onClose={uploading ? undefined : () => setUploadOpen(false)}
+        title={t('library.uploading')}
+      >
+        <div className="flex flex-col gap-3">
+          <div className="h-2 w-full overflow-hidden rounded bg-muted">
+            <div
+              className="h-full bg-ink transition-none"
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
+          <Typography className="text-sm text-muted">
+            {uploadStatus === 'uploading' && `${uploadProgress}%`}
+            {uploadStatus === 'processing' && t('library.processing')}
+            {uploadStatus === 'done' && t('library.uploadDone')}
+            {uploadStatus === 'error' && (localizedMessage(uploadError) || t('library.uploadFailed'))}
+          </Typography>
+        </div>
+      </Dialog>
     </Section>
   )
 }
