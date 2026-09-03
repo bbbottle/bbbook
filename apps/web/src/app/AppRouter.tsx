@@ -218,7 +218,7 @@ function Layout({ onLogout, onLock }: LayoutProps) {
         onChange={handleFileChange}
       />
 
-      <Toaster position="bottom-right" className="!z-40" />
+      <Toaster position="bottom-right" className="!z-40" toastOptions={{ className: '!rounded-none !border-ink' }} />
     </div>
   )
 }
