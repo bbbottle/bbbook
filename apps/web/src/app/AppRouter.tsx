@@ -133,7 +133,7 @@ function Layout({ onLogout }: LayoutProps) {
     <div className="flex h-full flex-col">
       <Navbar fixed>
         <StatuBar
-          deviceName={info?.modelName || 'bbbook'}
+          deviceName={(info?.modelName && info.modelName.toLowerCase() !== 'unknown') ? info.modelName : 'bbbook'}
           battery={info?.batteryLevel}
           charging={info?.isCharging}
           celluar={info?.wifi ? { on: true, label: info.wifi.ssid, signal: info.wifi.signal } : undefined}
