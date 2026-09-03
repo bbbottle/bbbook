@@ -70,16 +70,16 @@ function Layout({ onLogout }: LayoutProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
-  const { data: info, refresh } = useCached<DeviceInfo>({
+  const { data: info, revalidate } = useCached<DeviceInfo>({
     key: 'device-info',
     fn: fetchDeviceInfo,
     ttl: 0,
   })
 
   useEffect(() => {
-    const id = setInterval(refresh, 60000)
+    const id = setInterval(revalidate, 60000)
     return () => clearInterval(id)
-  }, [refresh])
+  }, [revalidate])
 
   const menuItems = [
     { textPrimary: t('menu.logout'), onClick: onLogout },
