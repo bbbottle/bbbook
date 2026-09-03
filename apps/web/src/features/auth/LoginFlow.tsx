@@ -1,14 +1,10 @@
 import { useEffect, useReducer, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  Button,
-  Card,
-  CardContent,
-  Input,
-  OtpInput,
-  Switch,
-  Typography,
-} from '@bbbook/kindle-ui'
+import { Button } from '@bbbook/kindle-ui/components/Button'
+import { Card, CardContent } from '@bbbook/kindle-ui/components/Card'
+import { Input, OtpInput } from '@bbbook/kindle-ui/components/Input'
+import { Switch } from '@bbbook/kindle-ui/components/Switch'
+import { Typography } from '@bbbook/kindle-ui/components/Typography'
 import {
   AuthError,
   backupCode,
@@ -53,6 +49,8 @@ const initialState: State = {
   error: null,
   loading: false,
 }
+
+const OTP_REGEX = /^\d{6}$/
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -133,7 +131,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
       let response: LoginResponse
       if (mode === 'totp') {
         const token = otp.trim()
-        if (!/^\d{6}$/.test(token)) {
+        if (!OTP_REGEX.test(token)) {
           throw new Error(t('auth.errorOtpLength'))
         }
         response = await login({ username, token })
@@ -255,7 +253,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                     disabled={
                       state.loading ||
                       !username ||
-                      (mode === 'totp' ? !/^\d{6}$/.test(otp.trim()) : !password)
+                      (mode === 'totp' ? !OTP_REGEX.test(otp.trim()) : !password)
                     }
                   >
                     {state.loading ? '...' : t('auth.verify')}
@@ -345,21 +343,21 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                       <Typography className="text-center text-sm">
                         {t('auth.scanQrDescription')}
                       </Typography>
-                      {state.qrCodeDataUrl && (
+                      {state.qrCodeDataUrl ? (
                         <img
                           src={state.qrCodeDataUrl}
                           alt={t('auth.qrCodeAlt')}
                           className="mx-auto aspect-square w-40 rounded-md border border-divider bg-paper p-2"
                         />
-                      )}
-                      {state.secret && (
+                      ) : null}
+                      {state.secret ? (
                         <Input
                           id="totp-secret"
                           value={state.secret}
                           readOnly
                           className="text-center text-xs"
                         />
-                      )}
+                      ) : null}
                       <OtpInput
                     value={otp}
                     onChange={setOtp}
@@ -398,11 +396,11 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                 <Typography className="text-center">{t('auth.signedIn')}</Typography>
               )}
 
-              {state.error && (
+              {state.error ? (
                 <p className="text-center text-sm font-sans text-ink" role="alert">
                   {state.error}
                 </p>
-              )}
+              ) : null}
             </CardContent>
           </Card>
     </div>

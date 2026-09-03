@@ -12,6 +12,10 @@
     },
     "./styles": {
       "import": "./src/styles/index.css"
+    },
+    "./components/*": {
+      "import": "./src/components/*/index.ts",
+      "types": "./src/components/*/index.ts"
     }
   },
   "scripts": {
