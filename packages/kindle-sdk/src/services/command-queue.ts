@@ -33,21 +33,25 @@ export const make = (
     const worker = Effect.forever(
       Effect.gen(function* () {
         const item = yield* Queue.take(queue)
-        yield* deviceAvailability.waitForAvailable
-        const result = commandExecutor.execute(item.command).pipe(
-          Effect.timeout(
-            Duration.millis(item.timeoutMs ?? config.commandTimeout ?? 30000)
-          ),
-          Effect.catchIf(Cause.isTimeoutError, () =>
-            Effect.fail(
-              new TimeoutError({
-                command: item.command,
-                timeoutMs: item.timeoutMs ?? config.commandTimeout ?? 30000,
-              })
+        yield* Deferred.complete(
+          item.deferred,
+          Effect.gen(function* () {
+            yield* deviceAvailability.waitForAvailable
+            return yield* commandExecutor.execute(item.command).pipe(
+              Effect.timeout(
+                Duration.millis(item.timeoutMs ?? config.commandTimeout ?? 30000)
+              ),
+              Effect.catchIf(Cause.isTimeoutError, () =>
+                Effect.fail(
+                  new TimeoutError({
+                    command: item.command,
+                    timeoutMs: item.timeoutMs ?? config.commandTimeout ?? 30000,
+                  })
+                )
+              )
             )
-          )
+          })
         )
-        yield* Deferred.complete(item.deferred, result)
       })
     )
 
