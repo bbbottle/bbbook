@@ -67,7 +67,7 @@ export function StatuBar({
                   : Math.min(Math.max(0.35 + (celluar.signal / 5) * 0.65, 0.35), 1),
             }}
           >
-            <RssIcon size={20} />
+            <RssIcon size={14} />
           </span>
         )}
         {typeof battery === 'number' && (

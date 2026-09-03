@@ -363,7 +363,6 @@ function BookPage() {
   const locationState = useLocation().state as Book | undefined
   const { data, refresh } = useCached<BooksResponse>({ key: 'kindle-books', fn: fetchBooks, ttl: 0 })
   const [deleting, setDeleting] = useState(false)
-  const [showConfirm, setShowConfirm] = useState(false)
 
   const localizedMessage = (code: string | null) =>
     code ? t(`errors.${code}`, { defaultValue: code }) : null
@@ -375,18 +374,37 @@ function BookPage() {
     await openBook(book.fileName)
   }
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
+    if (!book || deleting) return
+    const confirmId = toast(t('library.deleteConfirm', { fileName: book.fileName }), {
+      duration: Infinity,
+      action: {
+        label: t('common.confirm'),
+        onClick: () => {
+          toast.dismiss(confirmId)
+          performDelete()
+        },
+      },
+      cancel: {
+        label: t('common.cancel'),
+        onClick: () => toast.dismiss(confirmId),
+      },
+    })
+  }
+
+  const performDelete = async () => {
     if (!book) return
     setDeleting(true)
+    const id = toast.loading(t('library.deleting'))
     try {
       await deleteBook(book.fileName)
       await refresh()
       navigate('/library')
+      toast.success(t('library.deleteDone'), { id })
     } catch (err) {
-      alert(localizedMessage(formatError(err)) ?? formatError(err))
+      toast.error(localizedMessage(formatError(err)) ?? t('library.deleteFailed'), { id })
     } finally {
       setDeleting(false)
-      setShowConfirm(false)
     }
   }
 
@@ -421,27 +439,11 @@ function BookPage() {
       </Card>
       <div className="flex gap-3">
         <Button onClick={handleOpen}>{t('library.open')}</Button>
-        <Button variant="outline" onClick={() => setShowConfirm(true)}>
+        <Button variant="outline" disabled={deleting} onClick={handleDelete}>
           {t('library.delete')}
         </Button>
       </div>
-      <Dialog
-        open={showConfirm}
-        onClose={() => setShowConfirm(false)}
-        title={t('library.deleteConfirmTitle')}
-        actions={
-          <>
-            <Button variant="ghost" onClick={() => setShowConfirm(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button disabled={deleting} onClick={handleDelete}>
-              {t('common.confirm')}
-            </Button>
-          </>
-        }
-      >
-        {t('library.deleteConfirm', { fileName: book.fileName })}
-      </Dialog>
+
     </Section>
   )
 }
