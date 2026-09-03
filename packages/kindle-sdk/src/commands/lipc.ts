@@ -9,6 +9,12 @@ export const getBatteryLevel = () => `lipc-get-prop -i com.lab126.powerd battLev
 
 export const getBatteryCharging = () => `lipc-get-prop -i com.lab126.powerd isCharging`
 
+export const getWifiConnected = () => `lipc-get-prop -s com.lab126.wifid cmState 2>/dev/null || true`
+
+export const getWifiSignalStrength = () => `lipc-get-prop -s com.lab126.wifid signalStrength 2>/dev/null || true`
+
+export const getWifiSsid = () => `echo '{index=(0)}' | lipc-hash-prop -n com.lab126.wifid currentEssid 2>/dev/null || true`
+
 export const enterScreensaver = () =>
   `lipc-set-prop com.lab126.powerd serverToActive 1 && lipc-set-prop com.lab126.powerd preventScreenSaver 0`
 

@@ -29,4 +29,8 @@ export const DeviceInfoSchema = Schema.Struct({
   uptimeSeconds: Schema.Number,
   freeMemoryMb: Schema.Number,
   freeStorageMb: Schema.Number,
+  wifi: Schema.optional(Schema.Struct({
+    ssid: Schema.optional(Schema.String),
+    signal: Schema.optional(Schema.Number),
+  })),
 })
