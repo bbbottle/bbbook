@@ -11,6 +11,7 @@ import {
   useParams,
 } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Toaster, toast } from 'sonner'
 import { type LocalePreference } from '@bbbook/shared-types'
 import {
   ActionBar,
@@ -49,6 +50,8 @@ import {
 import { type CurrentUser, updateUserPreference } from '../api/auth.js'
 import { getLocalePreference, setLocalePreference } from '../i18n/localePreference.js'
 import { LocaleOptions } from '../i18n/systemLocale.js'
+
+const ALLOWED_EXTENSIONS = ['azw', 'azw3', 'mobi', 'epub', 'pdf']
 
 function formatError(err: unknown): string {
   if (err && typeof err === 'object' && 'code' in err && typeof (err as { code?: string }).code === 'string') {
@@ -120,11 +123,7 @@ function Layout({ onLogout, onLock }: LayoutProps) {
   const mainRef = useRef<HTMLElement>(null)
   const [query, setQuery] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [uploadOpen, setUploadOpen] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [uploadStatus, setUploadStatus] = useState<'uploading' | 'processing' | 'done' | 'error'>('uploading')
-  const [uploadError, setUploadError] = useState<string | null>(null)
   const { data: info, revalidate } = useCached<DeviceInfo>({
     key: 'device-info',
     fn: fetchDeviceInfo,
@@ -142,21 +141,29 @@ function Layout({ onLogout, onLock }: LayoutProps) {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || uploading) return
+
+    const ext = file.name.split('.').pop()?.toLowerCase()
+    if (!ext || !ALLOWED_EXTENSIONS.includes(ext)) {
+      toast.error(localizedMessage('INVALID_REQUEST_BODY') ?? t('library.uploadFailed'))
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
     setUploading(true)
-    setUploadOpen(true)
-    setUploadProgress(0)
-    setUploadStatus('uploading')
-    setUploadError(null)
+    const toastId = toast.loading(t('library.uploading'))
     try {
       await uploadBook(file, (progress, status) => {
-        setUploadProgress(progress)
-        setUploadStatus(status)
+        const message =
+          status === 'processing'
+            ? t('library.processing')
+            : `${t('library.uploading')} ${progress}%`
+        toast.loading(message, { id: toastId })
       })
-      setUploadStatus('done')
+      toast.success(t('library.uploadDone'), { id: toastId })
       window.dispatchEvent(new CustomEvent('bbbook:refreshLibrary'))
     } catch (err) {
-      setUploadStatus('error')
-      setUploadError(formatError(err))
+      const code = formatError(err)
+      toast.error(localizedMessage(code) ?? t('library.uploadFailed'), { id: toastId })
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -206,31 +213,12 @@ function Layout({ onLogout, onLock }: LayoutProps) {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".azw,.azw3,.mobi,.epub,.pdf"
+        accept={ALLOWED_EXTENSIONS.map((ext) => `.${ext}`).join(',')}
         className="hidden"
         onChange={handleFileChange}
       />
 
-      <Dialog
-        open={uploadOpen}
-        onClose={uploading ? undefined : () => setUploadOpen(false)}
-        title={t('library.uploading')}
-      >
-        <div className="flex flex-col gap-3">
-          <div className="h-2 w-full overflow-hidden rounded bg-muted">
-            <div
-              className="h-full bg-ink transition-none"
-              style={{ width: `${uploadProgress}%` }}
-            />
-          </div>
-          <Typography className="text-sm text-muted">
-            {uploadStatus === 'uploading' && `${uploadProgress}%`}
-            {uploadStatus === 'processing' && t('library.processing')}
-            {uploadStatus === 'done' && t('library.uploadDone')}
-            {uploadStatus === 'error' && (localizedMessage(uploadError) || t('library.uploadFailed'))}
-          </Typography>
-        </div>
-      </Dialog>
+      <Toaster position="bottom-right" className="!z-40" />
     </div>
   )
 }
@@ -517,9 +505,9 @@ function SettingsPage({ role }: SettingsPageProps) {
         <CardTitle>{t('settings.deviceInfo')}</CardTitle>
         <CardContent>
           {info ? (
-            <dl className="grid grid-cols-2 gap-2 text-sm font-sans text-ink">
+            <dl className="grid min-w-0 grid-cols-2 gap-2 text-sm font-sans text-ink [&>*]:min-w-0">
               <dt className="text-muted">{t('settings.serial')}</dt>
-              <dd>{info.serialNumber}</dd>
+              <dd className="truncate" title={info.serialNumber}>{info.serialNumber}</dd>
               <dt className="text-muted">{t('settings.freeMemory')}</dt>
               <dd>{info.freeMemoryMb} MB</dd>
               <dt className="text-muted">{t('settings.freeStorage')}</dt>
