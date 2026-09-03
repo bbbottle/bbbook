@@ -36,4 +36,8 @@ ENV API_PORT=80
 ENV STORAGE_PATH=/storage/bbbook
 EXPOSE 80
 
+COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["node", "apps/api/dist/main.js"]
