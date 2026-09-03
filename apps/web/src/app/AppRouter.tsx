@@ -327,7 +327,7 @@ function LibraryPage() {
     : books
 
   return (
-    <Section className="flex flex-col gap-2">
+    <Section className="flex flex-col">
       <div
         ref={pullRef}
         className="flex items-end justify-center overflow-hidden text-center text-sm text-muted transition-none"
