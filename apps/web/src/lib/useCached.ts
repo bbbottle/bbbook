@@ -48,14 +48,24 @@ function subscribeRefresh(key: string, callback: () => void) {
   }
 }
 
-function notifyRefresh(key: string) {
-  dataCache.delete(key)
-  promiseCache.delete(key)
-  nextRequestId(key)
+function notifyListeners(key: string) {
   const listeners = refreshListeners.get(key)
   if (listeners) {
     Array.from(listeners).forEach((cb) => cb())
   }
+}
+
+function notifyRefresh(key: string) {
+  dataCache.delete(key)
+  promiseCache.delete(key)
+  nextRequestId(key)
+  notifyListeners(key)
+}
+
+function notifyRevalidate(key: string) {
+  promiseCache.delete(key)
+  nextRequestId(key)
+  notifyListeners(key)
 }
 
 interface UseCachedOptions<T> {
@@ -69,12 +79,14 @@ interface UseCachedResult<T> {
   error: unknown
   loading: boolean
   refresh: () => void
+  revalidate: () => void
 }
 
 export function useCached<T>({ key, fn, ttl }: UseCachedOptions<T>): UseCachedResult<T> {
   const fnRef = useRef(fn)
   fnRef.current = fn
 
+  const clearOnNextTick = useRef(false)
   const [tick, setTick] = useState(0)
   const [state, setState] = useState<{ data: T | undefined; error: unknown; loading: boolean }>(() => {
     if (key) {
@@ -98,12 +110,14 @@ export function useCached<T>({ key, fn, ttl }: UseCachedOptions<T>): UseCachedRe
     }
 
     const cached = getCached<T>(key, ttl)
-    if (cached !== undefined) {
+    if (cached !== undefined && tick === 0) {
       setState({ data: cached, error: undefined, loading: false })
       return
     }
 
-    setState({ data: undefined, error: undefined, loading: true })
+    const clearData = clearOnNextTick.current
+    clearOnNextTick.current = false
+    setState((prev) => ({ data: clearData ? undefined : prev.data, error: undefined, loading: true }))
 
     let promiseEntry = promiseCache.get(key) as PromiseEntry<T> | undefined
     let requestId: number
@@ -142,7 +156,7 @@ export function useCached<T>({ key, fn, ttl }: UseCachedOptions<T>): UseCachedRe
       .catch((err: unknown) => {
         if (stale) return
         if (!isCurrentRequest(key, requestId)) return
-        setState({ data: undefined, error: err, loading: false })
+        setState((prev) => ({ ...prev, error: err, loading: false }))
       })
 
     return () => {
@@ -152,8 +166,14 @@ export function useCached<T>({ key, fn, ttl }: UseCachedOptions<T>): UseCachedRe
 
   const refresh = useCallback(() => {
     if (!key) return
+    clearOnNextTick.current = true
     notifyRefresh(key)
   }, [key])
 
-  return { data: state.data, error: state.error, loading: state.loading, refresh }
+  const revalidate = useCallback(() => {
+    if (!key) return
+    notifyRevalidate(key)
+  }, [key])
+
+  return { data: state.data, error: state.error, loading: state.loading, refresh, revalidate }
 }

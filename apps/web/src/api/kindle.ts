@@ -6,6 +6,13 @@ export interface DeviceInfo {
   freeMemoryMb: number
   freeStorageMb: number
   uptimeSeconds: number
+  batteryLevel?: number
+  isCharging?: boolean
+  modelName?: string
+  wifi?: {
+    ssid?: string
+    signal?: number
+  }
 }
 
 export type { Book }

@@ -1,4 +1,4 @@
-import { Effect, Context } from 'effect'
+import { Effect, Context, Option } from 'effect'
 import type { CommandQueueService } from './command-queue.js'
 import * as DeviceInfoCommands from '../commands/device-info.js'
 import * as Lipc from '../commands/lipc.js'
@@ -25,9 +25,26 @@ export const make = (commandQueue: CommandQueueService) =>
         Effect.map((r) => r.stdout.trim())
       )
 
+    const runOptional = (command: string) =>
+      run(command).pipe(
+        Effect.map((r) => r.trim()),
+        Effect.option
+      )
+
+    const parseWifiSignal = (text?: string) => {
+      const m = text?.trim().match(/^(\d+)\/\d+$/)
+      return m ? parseInt(m[1], 10) : undefined
+    }
+
+    const parseWifiSsid = (text?: string) => {
+      if (!text) return undefined
+      const m = text.match(/essid\s*=\s*(?:"([^"]*)"|'([^']*)'|([^,\s}]+))/i)
+      return m?.[1] || m?.[2] || m?.[3] || undefined
+    }
+
     const getDeviceInfo = () =>
       Effect.gen(function* () {
-        const [firmware, model, serial, uptime, memory, storage, battery, charging] = yield* Effect.all([
+        const [firmware, model, serial, uptime, memory, storage, battery, charging, cmState, signalStrength, ssidOutput] = yield* Effect.all([
           run(DeviceInfoCommands.getFirmwareVersion()),
           run(DeviceInfoCommands.getModel()),
           run(DeviceInfoCommands.getSerial()),
@@ -36,7 +53,19 @@ export const make = (commandQueue: CommandQueueService) =>
           run(DeviceInfoCommands.getFreeStorage()),
           run(Lipc.getBatteryLevel()),
           run(Lipc.getBatteryCharging()),
+          runOptional(Lipc.getWifiConnected()),
+          runOptional(Lipc.getWifiSignalStrength()),
+          runOptional(Lipc.getWifiSsid()),
         ])
+
+        const isConnected = Option.getOrUndefined(cmState)?.trim() === 'CONNECTED'
+        const signalStrengthText = Option.getOrUndefined(signalStrength)
+        const ssidText = Option.getOrUndefined(ssidOutput)
+        const signal = isConnected ? parseWifiSignal(signalStrengthText) : undefined
+        const ssid = isConnected ? parseWifiSsid(ssidText) : undefined
+        const wifi = isConnected && (ssid !== undefined || signal !== undefined)
+          ? { ssid, signal }
+          : undefined
 
         const info: DeviceInfoShape = {
           firmwareVersion: firmware || 'unknown',
@@ -47,6 +76,7 @@ export const make = (commandQueue: CommandQueueService) =>
           freeStorageMb: parseNumber(storage),
           batteryLevel: parseNumber(battery),
           isCharging: charging.trim() === '1',
+          wifi,
         }
         return info
       })

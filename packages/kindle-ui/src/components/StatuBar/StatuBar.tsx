@@ -61,7 +61,7 @@ export function StatuBar({
         {celluar?.on && (
           <span className="flex h-full items-center gap-0.5 text-[0.85em]">
             {celluar.label && <span>{celluar.label}</span>}
-            <CellularIcon size={20} />
+            <CellularIcon size={20} signal={celluar.signal} />
           </span>
         )}
         {typeof battery === 'number' && (
