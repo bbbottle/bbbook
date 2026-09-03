@@ -152,6 +152,8 @@ function Layout({ onLogout }: LayoutProps) {
         setUploadStatus(status)
       })
       setUploadStatus('done')
+      setUploadOpen(false)
+      navigate('/library')
       window.dispatchEvent(new CustomEvent('bbbook:refreshLibrary'))
     } catch (err) {
       setUploadStatus('error')
