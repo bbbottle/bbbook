@@ -33,7 +33,9 @@ export const make = (
   Effect.gen(function* () {
     const listBooks = () =>
       Effect.gen(function* () {
-        const result = yield* commandQueue.enqueue(List.listDocuments(DOCUMENTS_FOLDER))
+        const result = yield* commandQueue.enqueue(List.listDocuments(DOCUMENTS_FOLDER)).pipe(
+          Effect.catchTag('CommandRejectedError', () => Effect.succeed({ stdout: '', stderr: '', code: 0 }))
+        )
         const lines = result.stdout.trim().split('\n').filter(Boolean)
         const books: Array<Book> = []
         for (const line of lines) {

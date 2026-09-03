@@ -16,4 +16,4 @@ export const openBook = (bookPath: string) =>
   `lipc-set-prop com.lab126.appmgrd start app://com.lab126.booklet.kindle?param=${shellQuote(bookPath)}`
 
 export const listDocuments = (folder: string) =>
-  `find ${shellQuote(folder)} -maxdepth 1 -type f \\( -name '*.azw' -o -name '*.azw3' -o -name '*.mobi' -o -name '*.epub' -o -name '*.pdf' \\) -print 2>/dev/null || true`
+  `find ${shellQuote(folder)} -maxdepth 1 -type f \\( -name '*.azw' -o -name '*.azw3' -o -name '*.mobi' -o -name '*.epub' -o -name '*.pdf' \\) -print`
