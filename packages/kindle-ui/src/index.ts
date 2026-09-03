@@ -61,7 +61,7 @@ export type { NavbarProps } from './components/Navbar/index.js'
 export { Menu, MenuItem } from './components/Menu/index.js'
 export type { MenuProps, MenuItemProps } from './components/Menu/index.js'
 
-export { Popover } from './components/Popover/index.js'
+export { Popover, usePopoverContainer, usePopoverEntering } from './components/Popover/index.js'
 export type { PopoverProps } from './components/Popover/index.js'
 
 export { Screen } from './components/Screen/index.js'

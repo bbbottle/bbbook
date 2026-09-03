@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { cn } from '../../utils/cn.js'
 import { Icon } from '../Icon/index.js'
 
@@ -13,6 +13,8 @@ export interface DialogProps {
 
 export function Dialog({ open, onClose, title, children, actions, className }: DialogProps) {
   const ref = useRef<HTMLDivElement>(null)
+  const [mounted, setMounted] = useState(open)
+  const [entering, setEntering] = useState(false)
 
   useEffect(() => {
     if (!open) return
@@ -23,7 +25,18 @@ export function Dialog({ open, onClose, title, children, actions, className }: D
     return () => window.removeEventListener('keydown', handler)
   }, [open, onClose])
 
-  if (!open) return null
+  useEffect(() => {
+    if (open) {
+      setMounted(true)
+      const raf = requestAnimationFrame(() => setEntering(true))
+      return () => cancelAnimationFrame(raf)
+    }
+    setEntering(false)
+    const timer = setTimeout(() => setMounted(false), 200)
+    return () => clearTimeout(timer)
+  }, [open])
+
+  if (!mounted) return null
 
   return (
     <div
@@ -38,6 +51,8 @@ export function Dialog({ open, onClose, title, children, actions, className }: D
         aria-modal="true"
         className={cn(
           'relative w-full max-w-sm rounded-dialog border border-ink bg-paper p-6',
+          'transition-[opacity,transform] duration-ku-base ease-ku-out origin-center',
+          entering ? 'opacity-100 scale-100' : 'opacity-0 scale-95',
           className
         )}
       >
@@ -48,7 +63,7 @@ export function Dialog({ open, onClose, title, children, actions, className }: D
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-4 top-4 text-muted hover:text-ink focus-visible:ku-focus-ring"
+            className="absolute right-4 top-4 text-muted transition-colors duration-ku-fast ease-ku-out hover:text-ink focus-visible:ku-focus-ring"
             aria-label="Close"
           >
             <Icon name="close" size={24} />

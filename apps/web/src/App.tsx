@@ -63,7 +63,7 @@ export default function App() {
   return (
     <div className="relative flex min-h-full w-full flex-col items-center justify-center p-4">
       <Device wallpaper={false}>
-        <div className="relative h-full w-full transition-opacity duration-[var(--ku-motion-base)]">
+        <div className="relative h-full w-full">
           {screenContent}
           {isBlankLock && (
             <button

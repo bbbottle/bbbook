@@ -75,6 +75,14 @@ export default {
       },
       transitionDuration: {
         flash: 'var(--ku-motion-flash)',
+        'ku-fast': 'var(--ku-motion-fast)',
+        'ku-base': 'var(--ku-motion-base)',
+        'ku-slow': 'var(--ku-motion-slow)',
+      },
+      transitionTimingFunction: {
+        'ku-out': 'var(--ku-ease-out)',
+        'ku-in-out': 'var(--ku-ease-in-out)',
+        'ku-drawer': 'var(--ku-ease-drawer)',
       },
     },
   },

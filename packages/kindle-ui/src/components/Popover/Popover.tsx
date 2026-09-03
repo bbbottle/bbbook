@@ -7,10 +7,19 @@ import {
 } from 'react'
 import { cn } from '../../utils/cn.js'
 
-const PopoverContext = createContext<HTMLDivElement | null>(null)
+interface PopoverContextValue {
+  container: HTMLDivElement | null
+  entering: boolean
+}
+
+const PopoverContext = createContext<PopoverContextValue | null>(null)
 
 export function usePopoverContainer() {
-  return useContext(PopoverContext)
+  return useContext(PopoverContext)?.container ?? null
+}
+
+export function usePopoverEntering() {
+  return useContext(PopoverContext)?.entering ?? false
 }
 
 export interface PopoverProps {
@@ -20,22 +29,10 @@ export interface PopoverProps {
   className?: string
 }
 
-export function Popover({ open, onClose, children, className }: PopoverProps) {
-  if (!open) return null
-
-  return <PopoverRoot onClose={onClose} className={className}>{children}</PopoverRoot>
-}
-
-function PopoverRoot({
-  onClose,
-  children,
-  className,
-}: {
-  onClose?: () => void
-  children?: ReactNode
-  className?: string
-}) {
+export function Popover({ open = false, onClose, children, className }: PopoverProps) {
   const [container, setContainer] = useState<HTMLDivElement | null>(null)
+  const [mounted, setMounted] = useState(open)
+  const [entering, setEntering] = useState(false)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -45,8 +42,21 @@ function PopoverRoot({
     return () => window.removeEventListener('keydown', handler)
   }, [onClose])
 
+  useEffect(() => {
+    if (open) {
+      setMounted(true)
+      const raf = requestAnimationFrame(() => setEntering(true))
+      return () => cancelAnimationFrame(raf)
+    }
+    setEntering(false)
+    const timer = setTimeout(() => setMounted(false), 200)
+    return () => clearTimeout(timer)
+  }, [open])
+
+  if (!mounted) return null
+
   return (
-    <PopoverContext.Provider value={container}>
+    <PopoverContext.Provider value={{ container, entering }}>
       <div
         ref={setContainer}
         className={cn(
