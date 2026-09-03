@@ -1,11 +1,13 @@
 import { Effect, Context } from 'effect'
+import * as NodeFs from 'node:fs'
+import * as NodePath from 'node:path'
 import type { CommandQueueService } from './command-queue.js'
 import type { FileTransferService } from './file-transfer.js'
 import * as List from '../commands/library-list.js'
 import * as Add from '../commands/library-add.js'
-import * as Remove from '../commands/library-remove.js'
+import * as Open from '../commands/library-open.js'
 import * as Refresh from '../commands/library-refresh.js'
-import { ParseError, type KindleError } from '../errors/kindle-errors.js'
+import { CommandRejectedError, type KindleError } from '../errors/kindle-errors.js'
 import type { Book } from '@bbbook/shared-types'
 
 const DOCUMENTS_FOLDER = '/mnt/us/documents'
@@ -16,13 +18,18 @@ export interface LibraryService {
   readonly removeBook: (fileName: string) => Effect.Effect<void, KindleError>
   readonly restoreBook: (fileName: string) => Effect.Effect<void, KindleError>
   readonly refreshLibrary: () => Effect.Effect<void, KindleError>
+  readonly openBook: (fileName: string) => Effect.Effect<void, KindleError>
 }
 
 export class Library extends Context.Service<Library, LibraryService>()(
   '@bbbook/kindle-sdk/Library'
 ) {}
 
-export const make = (commandQueue: CommandQueueService, fileTransfer: FileTransferService) =>
+export const make = (
+  commandQueue: CommandQueueService,
+  fileTransfer: FileTransferService,
+  backupDir?: string
+) =>
   Effect.gen(function* () {
     const listBooks = () =>
       Effect.gen(function* () {
@@ -36,6 +43,7 @@ export const make = (commandQueue: CommandQueueService, fileTransfer: FileTransf
           books.push({
             id,
             title: fileName,
+            fileName,
             path: line,
           })
         }
@@ -45,22 +53,62 @@ export const make = (commandQueue: CommandQueueService, fileTransfer: FileTransf
     const addBook = (localPath: string, fileName: string) =>
       Effect.gen(function* () {
         const remotePath = `${DOCUMENTS_FOLDER}/${fileName}`
+        const exists = yield* fileTransfer.exists(remotePath)
+        if (exists) {
+          return yield* Effect.fail(
+            new CommandRejectedError({ command: 'addBook', reason: 'file already exists on device' })
+          )
+        }
         yield* commandQueue.enqueue(Add.ensureLibraryFolder(DOCUMENTS_FOLDER))
         yield* fileTransfer.upload(localPath, remotePath)
+        yield* commandQueue.enqueue(Refresh.refreshLibrary()).pipe(Effect.catch(() => Effect.void))
         return void 0
       })
 
     const removeBook = (fileName: string) =>
       Effect.gen(function* () {
+        if (!backupDir) {
+          return yield* Effect.fail(
+            new CommandRejectedError({ command: 'removeBook', reason: 'backup directory is not configured' })
+          )
+        }
         const remotePath = `${DOCUMENTS_FOLDER}/${fileName}`
-        yield* commandQueue.enqueue(Remove.removeBook(remotePath))
+        const localBackupPath = NodePath.join(backupDir, fileName)
+        const backupExists = yield* Effect.sync(() => NodeFs.existsSync(localBackupPath))
+        if (backupExists) {
+          return yield* Effect.fail(
+            new CommandRejectedError({ command: 'removeBook', reason: 'backup already exists in storage' })
+          )
+        }
+        yield* fileTransfer.download(remotePath, localBackupPath)
+        yield* fileTransfer.delete(remotePath)
+        yield* commandQueue.enqueue(Refresh.refreshLibrary()).pipe(Effect.catch(() => Effect.void))
         return void 0
       })
 
     const restoreBook = (fileName: string) =>
       Effect.gen(function* () {
+        if (!backupDir) {
+          return yield* Effect.fail(
+            new CommandRejectedError({ command: 'restoreBook', reason: 'backup directory is not configured' })
+          )
+        }
         const remotePath = `${DOCUMENTS_FOLDER}/${fileName}`
-        yield* commandQueue.enqueue(Remove.restoreBook(remotePath))
+        const localBackupPath = NodePath.join(backupDir, fileName)
+        const backupExists = yield* Effect.sync(() => NodeFs.existsSync(localBackupPath))
+        if (!backupExists) {
+          return yield* Effect.fail(
+            new CommandRejectedError({ command: 'restoreBook', reason: 'backup not found in storage' })
+          )
+        }
+        const remoteExists = yield* fileTransfer.exists(remotePath)
+        if (remoteExists) {
+          return yield* Effect.fail(
+            new CommandRejectedError({ command: 'restoreBook', reason: 'book already exists on device' })
+          )
+        }
+        yield* fileTransfer.upload(localBackupPath, remotePath)
+        yield* commandQueue.enqueue(Refresh.refreshLibrary()).pipe(Effect.catch(() => Effect.void))
         return void 0
       })
 
@@ -70,5 +118,12 @@ export const make = (commandQueue: CommandQueueService, fileTransfer: FileTransf
         return void 0
       })
 
-    return { listBooks, addBook, removeBook, restoreBook, refreshLibrary }
+    const openBook = (fileName: string) =>
+      Effect.gen(function* () {
+        const remotePath = `${DOCUMENTS_FOLDER}/${fileName}`
+        yield* commandQueue.enqueue(Open.openBook(remotePath))
+        return void 0
+      })
+
+    return { listBooks, addBook, removeBook, restoreBook, refreshLibrary, openBook }
   })

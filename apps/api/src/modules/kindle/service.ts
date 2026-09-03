@@ -1,5 +1,6 @@
 import { Context, Effect } from 'effect'
-import type { DeviceInfo } from '@bbbook/kindle-sdk'
+import type { Book, DeviceInfo } from '@bbbook/kindle-sdk'
+import { InvalidRequestError } from '../auth/errors.js'
 import { KindleUnavailableError } from '../../shared/schema/errors.js'
 
 export class KindleDeviceInfoService extends Context.Service<
@@ -10,3 +11,15 @@ export class KindleDeviceInfoService extends Context.Service<
     invalidateCache(): Effect.Effect<void>
   }
 >()('@bbbook/api/modules/kindle/KindleDeviceInfoService') {}
+
+export class KindleLibraryService extends Context.Service<
+  KindleLibraryService,
+  {
+    listBooks(): Effect.Effect<ReadonlyArray<Book>, KindleUnavailableError>
+    addBook(localPath: string, fileName: string): Effect.Effect<void, KindleUnavailableError | InvalidRequestError>
+    removeBook(fileName: string): Effect.Effect<void, KindleUnavailableError | InvalidRequestError>
+    restoreBook(fileName: string): Effect.Effect<void, KindleUnavailableError | InvalidRequestError>
+    refreshLibrary(): Effect.Effect<void, KindleUnavailableError>
+    openBook(fileName: string): Effect.Effect<void, KindleUnavailableError | InvalidRequestError>
+  }
+>()('@bbbook/api/modules/kindle/KindleLibraryService') {}

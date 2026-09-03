@@ -37,6 +37,8 @@ const parseSeedUsers = (
 }
 
 export const STORAGE_PATH = process.env.STORAGE_PATH ?? '/storage/bbbook'
+export const UPLOAD_PATH = `${STORAGE_PATH}/uploads`
+export const BACKUP_PATH = `${STORAGE_PATH}/backups`
 export const KINDLE_SSH_CMD = process.env.KINDLE_SSH_CMD ?? 'ssh kindle'
 export const API_PORT = process.env.API_PORT ?? '80'
 export const WEB_DIST_PATH = './apps/web/dist'
@@ -50,6 +52,8 @@ export const AUTH_DEFAULT_ADMIN_PASSWORD = process.env.AUTH_DEFAULT_ADMIN_PASSWO
 
 try {
   mkdirSync(STORAGE_PATH, { recursive: true })
+  mkdirSync(UPLOAD_PATH, { recursive: true })
+  mkdirSync(BACKUP_PATH, { recursive: true })
 } catch {
   // ignore existing directory or permission errors
 }

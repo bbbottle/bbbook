@@ -1,10 +1,17 @@
 import { API_BASE_URL, getAuthHeaders } from './auth.js'
+import type { Book } from '@bbbook/shared-types'
 
 export interface DeviceInfo {
   serialNumber: string
   freeMemoryMb: number
   freeStorageMb: number
   uptimeSeconds: number
+}
+
+export type { Book }
+
+export interface BooksResponse {
+  books: ReadonlyArray<Book>
 }
 
 export class KindleError extends Error {
@@ -33,9 +40,9 @@ function parseError(payload: unknown): string {
   return 'UNKNOWN_ERROR'
 }
 
-export async function fetchDeviceInfo(): Promise<DeviceInfo> {
-  const response = await fetch(`${API_BASE_URL}/kindle/info`, {
-    headers: getAuthHeaders(),
+async function request<T>(path: string, options: RequestInit): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
     credentials: 'include',
   })
 
@@ -45,4 +52,49 @@ export async function fetchDeviceInfo(): Promise<DeviceInfo> {
   }
 
   return response.json()
+}
+
+export async function fetchDeviceInfo(): Promise<DeviceInfo> {
+  return request('/kindle/info', {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+}
+
+export async function fetchBooks(): Promise<BooksResponse> {
+  return request('/kindle/books', {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+}
+
+export async function uploadBook(file: File): Promise<{ success: true }> {
+  const body = new FormData()
+  body.append('file', file)
+  return request('/kindle/books', {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body,
+  })
+}
+
+export async function deleteBook(fileName: string): Promise<{ success: true }> {
+  return request(`/kindle/books/${encodeURIComponent(fileName)}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  })
+}
+
+export async function openBook(fileName: string): Promise<{ success: true }> {
+  return request(`/kindle/books/${encodeURIComponent(fileName)}/open`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+  })
+}
+
+export async function restoreBook(fileName: string): Promise<{ success: true }> {
+  return request(`/kindle/books/${encodeURIComponent(fileName)}/restore`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+  })
 }

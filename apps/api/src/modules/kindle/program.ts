@@ -1,11 +1,16 @@
+import * as NodeFs from 'node:fs'
 import { DateTime, Duration, Effect, Layer, Option, Ref, Result } from 'effect'
-import type { DeviceInfo, KindleSDK } from '@bbbook/kindle-sdk'
+import { CommandRejectedError, type KindleSDK } from '@bbbook/kindle-sdk'
+import type { DeviceInfo } from '@bbbook/kindle-sdk'
 import { KindleUnavailableError } from '../../shared/schema/errors.js'
 import { KINDLE_SYNC_INTERVAL_MS } from '../../config.js'
 import { KindleSDKService } from './sdk.js'
-import { KindleDeviceInfoService } from './service.js'
+import { KindleDeviceInfoService, KindleLibraryService } from './service.js'
+import { InvalidRequestError } from '../auth/errors.js'
 
 const CACHE_TTL_MS = 30 * 1000
+
+const ALLOWED_EXTENSIONS = ['azw', 'azw3', 'mobi', 'epub', 'pdf']
 
 type Snapshot = {
   readonly info: DeviceInfo
@@ -15,6 +20,24 @@ type Snapshot = {
 type State = {
   readonly snapshot: Option.Option<Snapshot>
   readonly lastError: Option.Option<KindleUnavailableError>
+}
+
+const validateFileName = (fileName: string): InvalidRequestError | undefined => {
+  if (!fileName || fileName.trim() === '' || fileName.includes('/') || fileName.includes('\\') || fileName.includes('..')) {
+    return new InvalidRequestError({ message: 'invalid file name' })
+  }
+  const ext = fileName.split('.').pop()?.toLowerCase()
+  if (!ext || !ALLOWED_EXTENSIONS.includes(ext)) {
+    return new InvalidRequestError({ message: 'unsupported file type' })
+  }
+  return undefined
+}
+
+const mapKindleError = (cause: unknown): KindleUnavailableError | InvalidRequestError => {
+  if (cause instanceof CommandRejectedError) {
+    return new InvalidRequestError({ message: cause.reason })
+  }
+  return new KindleUnavailableError({ message: String(cause), cause })
 }
 
 const makeDeviceInfoService = (sdk: KindleSDK) =>
@@ -94,10 +117,94 @@ const makeDeviceInfoService = (sdk: KindleSDK) =>
     })
   })
 
-export const Live = Layer.effect(
+const cleanupTemp = (path: string) =>
+  Effect.try(() => {
+    if (NodeFs.existsSync(path)) {
+      NodeFs.unlinkSync(path)
+    }
+  }).pipe(Effect.catch(() => Effect.void))
+
+const makeLibraryService = (sdk: KindleSDK) =>
+  Effect.gen(function* () {
+    const listBooks = Effect.fn('KindleLibraryService.listBooks')(function* () {
+      return yield* Effect.tryPromise({
+        try: () => sdk.listBooks(),
+        catch: (cause) => new KindleUnavailableError({ message: String(cause), cause }),
+      })
+    })
+
+    const addBook = (localPath: string, fileName: string) =>
+      Effect.gen(function* () {
+        const validationError = validateFileName(fileName)
+        if (validationError) {
+          return yield* validationError
+        }
+        return yield* Effect.tryPromise({
+          try: () => sdk.addBook(localPath, fileName),
+          catch: mapKindleError,
+        }).pipe(Effect.ensuring(cleanupTemp(localPath)))
+      })
+
+    const removeBook = (fileName: string) =>
+      Effect.gen(function* () {
+        const validationError = validateFileName(fileName)
+        if (validationError) {
+          return yield* validationError
+        }
+        return yield* Effect.tryPromise({
+          try: () => sdk.removeBook(fileName),
+          catch: mapKindleError,
+        })
+      })
+
+    const restoreBook = (fileName: string) =>
+      Effect.gen(function* () {
+        const validationError = validateFileName(fileName)
+        if (validationError) {
+          return yield* validationError
+        }
+        return yield* Effect.tryPromise({
+          try: () => sdk.restoreBook(fileName),
+          catch: mapKindleError,
+        })
+      })
+
+    const refreshLibrary = Effect.fn('KindleLibraryService.refreshLibrary')(function* () {
+      return yield* Effect.tryPromise({
+        try: () => sdk.refreshLibrary(),
+        catch: (cause) => new KindleUnavailableError({ message: String(cause), cause }),
+      })
+    })
+
+    const openBook = (fileName: string) =>
+      Effect.gen(function* () {
+        const validationError = validateFileName(fileName)
+        if (validationError) {
+          return yield* validationError
+        }
+        return yield* Effect.tryPromise({
+          try: () => sdk.openBook(fileName),
+          catch: mapKindleError,
+        })
+      })
+
+    return KindleLibraryService.of({ listBooks, addBook, removeBook, restoreBook, refreshLibrary, openBook })
+  })
+
+const DeviceInfoLive = Layer.effect(
   KindleDeviceInfoService,
   Effect.gen(function* () {
     const { client: sdk } = yield* KindleSDKService
     return yield* makeDeviceInfoService(sdk)
   })
 ).pipe(Layer.provide(KindleSDKService.Live))
+
+const LibraryLive = Layer.effect(
+  KindleLibraryService,
+  Effect.gen(function* () {
+    const { client: sdk } = yield* KindleSDKService
+    return yield* makeLibraryService(sdk)
+  })
+).pipe(Layer.provide(KindleSDKService.Live))
+
+export const Live = Layer.mergeAll(DeviceInfoLive, LibraryLive)

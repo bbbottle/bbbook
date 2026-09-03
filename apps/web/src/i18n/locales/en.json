@@ -4,6 +4,7 @@
     "cancel": "Cancel",
     "add": "Add",
     "confirm": "Confirm",
+    "back": "Back",
     "tryAgain": "Try again",
     "book": "Book",
     "loading": "Loading…",
@@ -14,18 +15,32 @@
   },
   "nav": {
     "library": "library",
-    "store": "store",
     "settings": "settings"
   },
   "menu": {
     "logout": "Logout"
   },
-  "store": {
-    "tabAll": "All",
-    "tabDownloaded": "Downloaded",
-    "sectionResults": "Results"
+  "library": {
+    "title": "Library",
+    "searchPlaceholder": "Search books",
+    "upload": "Upload book",
+    "refresh": "Refresh",
+    "empty": "Library is empty",
+    "noSearchResults": "No matching books",
+    "bookNotFound": "Book not found",
+    "fileName": "File name",
+    "author": "Author",
+    "open": "Open",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Confirm deletion",
+    "deleteConfirm": "Are you sure you want to delete \"{{fileName}}\"?"
   },
   "settings": {
+    "title": "Device Info",
+    "serialNumber": "Serial number",
+    "freeMemoryMb": "Free memory (MB)",
+    "freeStorageMb": "Free storage (MB)",
+    "uptimeSeconds": "Uptime (s)",
     "deviceInfo": "Device Info",
     "serial": "Serial",
     "freeMemory": "Free memory",

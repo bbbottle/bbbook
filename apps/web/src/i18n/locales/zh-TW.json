@@ -4,6 +4,7 @@
     "cancel": "取消",
     "add": "新增",
     "confirm": "確認",
+    "back": "返回",
     "tryAgain": "重試",
     "book": "書籍",
     "loading": "載入中…",
@@ -14,18 +15,32 @@
   },
   "nav": {
     "library": "書架",
-    "store": "書城",
     "settings": "設定"
   },
   "menu": {
     "logout": "登出"
   },
-  "store": {
-    "tabAll": "全部",
-    "tabDownloaded": "已下載",
-    "sectionResults": "搜尋結果"
+  "library": {
+    "title": "書架",
+    "searchPlaceholder": "搜尋書籍",
+    "upload": "上傳書籍",
+    "refresh": "重新整理",
+    "empty": "書架為空",
+    "noSearchResults": "沒有符合的書籍",
+    "bookNotFound": "書籍不存在",
+    "fileName": "檔案名稱",
+    "author": "作者",
+    "open": "開啟",
+    "delete": "刪除",
+    "deleteConfirmTitle": "確認刪除",
+    "deleteConfirm": "確定要刪除「{{fileName}}」嗎？"
   },
   "settings": {
+    "title": "裝置資訊",
+    "serialNumber": "序號",
+    "freeMemoryMb": "可用記憶體 (MB)",
+    "freeStorageMb": "可用儲存空間 (MB)",
+    "uptimeSeconds": "運作時間 (秒)",
     "deviceInfo": "裝置資訊",
     "serial": "序號",
     "freeMemory": "可用記憶體",

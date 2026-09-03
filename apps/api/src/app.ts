@@ -7,16 +7,17 @@ import { createAuthMiddleware, requireAdmin } from './shared/middleware/auth.js'
 import { errorHandler } from './shared/middleware/error-handler.js'
 import { kindleRateLimiter } from './shared/middleware/kindle-rate-limiter.js'
 import { createHealthRouter } from './modules/health/index.js'
-import { createKindleRouter, KindleDeviceInfoService } from './modules/kindle/index.js'
+import { createKindleRouter, KindleDeviceInfoService, KindleLibraryService } from './modules/kindle/index.js'
 import { authRouter } from './modules/auth/index.js'
 import { adminRouter } from './modules/admin/index.js'
 import type { TokenService, TotpService, UserRepository } from './modules/auth/index.js'
+import { InvalidRequestError } from './modules/auth/errors.js'
 import { KindleUnavailableError } from './shared/schema/errors.js'
 
 export const createApp = (
   runtime: ManagedRuntime.ManagedRuntime<
-    KindleDeviceInfoService | TokenService | TotpService | UserRepository,
-    KindleUnavailableError
+    KindleDeviceInfoService | KindleLibraryService | TokenService | TotpService | UserRepository,
+    KindleUnavailableError | InvalidRequestError
   >
 ) => {
   const app = new Hono()

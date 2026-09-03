@@ -14,6 +14,8 @@ export interface FileTransferService {
   readonly download: (remotePath: string, localPath?: string) => Effect.Effect<void, KindleError>
   readonly remove: (remotePath: string) => Effect.Effect<void, KindleError>
   readonly restore: (remotePath: string) => Effect.Effect<void, KindleError>
+  readonly exists: (remotePath: string) => Effect.Effect<boolean, KindleError>
+  readonly delete: (remotePath: string) => Effect.Effect<void, KindleError>
 }
 
 const resolveLocalPath = (localCacheDir: string | undefined, remotePath: string, localPath?: string) => {
@@ -175,5 +177,17 @@ export const make = (
         )
       )
 
-    return { upload, download, remove, restore }
+    const exists = (remotePath: string) =>
+      throttler.withPermit(
+        transport.withConnection((client) => remoteExists(client, remotePath))
+      )
+
+    const deleteFile = (remotePath: string) =>
+      throttler.withPermit(
+        transport.withConnection((client) =>
+          execGuarded(client, `rm -f -- ${shellQuote(remotePath)}`)
+        )
+      )
+
+    return { upload, download, remove, restore, exists, delete: deleteFile }
   })
