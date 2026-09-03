@@ -156,6 +156,8 @@ function LibraryPage() {
   const { query } = useOutletContext<{ query: string }>()
   const { data, error, loading, refresh } = useCached<BooksResponse>({ key: 'kindle-books', fn: fetchBooks, ttl: 0 })
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   const localizedMessage = (code: string | null) =>
     code ? t(`errors.${code}`, { defaultValue: code }) : null
@@ -169,10 +171,18 @@ function LibraryPage() {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
-    await uploadBook(file)
-    await refresh()
-    if (fileInputRef.current) fileInputRef.current.value = ''
+    if (!file || uploading) return
+    setUploading(true)
+    setUploadError(null)
+    try {
+      await uploadBook(file)
+      await refresh()
+    } catch (err) {
+      setUploadError(formatError(err))
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
   }
 
   return (
@@ -185,13 +195,18 @@ function LibraryPage() {
           className="hidden"
           onChange={handleFileChange}
         />
-        <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+        <Button variant="outline" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
           {t('library.upload')}
         </Button>
         <Button variant="ghost" onClick={refresh}>
           {t('library.refresh')}
         </Button>
       </div>
+      {uploadError && (
+        <Typography className="px-4 text-sm text-muted">
+          {localizedMessage(uploadError)}
+        </Typography>
+      )}
 
       {loading && (
         <Typography className="px-4 py-6 text-sm text-muted">{t('common.loading')}</Typography>

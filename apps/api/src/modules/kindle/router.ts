@@ -67,7 +67,7 @@ export const createKindleRouter = (
   )
 
   router.delete('/books/:fileName', async (c) => {
-    const fileName = decodeURIComponent(c.req.param('fileName'))
+    const fileName = c.req.param('fileName')
     const exit = await runtime.runPromiseExit(
       KindleLibraryService.use((service) => service.removeBook(fileName))
     )
@@ -75,7 +75,7 @@ export const createKindleRouter = (
   })
 
   router.post('/books/:fileName/restore', async (c) => {
-    const fileName = decodeURIComponent(c.req.param('fileName'))
+    const fileName = c.req.param('fileName')
     const exit = await runtime.runPromiseExit(
       KindleLibraryService.use((service) => service.restoreBook(fileName))
     )
@@ -83,7 +83,7 @@ export const createKindleRouter = (
   })
 
   router.post('/books/:fileName/open', async (c) => {
-    const fileName = decodeURIComponent(c.req.param('fileName'))
+    const fileName = c.req.param('fileName')
     const exit = await runtime.runPromiseExit(
       KindleLibraryService.use((service) => service.openBook(fileName))
     )

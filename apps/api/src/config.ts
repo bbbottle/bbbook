@@ -39,7 +39,17 @@ const parseSeedUsers = (
 export const STORAGE_PATH = process.env.STORAGE_PATH ?? '/storage/bbbook'
 export const UPLOAD_PATH = `${STORAGE_PATH}/uploads`
 export const BACKUP_PATH = `${STORAGE_PATH}/backups`
-export const UPLOAD_MAX_SIZE = process.env.UPLOAD_MAX_SIZE ? Number(process.env.UPLOAD_MAX_SIZE) : 200 * 1024 * 1024
+const parseUploadMaxSize = (): number => {
+  const raw = process.env.UPLOAD_MAX_SIZE
+  if (!raw) return 200 * 1024 * 1024
+  const parsed = Number(raw)
+  if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error('UPLOAD_MAX_SIZE must be a positive integer number of bytes')
+  }
+  return parsed
+}
+
+export const UPLOAD_MAX_SIZE = parseUploadMaxSize()
 export const KINDLE_SSH_CMD = process.env.KINDLE_SSH_CMD ?? 'ssh kindle'
 export const API_PORT = process.env.API_PORT ?? '80'
 export const WEB_DIST_PATH = './apps/web/dist'
