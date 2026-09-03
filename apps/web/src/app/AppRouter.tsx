@@ -116,25 +116,57 @@ interface LayoutProps {
 function Layout({ onLogout }: LayoutProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const location = useLocation()
   const mainRef = useRef<HTMLElement>(null)
   const [query, setQuery] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadStatus, setUploadStatus] = useState<'uploading' | 'processing' | 'done' | 'error'>('uploading')
+  const [uploadError, setUploadError] = useState<string | null>(null)
   const { data: info, revalidate } = useCached<DeviceInfo>({
     key: 'device-info',
     fn: fetchDeviceInfo,
     ttl: 0,
   })
 
+  const localizedMessage = (code: string | null) =>
+    code ? t(`errors.${code}`, { defaultValue: code }) : null
+
   useEffect(() => {
     const id = setInterval(revalidate, 60000)
     return () => clearInterval(id)
   }, [revalidate])
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || uploading) return
+    setUploading(true)
+    setUploadOpen(true)
+    setUploadProgress(0)
+    setUploadStatus('uploading')
+    setUploadError(null)
+    try {
+      await uploadBook(file, (progress, status) => {
+        setUploadProgress(progress)
+        setUploadStatus(status)
+      })
+      setUploadStatus('done')
+      window.dispatchEvent(new CustomEvent('bbbook:refreshLibrary'))
+    } catch (err) {
+      setUploadStatus('error')
+      setUploadError(formatError(err))
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   const menuItems: MenuItemProps[] = [
     {
       textPrimary: t('library.upload'),
       onClick: () => {
-        navigate('/library', { state: { triggerUpload: true }, replace: location.pathname === '/library' })
+        fileInputRef.current?.click()
       },
     },
     { textPrimary: t('menu.logout'), onClick: onLogout },
@@ -168,6 +200,35 @@ function Layout({ onLogout }: LayoutProps) {
       <main ref={mainRef} className="flex-1 overflow-auto">
         <Outlet context={{ query, setQuery, mainRef }} />
       </main>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".azw,.azw3,.mobi,.epub,.pdf"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      <Dialog
+        open={uploadOpen}
+        onClose={uploading ? undefined : () => setUploadOpen(false)}
+        title={t('library.uploading')}
+      >
+        <div className="flex flex-col gap-3">
+          <div className="h-2 w-full overflow-hidden rounded bg-muted">
+            <div
+              className="h-full bg-ink transition-none"
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
+          <Typography className="text-sm text-muted">
+            {uploadStatus === 'uploading' && `${uploadProgress}%`}
+            {uploadStatus === 'processing' && t('library.processing')}
+            {uploadStatus === 'done' && t('library.uploadDone')}
+            {uploadStatus === 'error' && (localizedMessage(uploadError) || t('library.uploadFailed'))}
+          </Typography>
+        </div>
+      </Dialog>
     </div>
   )
 }
@@ -175,18 +236,11 @@ function Layout({ onLogout }: LayoutProps) {
 function LibraryPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const location = useLocation()
   const { query, mainRef } = useOutletContext<{ query: string; mainRef: RefObject<HTMLElement | null> }>()
   const { data, error, loading, refresh } = useCached<BooksResponse>({ key: 'kindle-books', fn: fetchBooks, ttl: 0 })
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const pullRef = useRef<HTMLDivElement>(null)
   const pullWillRefreshRef = useRef(false)
   const [pullWillRefresh, setPullWillRefresh] = useState(false)
-  const [uploadOpen, setUploadOpen] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [uploadStatus, setUploadStatus] = useState<'uploading' | 'processing' | 'done' | 'error'>('uploading')
-  const [uploadError, setUploadError] = useState<string | null>(null)
 
   const PULL_THRESHOLD = 80
   const PULL_MAX = 120
@@ -195,15 +249,10 @@ function LibraryPage() {
     code ? t(`errors.${code}`, { defaultValue: code }) : null
 
   useEffect(() => {
-    if (
-      location.state &&
-      typeof location.state === 'object' &&
-      (location.state as { triggerUpload?: unknown }).triggerUpload
-    ) {
-      navigate(location.pathname, { state: null, replace: true })
-      fileInputRef.current?.click()
-    }
-  }, [location, navigate])
+    const handler = () => refresh()
+    window.addEventListener('bbbook:refreshLibrary', handler)
+    return () => window.removeEventListener('bbbook:refreshLibrary', handler)
+  }, [refresh])
 
   useEffect(() => {
     const el = mainRef.current
@@ -277,41 +326,8 @@ function LibraryPage() {
       )
     : books
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || uploading) return
-    setUploading(true)
-    setUploadOpen(true)
-    setUploadProgress(0)
-    setUploadStatus('uploading')
-    setUploadError(null)
-    try {
-      await uploadBook(file, (progress, status) => {
-        setUploadProgress(progress)
-        setUploadStatus(status)
-      })
-      setUploadStatus('done')
-      refresh()
-    } catch (err) {
-      setUploadStatus('error')
-      setUploadError(formatError(err))
-    } finally {
-      setUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-    }
-  }
-
   return (
     <Section className="flex flex-col gap-2">
-      <input
-        id="book-upload-input"
-        ref={fileInputRef}
-        type="file"
-        accept=".azw,.azw3,.mobi,.epub,.pdf"
-        className="hidden"
-        onChange={handleFileChange}
-      />
-
       <div
         ref={pullRef}
         className="flex items-end justify-center overflow-hidden text-center text-sm text-muted transition-none"
@@ -346,27 +362,6 @@ function LibraryPage() {
           />
         ))}
       </List>
-
-      <Dialog
-        open={uploadOpen}
-        onClose={uploading ? undefined : () => setUploadOpen(false)}
-        title={t('library.uploading')}
-      >
-        <div className="flex flex-col gap-3">
-          <div className="h-2 w-full overflow-hidden rounded bg-muted">
-            <div
-              className="h-full bg-ink transition-none"
-              style={{ width: `${uploadProgress}%` }}
-            />
-          </div>
-          <Typography className="text-sm text-muted">
-            {uploadStatus === 'uploading' && `${uploadProgress}%`}
-            {uploadStatus === 'processing' && t('library.processing')}
-            {uploadStatus === 'done' && t('library.uploadDone')}
-            {uploadStatus === 'error' && (localizedMessage(uploadError) || t('library.uploadFailed'))}
-          </Typography>
-        </div>
-      </Dialog>
     </Section>
   )
 }
