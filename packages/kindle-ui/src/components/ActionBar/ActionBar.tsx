@@ -42,7 +42,7 @@ export function ActionItem({ icon, children, className, onClick }: ActionItemPro
       type="button"
       onClick={onClick}
       className={cn(
-        'flex h-[50px] w-[50px] flex-col items-center justify-center',
+        'flex h-[50px] w-[50px] flex-col items-center justify-center gap-1',
         'text-[10px] font-sans font-medium lowercase tracking-wide text-ink',
         'transition-[colors,transform] duration-ku-fast ease-ku-out focus-visible:ku-focus-ring active:scale-[0.97] active:bg-ink active:text-paper',
         className
