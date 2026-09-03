@@ -39,6 +39,9 @@
     "processing": "正在传送到 Kindle",
     "uploadDone": "上传完成",
     "uploadFailed": "上传失败",
+    "deleting": "删除中…",
+    "deleteDone": "删除完成",
+    "deleteFailed": "删除失败",
     "pullToRefresh": "下拉刷新",
     "releaseToRefresh": "释放刷新"
   },
