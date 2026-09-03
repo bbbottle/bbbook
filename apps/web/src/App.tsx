@@ -41,7 +41,8 @@ export default function App() {
   const [authed, setAuthed] = useState(() => isAuthenticated())
   const [showLogin, setShowLogin] = useState(false)
   const [locked, setLocked] = useState(() => getLocked())
-  const sessionToken = useMemo(() => (authed ? getSessionToken() : null), [authed])
+  const canFetchAccount = authed && !locked
+  const sessionToken = useMemo(() => (canFetchAccount ? getSessionToken() : null), [canFetchAccount])
 
   const { data: currentUserData } = useCached({
     key: sessionToken ? `current-user:${sessionToken}` : null,
