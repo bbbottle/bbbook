@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { PaperAirplaneIcon } from '@primer/octicons-react'
+import { PaperAirplaneIcon, RssIcon } from '@primer/octicons-react'
 import { cn } from '../../utils/cn.js'
 import {
   BatteryChargingIcon,
   BatteryFullIcon,
-  CellularIcon,
 } from '../../icons/index.js'
 
 export interface StatuBarProps {
@@ -59,9 +58,16 @@ export function StatuBar({
           </span>
         )}
         {celluar?.on && (
-          <span className="flex h-full items-center gap-0.5 text-[0.85em]">
-            {celluar.label && <span>{celluar.label}</span>}
-            <CellularIcon size={20} signal={celluar.signal} />
+          <span
+            className="flex h-full items-center text-[0.85em]"
+            style={{
+              opacity:
+                celluar.signal === undefined
+                  ? 1
+                  : Math.min(Math.max(0.35 + (celluar.signal / 5) * 0.65, 0.35), 1),
+            }}
+          >
+            <RssIcon size={20} />
           </span>
         )}
         {typeof battery === 'number' && (
