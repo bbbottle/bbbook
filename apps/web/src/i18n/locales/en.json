@@ -18,7 +18,8 @@
     "settings": "settings"
   },
   "menu": {
-    "logout": "Logout"
+    "logout": "Logout",
+    "lock": "Lock screen"
   },
   "library": {
     "title": "Library",
@@ -69,6 +70,7 @@
   },
   "auth": {
     "login": "Sign in",
+    "unlock": "Unlock",
     "usernamePlaceholder": "Username",
     "passwordPlaceholder": "Password",
     "otpPlaceholder": "OTP",

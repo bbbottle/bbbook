@@ -18,7 +18,8 @@
     "settings": "設定"
   },
   "menu": {
-    "logout": "登出"
+    "logout": "登出",
+    "lock": "鎖屏"
   },
   "library": {
     "title": "書架",
@@ -69,6 +70,7 @@
   },
   "auth": {
     "login": "登入",
+    "unlock": "解鎖",
     "usernamePlaceholder": "使用者名稱",
     "passwordPlaceholder": "密碼",
     "otpPlaceholder": "動態密碼",
