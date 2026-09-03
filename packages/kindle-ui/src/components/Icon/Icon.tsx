@@ -1,17 +1,16 @@
-import type { ComponentType } from 'react'
+import type { ReactNode } from 'react'
 import {
-  AirplaneIcon,
-  BackIcon,
-  BatteryChargingIcon,
-  BatteryFullIcon,
-  CloseIcon,
+  ArrowLeftIcon,
+  GearIcon,
   HomeIcon,
-  MenuIcon,
+  PackageIcon,
+  PaperAirplaneIcon,
+  RssIcon,
   SearchIcon,
-  SettingsIcon,
-  StoreIcon,
-  WifiIcon,
-} from '../../icons/index.js'
+  ThreeBarsIcon,
+  XIcon,
+} from '@primer/octicons-react'
+import { BatteryChargingIcon, BatteryFullIcon } from '../../icons/index.js'
 
 export type IconName =
   | 'home'
@@ -32,18 +31,20 @@ export interface IconProps {
   size?: number
 }
 
-const icons: Record<IconName, ComponentType<{ size?: number; className?: string }>> = {
+type IconComponent = (props: { size?: number; className?: string }) => ReactNode
+
+const icons: Record<IconName, IconComponent> = {
   home: HomeIcon,
-  back: BackIcon,
-  settings: SettingsIcon,
+  back: ArrowLeftIcon,
+  settings: GearIcon,
   battery: BatteryFullIcon,
   'battery-charging': BatteryChargingIcon,
-  wifi: WifiIcon,
-  airplane: AirplaneIcon,
+  wifi: RssIcon,
+  airplane: PaperAirplaneIcon,
   search: SearchIcon,
-  close: CloseIcon,
-  menu: MenuIcon,
-  store: StoreIcon,
+  close: XIcon,
+  menu: ThreeBarsIcon,
+  store: PackageIcon,
 }
 
 export function Icon({ name, className, size = 24 }: IconProps) {

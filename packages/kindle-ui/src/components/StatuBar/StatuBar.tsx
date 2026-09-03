@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
+import { PaperAirplaneIcon } from '@primer/octicons-react'
 import { cn } from '../../utils/cn.js'
 import {
-  AirplaneIcon,
   BatteryChargingIcon,
   BatteryFullIcon,
-  WifiIcon,
+  CellularIcon,
 } from '../../icons/index.js'
 
 export interface StatuBarProps {
@@ -55,13 +55,13 @@ export function StatuBar({
       <div className="flex h-full items-center gap-3">
         {airplane && (
           <span className="flex h-full items-center">
-            <AirplaneIcon size={20} className="rotate-[-90deg]" />
+            <PaperAirplaneIcon size={20} className="rotate-[-90deg]" />
           </span>
         )}
         {celluar?.on && (
           <span className="flex h-full items-center gap-0.5 text-[0.85em]">
             {celluar.label && <span>{celluar.label}</span>}
-            <WifiIcon size={20} />
+            <CellularIcon size={20} signal={celluar.signal} />
           </span>
         )}
         {typeof battery === 'number' && (
@@ -79,5 +79,3 @@ export function StatuBar({
     </div>
   )
 }
-
-
