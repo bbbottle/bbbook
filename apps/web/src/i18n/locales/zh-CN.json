@@ -33,7 +33,13 @@
     "open": "打开",
     "delete": "删除",
     "deleteConfirmTitle": "确认删除",
-    "deleteConfirm": "确定要删除「{{fileName}}」吗？"
+    "deleteConfirm": "确定要删除「{{fileName}}」吗？",
+    "uploading": "正在上传",
+    "processing": "正在传送到 Kindle",
+    "uploadDone": "上传完成",
+    "uploadFailed": "上传失败",
+    "pullToRefresh": "下拉刷新",
+    "releaseToRefresh": "释放刷新"
   },
   "settings": {
     "title": "设备信息",

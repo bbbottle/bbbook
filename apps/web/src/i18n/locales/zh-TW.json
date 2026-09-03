@@ -33,7 +33,13 @@
     "open": "開啟",
     "delete": "刪除",
     "deleteConfirmTitle": "確認刪除",
-    "deleteConfirm": "確定要刪除「{{fileName}}」嗎？"
+    "deleteConfirm": "確定要刪除「{{fileName}}」嗎？",
+    "uploading": "正在上傳",
+    "processing": "正在傳送到 Kindle",
+    "uploadDone": "上傳完成",
+    "uploadFailed": "上傳失敗",
+    "pullToRefresh": "下拉重新整理",
+    "releaseToRefresh": "放開重新整理"
   },
   "settings": {
     "title": "裝置資訊",

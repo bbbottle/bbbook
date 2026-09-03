@@ -75,13 +75,43 @@ export async function fetchBooks(): Promise<BooksResponse> {
   })
 }
 
-export async function uploadBook(file: File): Promise<{ success: true }> {
-  const body = new FormData()
-  body.append('file', file)
-  return request('/kindle/books', {
-    method: 'POST',
-    headers: getAuthHeaders(),
-    body,
+export async function uploadBook(
+  file: File,
+  onProgress?: (progress: number, status: 'uploading' | 'processing') => void
+): Promise<{ success: true }> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    const formData = new FormData()
+    formData.append('file', file)
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const progress = Math.round((event.loaded / event.total) * 100)
+        onProgress?.(progress, progress === 100 ? 'processing' : 'uploading')
+      }
+    }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve({ success: true })
+      } else {
+        let payload: unknown
+        try {
+          payload = JSON.parse(xhr.responseText)
+        } catch {
+          payload = {}
+        }
+        reject(new KindleError(parseError(payload), xhr.status))
+      }
+    }
+
+    xhr.onerror = () => reject(new KindleError('NETWORK_ERROR', 0))
+    xhr.onabort = () => reject(new KindleError('UPLOAD_ABORTED', 0))
+
+    xhr.open('POST', `${API_BASE_URL}/kindle/books`)
+    const headers = getAuthHeaders()
+    Object.entries(headers).forEach(([key, value]) => xhr.setRequestHeader(key, value))
+    xhr.send(formData)
   })
 }
 

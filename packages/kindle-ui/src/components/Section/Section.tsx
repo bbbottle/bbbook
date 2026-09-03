@@ -7,7 +7,7 @@ export interface SectionProps {
 }
 
 export function Section({ children, className }: SectionProps) {
-  return <section className={cn('px-4 py-2', className)}>{children}</section>
+  return <section className={cn('py-2', className)}>{children}</section>
 }
 
 export interface SectionTitleProps {

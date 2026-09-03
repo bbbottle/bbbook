@@ -33,7 +33,13 @@
     "open": "Open",
     "delete": "Delete",
     "deleteConfirmTitle": "Confirm deletion",
-    "deleteConfirm": "Are you sure you want to delete \"{{fileName}}\"?"
+    "deleteConfirm": "Are you sure you want to delete \"{{fileName}}\"?",
+    "uploading": "Uploading…",
+    "processing": "Sending to Kindle…",
+    "uploadDone": "Upload complete",
+    "uploadFailed": "Upload failed",
+    "pullToRefresh": "Pull down to refresh",
+    "releaseToRefresh": "Release to refresh"
   },
   "settings": {
     "title": "Device Info",
