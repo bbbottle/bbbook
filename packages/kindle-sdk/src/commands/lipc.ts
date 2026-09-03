@@ -5,9 +5,9 @@ export { shellQuote }
 export const setPreventScreenSaver = (prevent: boolean) =>
   `lipc-set-prop com.lab126.powerd preventScreenSaver ${prevent ? 1 : 0}`
 
-export const getBatteryLevel = () => `lipc-get-prop -s com.lab126.powerd battLevel`
+export const getBatteryLevel = () => `lipc-get-prop -i com.lab126.powerd battLevel`
 
-export const getBatteryCharging = () => `lipc-get-prop -s com.lab126.powerd charging`
+export const getBatteryCharging = () => `lipc-get-prop -i com.lab126.powerd isCharging`
 
 export const enterScreensaver = () =>
   `lipc-set-prop com.lab126.powerd serverToActive 1 && lipc-set-prop com.lab126.powerd preventScreenSaver 0`
