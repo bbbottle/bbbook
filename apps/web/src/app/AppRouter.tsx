@@ -375,19 +375,20 @@ function BookPage() {
     await openBook(book.fileName)
   }
 
-  const handleDelete = async () => {
-    if (!book) return
+  const handleDelete = () => {
+    if (!book || deleting) return
+    setShowConfirm(false)
     setDeleting(true)
-    try {
-      await deleteBook(book.fileName)
+    const promise = deleteBook(book.fileName).then(async () => {
       await refresh()
       navigate('/library')
-    } catch (err) {
-      alert(localizedMessage(formatError(err)) ?? formatError(err))
-    } finally {
-      setDeleting(false)
-      setShowConfirm(false)
-    }
+    })
+    promise.finally(() => setDeleting(false))
+    toast.promise(promise, {
+      loading: t('library.deleting'),
+      success: t('library.deleteDone'),
+      error: (err) => localizedMessage(formatError(err)) ?? t('library.deleteFailed'),
+    })
   }
 
   if (!book) {
@@ -421,7 +422,7 @@ function BookPage() {
       </Card>
       <div className="flex gap-3">
         <Button onClick={handleOpen}>{t('library.open')}</Button>
-        <Button variant="outline" onClick={() => setShowConfirm(true)}>
+        <Button variant="outline" disabled={deleting} onClick={() => setShowConfirm(true)}>
           {t('library.delete')}
         </Button>
       </div>
@@ -434,7 +435,7 @@ function BookPage() {
             <Button variant="ghost" onClick={() => setShowConfirm(false)}>
               {t('common.cancel')}
             </Button>
-            <Button disabled={deleting} onClick={handleDelete}>
+            <Button onClick={handleDelete}>
               {t('common.confirm')}
             </Button>
           </>

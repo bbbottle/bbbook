@@ -39,6 +39,9 @@
     "processing": "Sending to Kindle…",
     "uploadDone": "Upload complete",
     "uploadFailed": "Upload failed",
+    "deleting": "Deleting…",
+    "deleteDone": "Delete complete",
+    "deleteFailed": "Delete failed",
     "pullToRefresh": "Pull down to refresh",
     "releaseToRefresh": "Release to refresh"
   },
