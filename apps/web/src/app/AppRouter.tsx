@@ -511,8 +511,6 @@ function SettingsPage({ role }: SettingsPageProps) {
 
   return (
     <Section className="flex flex-col gap-4 p-4">
-      <LanguageCard />
-
       <Card>
         <CardTitle>{t('settings.deviceInfo')}</CardTitle>
         <CardContent>
@@ -589,6 +587,8 @@ function SettingsPage({ role }: SettingsPageProps) {
           </form>
         </Dialog>
       )}
+
+      <LanguageCard />
     </Section>
   )
 }
