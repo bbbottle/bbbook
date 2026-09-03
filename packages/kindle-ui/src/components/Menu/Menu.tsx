@@ -5,7 +5,7 @@ import {
   type ElementType,
   type MouseEventHandler,
 } from 'react'
-import { Popover, usePopoverContainer } from '../Popover/index.js'
+import { Popover, usePopoverContainer, usePopoverEntering } from '../Popover/index.js'
 import { cn } from '../../utils/cn.js'
 
 export interface MenuProps {
@@ -51,6 +51,7 @@ function MenuContent({
   className,
 }: MenuContentProps) {
   const container = usePopoverContainer()
+  const entering = usePopoverEntering()
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
 
   useLayoutEffect(() => {
@@ -71,9 +72,11 @@ function MenuContent({
     <div
       className={cn(
         'absolute z-30 min-w-[230px] overflow-hidden rounded-dialog border border-ink bg-paper shadow-eink',
+        'transition-[opacity,transform] duration-ku-base ease-ku-out origin-top-right',
+        entering ? 'opacity-100 scale-100' : 'opacity-0 scale-95',
         className
       )}
-      style={position}
+      style={{ ...position, transformOrigin: 'right top' }}
       onClick={(e) => e.stopPropagation()}
     >
       {children}
@@ -103,7 +106,7 @@ export function MenuItem({
       onClick={onClick}
       className={cn(
         'block cursor-pointer px-5 py-3 text-base font-sans text-ink outline-none',
-        'hover:bg-ink hover:text-surface active:bg-ink active:text-paper focus-visible:ku-focus-ring',
+        'transition-colors duration-ku-fast ease-ku-out hover:bg-ink hover:text-surface active:scale-[0.99] active:bg-ink active:text-paper focus-visible:ku-focus-ring',
         className
       )}
     >

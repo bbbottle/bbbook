@@ -225,7 +225,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
   }
 
   return (
-    <div className="h-full w-full flex flex-col items-center justify-center p-4 transition-opacity duration-[var(--ku-motion-base)]">
+    <div className="h-full w-full flex flex-col items-center justify-center p-4">
       <Card className="w-full max-w-xs border-0">
             <CardContent className="flex flex-col gap-4">
               {state.stage === 'login' && (
@@ -293,7 +293,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                   <button
                     type="button"
                     onClick={() => dispatch({ type: 'USE_BACKUP' })}
-                    className="self-center text-sm font-sans text-muted hover:text-ink focus-visible:ku-focus-ring"
+                    className="self-center text-sm font-sans text-muted transition-colors duration-ku-fast ease-ku-out hover:text-ink focus-visible:ku-focus-ring"
                   >
                     {t('auth.useBackupCode')}
                   </button>
@@ -318,7 +318,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                   <button
                     type="button"
                     onClick={() => dispatch({ type: 'RESET' })}
-                    className="self-center text-sm font-sans text-muted hover:text-ink focus-visible:ku-focus-ring"
+                    className="self-center text-sm font-sans text-muted transition-colors duration-ku-fast ease-ku-out hover:text-ink focus-visible:ku-focus-ring"
                   >
                     {t('auth.backToSignIn')}
                   </button>

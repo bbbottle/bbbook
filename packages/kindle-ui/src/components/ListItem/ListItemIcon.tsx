@@ -13,7 +13,7 @@ export function ListItemIcon({ children, className, onClick }: ListItemIconProps
       onClick={onClick}
       className={cn(
         'flex shrink-0 items-center justify-center text-ink',
-        'active:opacity-70',
+        'transition-transform duration-ku-fast ease-ku-out active:scale-[0.95]',
         className
       )}
     >

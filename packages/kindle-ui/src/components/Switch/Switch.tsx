@@ -37,8 +37,8 @@ export function Switch({
         className="peer sr-only"
         {...rest}
       />
-      <span className="h-full w-full rounded-full bg-muted transition-colors peer-checked:bg-ink peer-focus-visible:ku-focus-ring" />
-      <span className="absolute left-1 top-1 h-6 w-6 rounded-full bg-paper transition-transform peer-checked:translate-x-6" />
+      <span className="h-full w-full rounded-full bg-muted transition-colors duration-ku-fast ease-ku-in-out peer-checked:bg-ink peer-focus-visible:ku-focus-ring" />
+      <span className="absolute left-1 top-1 h-6 w-6 rounded-full bg-paper transition-transform duration-ku-fast ease-ku-in-out peer-checked:translate-x-6" />
     </label>
   )
 }

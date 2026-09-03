@@ -19,7 +19,7 @@ export interface InputProps {
 }
 
 const inputBase =
-  'h-12 w-full rounded-md border border-divider bg-paper px-3 font-sans text-base text-ink placeholder:text-subtle transition-colors focus-visible:ku-focus-ring disabled:opacity-50 disabled:cursor-not-allowed'
+  'h-12 w-full rounded-md border border-divider bg-paper px-3 font-sans text-base text-ink placeholder:text-subtle focus-visible:ku-focus-ring disabled:opacity-50 disabled:cursor-not-allowed'
 
 export function Input({
   type = 'text',
@@ -173,7 +173,7 @@ export function OtpInput({
           value={digits[i] || ''}
           aria-label={getDigitAriaLabel ? getDigitAriaLabel(i, length) : undefined}
           className={cn(
-            'h-12 flex-1 min-w-0 rounded-md border border-divider bg-paper text-center font-sans text-base text-ink transition-colors focus-visible:ku-focus-ring disabled:opacity-50 disabled:cursor-not-allowed'
+            'h-12 flex-1 min-w-0 rounded-md border border-divider bg-paper text-center font-sans text-base text-ink focus-visible:ku-focus-ring disabled:opacity-50 disabled:cursor-not-allowed'
           )}
           onChange={(e) => handleChange(i, e)}
           onKeyDown={(e) => handleKeyDown(i, e)}

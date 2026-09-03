@@ -39,7 +39,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
       onClick={onClick}
       className={cn(
         'group relative flex items-center justify-between gap-4 px-4 py-3 min-h-[56px] cursor-pointer border-b border-divider last:border-b-0 text-left',
-        'outline-none focus-visible:ku-focus-ring active:bg-ink active:text-surface',
+        'transition-[colors,transform] duration-ku-fast ease-ku-out outline-none focus-visible:ku-focus-ring active:scale-[0.99] active:bg-ink active:text-surface',
         (selected || active) && 'bg-ink text-surface',
         className
       )}
