@@ -40,7 +40,10 @@ export function Dialog({ open, onClose, title, children, actions, className }: D
 
   return (
     <div
-      className="absolute inset-0 z-30 flex items-center justify-center bg-black/20 p-4"
+      className={cn(
+        'absolute inset-0 z-30 flex items-center justify-center bg-black/20 p-4',
+        open ? 'pointer-events-auto' : 'pointer-events-none'
+      )}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose?.()
       }}

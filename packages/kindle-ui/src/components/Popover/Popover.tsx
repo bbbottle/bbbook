@@ -35,12 +35,13 @@ export function Popover({ open = false, onClose, children, className }: PopoverP
   const [entering, setEntering] = useState(false)
 
   useEffect(() => {
+    if (!open) return
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose?.()
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [onClose])
+  }, [open, onClose])
 
   useEffect(() => {
     if (open) {
@@ -60,7 +61,8 @@ export function Popover({ open = false, onClose, children, className }: PopoverP
       <div
         ref={setContainer}
         className={cn(
-          'pointer-events-auto absolute inset-0 z-30',
+          'absolute inset-0 z-30',
+          open ? 'pointer-events-auto' : 'pointer-events-none',
           className
         )}
         onClick={onClose}
