@@ -25,23 +25,6 @@ const makeDeviceInfoService = (sdk: KindleSDK) =>
     })
 
     const fetchSnapshot = Effect.fn('KindleDeviceInfoService.fetchSnapshot')(function* () {
-      const availableResult = yield* Effect.result(
-        Effect.tryPromise({
-          try: () => sdk.isAvailable(),
-          catch: (cause) => new KindleUnavailableError({ message: String(cause), cause }),
-        })
-      )
-      if (Result.isFailure(availableResult)) {
-        const error = availableResult.failure
-        yield* Ref.update(stateRef, (state) => ({ ...state, lastError: Option.some(error) }))
-        return yield* error
-      }
-      if (!availableResult.success) {
-        const error = new KindleUnavailableError({ message: 'Kindle unavailable', cause: null })
-        yield* Ref.update(stateRef, (state) => ({ ...state, lastError: Option.some(error) }))
-        return yield* error
-      }
-
       const infoResult = yield* Effect.result(
         Effect.tryPromise({
           try: () => sdk.getDeviceInfo(),
