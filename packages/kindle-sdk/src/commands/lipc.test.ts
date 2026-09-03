@@ -33,7 +33,7 @@ describe('lipc commands', () => {
     Effect.gen(function* () {
       assert.strictEqual(
         getBatteryLevel(),
-        'lipc-get-prop -s com.lab126.powerd battLevel'
+        'lipc-get-prop -i com.lab126.powerd battLevel'
       )
     }))
 
@@ -41,7 +41,7 @@ describe('lipc commands', () => {
     Effect.gen(function* () {
       assert.strictEqual(
         getBatteryCharging(),
-        'lipc-get-prop -s com.lab126.powerd charging'
+        'lipc-get-prop -i com.lab126.powerd isCharging'
       )
     }))
 
