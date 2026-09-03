@@ -116,6 +116,7 @@ interface LayoutProps {
 function Layout({ onLogout }: LayoutProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const mainRef = useRef<HTMLElement>(null)
   const [query, setQuery] = useState('')
   const { data: info, revalidate } = useCached<DeviceInfo>({
@@ -133,9 +134,7 @@ function Layout({ onLogout }: LayoutProps) {
     {
       textPrimary: t('library.upload'),
       onClick: () => {
-        sessionStorage.setItem('bbbook_trigger_upload', '1')
-        navigate('/library')
-        window.dispatchEvent(new CustomEvent('bbbook:triggerUpload'))
+        navigate('/library', { state: { triggerUpload: true }, replace: location.pathname === '/library' })
       },
     },
     { textPrimary: t('menu.logout'), onClick: onLogout },
@@ -176,6 +175,7 @@ function Layout({ onLogout }: LayoutProps) {
 function LibraryPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const { query, mainRef } = useOutletContext<{ query: string; mainRef: RefObject<HTMLElement | null> }>()
   const { data, error, loading, refresh } = useCached<BooksResponse>({ key: 'kindle-books', fn: fetchBooks, ttl: 0 })
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -195,18 +195,15 @@ function LibraryPage() {
     code ? t(`errors.${code}`, { defaultValue: code }) : null
 
   useEffect(() => {
-    const pending = sessionStorage.getItem('bbbook_trigger_upload')
-    if (pending) {
-      sessionStorage.removeItem('bbbook_trigger_upload')
+    if (
+      location.state &&
+      typeof location.state === 'object' &&
+      (location.state as { triggerUpload?: unknown }).triggerUpload
+    ) {
+      navigate(location.pathname, { state: null, replace: true })
       fileInputRef.current?.click()
     }
-    const handler = () => {
-      sessionStorage.removeItem('bbbook_trigger_upload')
-      fileInputRef.current?.click()
-    }
-    window.addEventListener('bbbook:triggerUpload', handler)
-    return () => window.removeEventListener('bbbook:triggerUpload', handler)
-  }, [])
+  }, [location, navigate])
 
   useEffect(() => {
     const el = mainRef.current
