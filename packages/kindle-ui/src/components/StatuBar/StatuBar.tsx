@@ -58,7 +58,15 @@ export function StatuBar({
           </span>
         )}
         {celluar?.on && (
-          <span className="flex h-full items-center text-[0.85em]">
+          <span
+            className="flex h-full items-center text-[0.85em]"
+            style={{
+              opacity:
+                celluar.signal === undefined
+                  ? 1
+                  : Math.min(Math.max(0.35 + (celluar.signal / 5) * 0.65, 0.35), 1),
+            }}
+          >
             <RssIcon size={20} />
           </span>
         )}
