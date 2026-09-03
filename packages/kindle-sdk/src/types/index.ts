@@ -7,6 +7,10 @@ export interface DeviceInfo extends SharedKindleDeviceInfo {
   readonly freeMemoryMb: number
   readonly freeStorageMb: number
   readonly uptimeSeconds: number
+  readonly wifi?: {
+    readonly ssid?: string
+    readonly signal?: number
+  }
 }
 
 export interface QueueItem {

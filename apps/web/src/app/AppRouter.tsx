@@ -70,6 +70,11 @@ function Layout({ onLogout }: LayoutProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
+  const { data: info } = useCached<DeviceInfo>({
+    key: 'device-info',
+    fn: fetchDeviceInfo,
+    ttl: 0,
+  })
 
   const menuItems = [
     { textPrimary: t('menu.logout'), onClick: onLogout },
@@ -79,9 +84,10 @@ function Layout({ onLogout }: LayoutProps) {
     <div className="flex h-full flex-col">
       <Navbar fixed>
         <StatuBar
-          deviceName={t('common.deviceName')}
-          battery={86}
-          celluar={{ on: true, label: t('common.networkLabel'), signal: 3 }}
+          deviceName={info?.modelName || 'bbbook'}
+          battery={info?.batteryLevel}
+          charging={info?.isCharging}
+          celluar={info?.wifi ? { on: true, label: info.wifi.ssid, signal: info.wifi.signal } : undefined}
         />
         <ActionBar>
           <ActionGroup>
