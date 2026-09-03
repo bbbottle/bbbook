@@ -111,9 +111,10 @@ function LanguageCard() {
 
 interface LayoutProps {
   onLogout?: () => void
+  onLock?: () => void
 }
 
-function Layout({ onLogout }: LayoutProps) {
+function Layout({ onLogout, onLock }: LayoutProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const mainRef = useRef<HTMLElement>(null)
@@ -169,6 +170,7 @@ function Layout({ onLogout }: LayoutProps) {
         fileInputRef.current?.click()
       },
     },
+    { textPrimary: t('menu.lock'), onClick: onLock },
     { textPrimary: t('menu.logout'), onClick: onLogout },
   ]
 
@@ -595,14 +597,15 @@ function SettingsPage({ role }: SettingsPageProps) {
 
 export interface AppRouterProps {
   onLogout?: () => void
+  onLock?: () => void
   currentUser?: CurrentUser | null
 }
 
-export function AppRouter({ onLogout, currentUser }: AppRouterProps) {
+export function AppRouter({ onLogout, onLock, currentUser }: AppRouterProps) {
   return (
     <MemoryRouter initialEntries={['/library']}>
       <Routes>
-        <Route path="/" element={<Layout onLogout={onLogout} />}>
+        <Route path="/" element={<Layout onLogout={onLogout} onLock={onLock} />}>
           <Route index element={<Navigate to="/library" replace />} />
           <Route path="library" element={<LibraryPage />} />
           <Route path="settings" element={<SettingsPage role={currentUser?.role} />} />

@@ -14,10 +14,33 @@ import { LoginFlow } from './features/auth/LoginFlow.js'
 import { initializeLocale, setLocalePreference } from './i18n/localePreference'
 import { useCached } from './lib/useCached.js'
 
+const LOCKED_KEY = 'bbbook.locked'
+
+function getLocked(): boolean {
+  try {
+    return localStorage.getItem(LOCKED_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+function saveLocked(locked: boolean) {
+  try {
+    if (locked) {
+      localStorage.setItem(LOCKED_KEY, 'true')
+    } else {
+      localStorage.removeItem(LOCKED_KEY)
+    }
+  } catch {
+    // ignore storage failures
+  }
+}
+
 export default function App() {
   const { t } = useTranslation()
   const [authed, setAuthed] = useState(() => isAuthenticated())
   const [showLogin, setShowLogin] = useState(false)
+  const [locked, setLocked] = useState(() => getLocked())
   const sessionToken = useMemo(() => (authed ? getSessionToken() : null), [authed])
 
   const { data: currentUserData } = useCached({
@@ -40,6 +63,16 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === LOCKED_KEY) {
+        setLocked(getLocked())
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
+
+  useEffect(() => {
     if (prefData) {
       setLocalePreference(prefData.locale)
     }
@@ -58,18 +91,31 @@ export default function App() {
     setShowLogin(false)
   }, [])
 
+  const handleLock = useCallback(() => {
+    setLocked(true)
+    saveLocked(true)
+  }, [])
+
+  const handleUnlock = useCallback(() => {
+    setLocked(false)
+    saveLocked(false)
+    if (!authed) {
+      setShowLogin(true)
+    }
+  }, [authed])
+
   let screenContent: React.ReactNode = null
-  if (authed) {
-    screenContent = <AppRouter onLogout={handleLogout} currentUser={currentUser} />
-  } else if (showLogin) {
+  if (authed && !locked) {
+    screenContent = <AppRouter onLogout={handleLogout} onLock={handleLock} currentUser={currentUser} />
+  } else if (showLogin && !locked) {
     screenContent = <LoginFlow onAuthed={handleAuthed} />
   }
 
-  const isBlankLock = !authed && !showLogin
+  const isBlankLock = !authed && !showLogin && !locked
 
   return (
     <div className="relative flex min-h-full w-full flex-col items-center justify-center p-4">
-      <Device wallpaper={false}>
+      <Device wallpaper={locked ? '/assets/wallpaper.png' : false}>
         <div className="relative h-full w-full">
           {screenContent}
           {isBlankLock && (
@@ -78,6 +124,14 @@ export default function App() {
               aria-label={t('auth.login')}
               className="absolute inset-0 z-10 h-full w-full cursor-pointer bg-transparent focus-visible:ku-focus-ring"
               onClick={() => setShowLogin(true)}
+            />
+          )}
+          {locked && (
+            <button
+              type="button"
+              aria-label={t('auth.unlock')}
+              className="absolute inset-0 z-10 h-full w-full cursor-pointer bg-transparent focus-visible:ku-focus-ring"
+              onClick={handleUnlock}
             />
           )}
         </div>
