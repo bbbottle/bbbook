@@ -11,6 +11,35 @@ if [ -n "${KINDLE_SSH_KEY:-}" ]; then
 fi
 
 if [ -n "${KINDLE_SSH_HOSTNAME:-}" ]; then
+  case "$KINDLE_SSH_HOSTNAME" in
+    *[[:space:]]*)
+      echo "KINDLE_SSH_HOSTNAME must not contain whitespace" >&2
+      exit 1
+      ;;
+  esac
+
+  if [ -n "${KINDLE_SSH_USER:-}" ]; then
+    case "$KINDLE_SSH_USER" in
+      *[[:space:]]*)
+        echo "KINDLE_SSH_USER must not contain whitespace" >&2
+        exit 1
+        ;;
+    esac
+  fi
+
+  if [ -n "${KINDLE_SSH_PORT:-}" ]; then
+    case "$KINDLE_SSH_PORT" in
+      ''|*[!0-9]*)
+        echo "KINDLE_SSH_PORT must be a number" >&2
+        exit 1
+        ;;
+    esac
+    if [ "$KINDLE_SSH_PORT" -lt 1 ] || [ "$KINDLE_SSH_PORT" -gt 65535 ]; then
+      echo "KINDLE_SSH_PORT out of range" >&2
+      exit 1
+    fi
+  fi
+
   cat > /root/.ssh/config <<EOF
 Host kindle
   HostName ${KINDLE_SSH_HOSTNAME}
