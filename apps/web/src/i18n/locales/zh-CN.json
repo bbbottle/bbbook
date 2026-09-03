@@ -18,10 +18,7 @@
     "settings": "设置"
   },
   "menu": {
-    "sync": "同步",
-    "settings": "设置",
-    "logout": "登出",
-    "about": "关于"
+    "logout": "登出"
   },
   "store": {
     "tabAll": "全部",
@@ -29,9 +26,6 @@
     "sectionResults": "搜索结果"
   },
   "settings": {
-    "deviceOptions": "设备选项",
-    "airplaneMode": "飞行模式",
-    "wifi": "Wi-Fi",
     "deviceInfo": "设备信息",
     "serial": "序列号",
     "freeMemory": "可用内存",

@@ -23,7 +23,6 @@ import { ListItem } from '@bbbook/kindle-ui/components/ListItem'
 import { Navbar } from '@bbbook/kindle-ui/components/Navbar'
 import { Section, SectionTitle } from '@bbbook/kindle-ui/components/Section'
 import { StatuBar } from '@bbbook/kindle-ui/components/StatuBar'
-import { Switch } from '@bbbook/kindle-ui/components/Switch'
 import { Tab, TabItem } from '@bbbook/kindle-ui/components/Tab'
 import { Typography } from '@bbbook/kindle-ui/components/Typography'
 import { createUser, listUsers, type User } from '../api/admin.js'
@@ -73,10 +72,7 @@ function Layout({ onLogout }: LayoutProps) {
   const [query, setQuery] = useState('')
 
   const menuItems = [
-    { textPrimary: t('menu.sync') },
-    { textPrimary: t('menu.settings'), onClick: () => navigate('/settings') },
     { textPrimary: t('menu.logout'), onClick: onLogout },
-    { textPrimary: t('menu.about') },
   ]
 
   return (
@@ -221,8 +217,6 @@ interface SettingsPageProps {
 
 function SettingsPage({ role }: SettingsPageProps) {
   const { t } = useTranslation()
-  const [airplane, setAirplane] = useState(false)
-  const [wifi, setWifi] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [newUsername, setNewUsername] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -275,21 +269,6 @@ function SettingsPage({ role }: SettingsPageProps) {
   return (
     <Section className="flex flex-col gap-4 p-4">
       <LanguageCard />
-
-      <Card>
-        <CardTitle>{t('settings.deviceOptions')}</CardTitle>
-        <CardContent className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-sans text-ink">{t('settings.airplaneMode')}</span>
-            <Switch checked={airplane} onChange={setAirplane} ariaLabel={t('settings.airplaneMode')} />
-          </div>
-          <div className="h-px bg-divider" />
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-sans text-ink">{t('settings.wifi')}</span>
-            <Switch checked={wifi} onChange={setWifi} ariaLabel={t('settings.wifi')} />
-          </div>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardTitle>{t('settings.deviceInfo')}</CardTitle>
