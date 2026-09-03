@@ -200,7 +200,10 @@ function LibraryPage() {
       sessionStorage.removeItem('bbbook_trigger_upload')
       fileInputRef.current?.click()
     }
-    const handler = () => fileInputRef.current?.click()
+    const handler = () => {
+      sessionStorage.removeItem('bbbook_trigger_upload')
+      fileInputRef.current?.click()
+    }
     window.addEventListener('bbbook:triggerUpload', handler)
     return () => window.removeEventListener('bbbook:triggerUpload', handler)
   }, [])
@@ -230,13 +233,13 @@ function LibraryPage() {
       const delta = e.touches[0].clientY - startY
       if (delta > 0) {
         e.preventDefault()
-        const dist = Math.min(delta * 0.5, PULL_MAX)
-        if (pullRef.current) pullRef.current.style.height = `${dist}px`
-        const shouldRefresh = dist > PULL_THRESHOLD
-        if (shouldRefresh !== pullWillRefreshRef.current) {
-          pullWillRefreshRef.current = shouldRefresh
-          setPullWillRefresh(shouldRefresh)
-        }
+      }
+      const dist = Math.min(Math.max(delta, 0) * 0.5, PULL_MAX)
+      if (pullRef.current) pullRef.current.style.height = `${dist}px`
+      const shouldRefresh = dist > PULL_THRESHOLD
+      if (shouldRefresh !== pullWillRefreshRef.current) {
+        pullWillRefreshRef.current = shouldRefresh
+        setPullWillRefresh(shouldRefresh)
       }
     }
     const onTouchEnd = () => {
@@ -249,15 +252,24 @@ function LibraryPage() {
         refresh()
       }
     }
+    const onTouchCancel = () => {
+      if (!isPulling) return
+      isPulling = false
+      if (pullRef.current) pullRef.current.style.height = '0px'
+      if (pullWillRefreshRef.current) {
+        pullWillRefreshRef.current = false
+        setPullWillRefresh(false)
+      }
+    }
     el.addEventListener('touchstart', onTouchStart, { passive: true })
     el.addEventListener('touchmove', onTouchMove, { passive: false })
     el.addEventListener('touchend', onTouchEnd)
-    el.addEventListener('touchcancel', onTouchEnd)
+    el.addEventListener('touchcancel', onTouchCancel)
     return () => {
       el.removeEventListener('touchstart', onTouchStart)
       el.removeEventListener('touchmove', onTouchMove)
       el.removeEventListener('touchend', onTouchEnd)
-      el.removeEventListener('touchcancel', onTouchEnd)
+      el.removeEventListener('touchcancel', onTouchCancel)
     }
   }, [mainRef, refresh])
 
