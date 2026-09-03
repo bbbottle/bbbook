@@ -1,12 +1,12 @@
 import { Effect, Semaphore, Duration, Context } from 'effect'
-import type { WifiTransportService } from './wifi-transport.js'
+import type { SshTransportService } from './ssh-transport.js'
 import {
   KindleError,
   ResourceExhaustedError,
   TimeoutError,
 } from '../errors/kindle-errors.js'
 import * as Executor from './executor.js'
-import type { WifiTransportConfig } from './transport-config.js'
+import type { SshTransportConfig } from './transport-config.js'
 
 export interface ResourceThrottlerService {
   readonly withPermit: <A, E, R>(
@@ -27,13 +27,13 @@ const parseFreeMemory = (stdout: string) => {
   return Number.isNaN(value) ? 0 : value
 }
 
-export const make = (config: WifiTransportConfig, wifi: WifiTransportService) =>
+export const make = (config: SshTransportConfig, transport: SshTransportService) =>
   Effect.gen(function* () {
     const semaphore = yield* Semaphore.make(1)
 
     const checkMemory: Effect.Effect<void, KindleError> =
       Effect.gen(function* () {
-        const result = yield* wifi.withConnection((client) =>
+        const result = yield* transport.withConnection((client) =>
           Executor.exec(client, freeMemoryCommand).pipe(
             Effect.timeoutOrElse({
               duration: Duration.millis(5000),

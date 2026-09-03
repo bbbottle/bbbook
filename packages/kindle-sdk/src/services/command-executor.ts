@@ -7,8 +7,8 @@ import {
   CommandRejectedError,
   type KindleError,
 } from '../errors/kindle-errors.js'
-import type { WifiTransportConfig } from '../core/transport-config.js'
-import type { WifiTransportService } from '../core/wifi-transport.js'
+import type { SshTransportConfig } from '../core/transport-config.js'
+import type { SshTransportService } from '../core/ssh-transport.js'
 import type { ResourceThrottlerService } from '../core/resource-throttler.js'
 import type { ExecResult } from '../core/executor.js'
 
@@ -61,12 +61,12 @@ const validateCommandEffect = (command: string): Effect.Effect<void, CommandReje
   return Effect.void
 }
 
-export const make = (config: WifiTransportConfig, wifi: WifiTransportService, throttler: ResourceThrottlerService) =>
+export const make = (config: SshTransportConfig, transport: SshTransportService, throttler: ResourceThrottlerService) =>
   Effect.gen(function* () {
     const execute = Effect.fn(function* (command: string) {
       yield* validateCommandEffect(command)
       const result = yield* throttler.withPermit(
-        wifi.withConnection((client) =>
+        transport.withConnection((client) =>
           Executor.exec(client, command).pipe(
             Effect.timeout(Duration.millis(config.commandTimeout ?? 30000)),
             Effect.catchIf(Cause.isTimeoutError, () =>

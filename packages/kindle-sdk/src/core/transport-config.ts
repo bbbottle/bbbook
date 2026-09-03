@@ -1,6 +1,6 @@
 import type { KindleConnectionOptions } from '@bbbook/shared-types'
 
-export interface WifiTransportConfig extends KindleConnectionOptions {
+export interface SshTransportConfig extends KindleConnectionOptions {
   readonly heartbeatInterval?: number
   readonly commandTimeout?: number
   readonly minMemoryMb?: number
@@ -10,7 +10,7 @@ export interface WifiTransportConfig extends KindleConnectionOptions {
   readonly localCacheDir?: string
 }
 
-export const defaultWifiTransportConfig = (config: WifiTransportConfig): WifiTransportConfig => ({
+export const defaultSshTransportConfig = (config: SshTransportConfig): SshTransportConfig => ({
   sshCmdStr: config.sshCmdStr,
   connectionTimeout: config.connectionTimeout ?? 10000,
   heartbeatInterval: config.heartbeatInterval ?? 5000,

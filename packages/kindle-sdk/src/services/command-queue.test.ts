@@ -4,7 +4,7 @@ import { vi } from 'vitest'
 import { DeviceBusyError } from '../errors/kindle-errors.js'
 import { make as makeCommandQueue } from './command-queue.js'
 import {
-  defaultWifiConfig,
+  defaultSshConfig,
   makeFakeCommandExecutor,
   makeFakeDeviceAvailability,
 } from '../../test/fakes.js'
@@ -18,7 +18,7 @@ describe('CommandQueue', () => {
       const commandExecutor = makeFakeCommandExecutor({ execute })
       const deviceAvailability = makeFakeDeviceAvailability()
       const queue = yield* makeCommandQueue(
-        defaultWifiConfig(),
+        defaultSshConfig(),
         commandExecutor,
         deviceAvailability
       )
@@ -35,7 +35,7 @@ describe('CommandQueue', () => {
       const commandExecutor = makeFakeCommandExecutor({ execute })
       const deviceAvailability = makeFakeDeviceAvailability()
       const queue = yield* makeCommandQueue(
-        defaultWifiConfig(),
+        defaultSshConfig(),
         commandExecutor,
         deviceAvailability
       )
@@ -52,7 +52,7 @@ describe('CommandQueue', () => {
       const commandExecutor = makeFakeCommandExecutor({ execute })
       const deviceAvailability = makeFakeDeviceAvailability()
       const queue = yield* makeCommandQueue(
-        defaultWifiConfig({ queueSize: 1 }),
+        defaultSshConfig({ queueSize: 1 }),
         commandExecutor,
         deviceAvailability
       )
