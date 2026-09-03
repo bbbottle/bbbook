@@ -4,7 +4,7 @@ import {
   AirplaneIcon,
   BatteryChargingIcon,
   BatteryFullIcon,
-  CellularIcon,
+  WifiIcon,
 } from '../../icons/index.js'
 
 export interface StatuBarProps {
@@ -61,7 +61,7 @@ export function StatuBar({
         {celluar?.on && (
           <span className="flex h-full items-center gap-0.5 text-[0.85em]">
             {celluar.label && <span>{celluar.label}</span>}
-            <CellularIcon size={20} signal={celluar.signal} />
+            <WifiIcon size={20} />
           </span>
         )}
         {typeof battery === 'number' && (
