@@ -1,10 +1,14 @@
 import type { ReactNode } from 'react'
 import {
   ArrowLeftIcon,
+  ChevronRightIcon,
+  DeviceMobileIcon,
   GearIcon,
+  GlobeIcon,
   HomeIcon,
   PackageIcon,
   PaperAirplaneIcon,
+  PersonIcon,
   RssIcon,
   SearchIcon,
   ThreeBarsIcon,
@@ -24,6 +28,10 @@ export type IconName =
   | 'close'
   | 'menu'
   | 'store'
+  | 'chevron-right'
+  | 'account'
+  | 'language'
+  | 'device'
 
 export interface IconProps {
   name: IconName
@@ -45,6 +53,10 @@ const icons: Record<IconName, IconComponent> = {
   close: XIcon,
   menu: ThreeBarsIcon,
   store: PackageIcon,
+  'chevron-right': ChevronRightIcon,
+  account: PersonIcon,
+  language: GlobeIcon,
+  device: DeviceMobileIcon,
 }
 
 export function Icon({ name, className, size = 24 }: IconProps) {

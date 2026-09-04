@@ -28,6 +28,7 @@ import {
   Input,
   List,
   ListItem,
+  ListItemIcon,
   Navbar,
   SearchBar,
   Section,
@@ -63,8 +64,13 @@ function formatError(err: unknown): string {
   return 'UNKNOWN_ERROR'
 }
 
-function LanguageCard() {
+interface PageProps {
+  role?: 'admin' | 'user'
+}
+
+function LanguagePage(_props: PageProps) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [preference, setPreference] = useState<LocalePreference>(() => getLocalePreference())
   const latestRef = useRef(preference)
   const savingRef = useRef(false)
@@ -95,9 +101,12 @@ function LanguageCard() {
   }
 
   return (
-    <Card>
-      <CardTitle>{t('settings.language')}</CardTitle>
-      <CardContent className="flex flex-col gap-2">
+    <Section className="flex flex-col gap-4 p-4">
+      <Button variant="ghost" className="self-start" onClick={() => navigate(-1)}>
+        <Icon name="back" size={18} />
+        {t('common.back')}
+      </Button>
+      <div className="flex flex-col gap-2">
         {LocaleOptions.map((option) => (
           <Button
             key={option.value}
@@ -107,8 +116,8 @@ function LanguageCard() {
             {t(option.labelKey)}
           </Button>
         ))}
-      </CardContent>
-    </Card>
+      </div>
+    </Section>
   )
 }
 
@@ -448,12 +457,48 @@ function BookPage() {
   )
 }
 
-interface SettingsPageProps {
-  role?: 'admin' | 'user'
+function DeviceInfoPage(_props: PageProps) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { data: info, error: infoError } = useCached<DeviceInfo>({
+    key: 'kindle-info',
+    fn: fetchDeviceInfo,
+    ttl: 0,
+  })
+  const deviceError = infoError ? formatError(infoError) : null
+
+  const localizedMessage = (code: string | null) =>
+    code ? t(`errors.${code}`, { defaultValue: code }) : null
+
+  return (
+    <Section className="flex flex-col gap-4 p-4">
+      <Button variant="ghost" className="self-start" onClick={() => navigate(-1)}>
+        <Icon name="back" size={18} />
+        {t('common.back')}
+      </Button>
+      {info ? (
+        <dl className="grid min-w-0 grid-cols-2 gap-2 text-sm font-sans text-ink [&>*]:min-w-0">
+          <dt className="text-muted">{t('settings.serial')}</dt>
+          <dd className="truncate" title={info.serialNumber}>{info.serialNumber}</dd>
+          <dt className="text-muted">{t('settings.freeMemory')}</dt>
+          <dd>{info.freeMemoryMb} MB</dd>
+          <dt className="text-muted">{t('settings.freeStorage')}</dt>
+          <dd>{info.freeStorageMb} MB</dd>
+          <dt className="text-muted">{t('settings.uptime')}</dt>
+          <dd>{info.uptimeSeconds}s</dd>
+        </dl>
+      ) : deviceError ? (
+        <Typography className="text-sm text-muted">{localizedMessage(deviceError)}</Typography>
+      ) : (
+        <Typography className="text-sm text-muted">{t('settings.loadingDeviceInfo')}</Typography>
+      )}
+    </Section>
+  )
 }
 
-function SettingsPage({ role }: SettingsPageProps) {
+function UserManagementPage({ role }: PageProps) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [newUsername, setNewUsername] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -461,18 +506,12 @@ function SettingsPage({ role }: SettingsPageProps) {
   const [adminMessage, setAdminMessage] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
 
-  const { data: info, error: infoError } = useCached<DeviceInfo>({
-    key: 'kindle-info',
-    fn: fetchDeviceInfo,
-    ttl: 0,
-  })
   const { data: usersData, error: usersError, refresh: refreshUsers } = useCached<User[]>({
-    key: role === 'admin' ? 'admin-users' : null,
+    key: 'admin-users',
     fn: listUsers,
     ttl: 0,
   })
   const users = usersData ?? []
-  const deviceError = infoError ? formatError(infoError) : null
 
   const localizedMessage = (code: string | null) =>
     code ? t(`errors.${code}`, { defaultValue: code }) : null
@@ -501,51 +540,38 @@ function SettingsPage({ role }: SettingsPageProps) {
     }
   }
 
+  if (role !== 'admin') {
+    return (
+      <Section className="p-4">
+        <Button variant="ghost" className="self-start" onClick={() => navigate(-1)}>
+          <Icon name="back" size={18} />
+          {t('common.back')}
+        </Button>
+        <Typography className="mt-4 text-sm text-muted">{t('errors.FORBIDDEN')}</Typography>
+      </Section>
+    )
+  }
+
   return (
     <Section className="flex flex-col gap-4 p-4">
-      <Card>
-        <CardTitle>{t('settings.deviceInfo')}</CardTitle>
-        <CardContent>
-          {info ? (
-            <dl className="grid min-w-0 grid-cols-2 gap-2 text-sm font-sans text-ink [&>*]:min-w-0">
-              <dt className="text-muted">{t('settings.serial')}</dt>
-              <dd className="truncate" title={info.serialNumber}>{info.serialNumber}</dd>
-              <dt className="text-muted">{t('settings.freeMemory')}</dt>
-              <dd>{info.freeMemoryMb} MB</dd>
-              <dt className="text-muted">{t('settings.freeStorage')}</dt>
-              <dd>{info.freeStorageMb} MB</dd>
-              <dt className="text-muted">{t('settings.uptime')}</dt>
-              <dd>{info.uptimeSeconds}s</dd>
-            </dl>
-          ) : deviceError ? (
-            <Typography className="text-sm text-muted">{localizedMessage(deviceError)}</Typography>
-          ) : (
-            <Typography className="text-sm text-muted">{t('settings.loadingDeviceInfo')}</Typography>
-          )}
-        </CardContent>
-      </Card>
-
-      {role === 'admin' && (
-        <Card>
-          <CardTitle>{t('settings.userManagement')}</CardTitle>
-          <CardContent className="flex flex-col gap-3">
-            <List>
-              {users.map((user) => (
-                <ListItem
-                  key={user.id}
-                  title={user.username}
-                  subtitle={user.totpEnabled ? t('settings.totpEnabled') : t('settings.totpNotConfigured')}
-                  meta={user.role === 'admin' ? t('common.roleAdmin') : t('common.roleUser')}
-                />
-              ))}
-            </List>
-            <Button onClick={() => setDialogOpen(true)}>{t('settings.addUser')}</Button>
-            {adminMessage ? (
-              <Typography className="text-sm text-muted">{adminMessage}</Typography>
-            ) : null}
-          </CardContent>
-        </Card>
-      )}
+      <Button variant="ghost" className="self-start" onClick={() => navigate(-1)}>
+        <Icon name="back" size={18} />
+        {t('common.back')}
+      </Button>
+      <List>
+        {users.map((user) => (
+          <ListItem
+            key={user.id}
+            title={user.username}
+            subtitle={user.totpEnabled ? t('settings.totpEnabled') : t('settings.totpNotConfigured')}
+            meta={user.role === 'admin' ? t('common.roleAdmin') : t('common.roleUser')}
+          />
+        ))}
+      </List>
+      <Button onClick={() => setDialogOpen(true)}>{t('settings.addUser')}</Button>
+      {adminMessage ? (
+        <Typography className="text-sm text-muted">{adminMessage}</Typography>
+      ) : null}
 
       {dialogOpen && (
         <Dialog
@@ -579,8 +605,50 @@ function SettingsPage({ role }: SettingsPageProps) {
           </form>
         </Dialog>
       )}
+    </Section>
+  )
+}
 
-      <LanguageCard />
+function SettingsPage({ role }: PageProps) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+
+  return (
+    <Section className="flex flex-col gap-4 p-4">
+      <List>
+        <ListItem
+          title={t('settings.deviceInfo')}
+          subtitle={t('settings.deviceInfoDesc')}
+          onClick={() => navigate('device')}
+          meta={<Icon name="chevron-right" size={16} />}
+        >
+          <ListItemIcon>
+            <Icon name="device" size={20} />
+          </ListItemIcon>
+        </ListItem>
+        <ListItem
+          title={t('settings.language')}
+          subtitle={t('settings.languageDesc')}
+          onClick={() => navigate('language')}
+          meta={<Icon name="chevron-right" size={16} />}
+        >
+          <ListItemIcon>
+            <Icon name="language" size={20} />
+          </ListItemIcon>
+        </ListItem>
+        {role === 'admin' && (
+          <ListItem
+            title={t('settings.userManagement')}
+            subtitle={t('settings.userManagementDesc')}
+            onClick={() => navigate('users')}
+            meta={<Icon name="chevron-right" size={16} />}
+          >
+            <ListItemIcon>
+              <Icon name="account" size={20} />
+            </ListItemIcon>
+          </ListItem>
+        )}
+      </List>
     </Section>
   )
 }
@@ -592,14 +660,21 @@ export interface AppRouterProps {
 }
 
 export function AppRouter({ onLogout, onLock, currentUser }: AppRouterProps) {
+  const role = currentUser?.role
+
   return (
     <MemoryRouter initialEntries={['/library']}>
       <Routes>
         <Route path="/" element={<Layout onLogout={onLogout} onLock={onLock} />}>
           <Route index element={<Navigate to="/library" replace />} />
           <Route path="library" element={<LibraryPage />} />
-          <Route path="settings" element={<SettingsPage role={currentUser?.role} />} />
           <Route path="books/:id" element={<BookPage />} />
+          <Route path="settings" element={<Outlet />}>
+            <Route index element={<SettingsPage role={role} />} />
+            <Route path="device" element={<DeviceInfoPage role={role} />} />
+            <Route path="language" element={<LanguagePage role={role} />} />
+            <Route path="users" element={<UserManagementPage role={role} />} />
+          </Route>
         </Route>
       </Routes>
     </MemoryRouter>

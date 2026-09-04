@@ -45,16 +45,20 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
       )}
       {...rest}
     >
-      <div className="flex-1 min-w-0">
-        {title && (
-          <div className="text-base leading-snug font-sans truncate">{title}</div>
-        )}
-        {subtitle && (
-          <div className="text-sm leading-snug font-sans text-muted truncate group-[.active]:text-surface/80">
-            {subtitle}
+      <div className="flex flex-1 items-center gap-3 min-w-0">
+        {children}
+        {(title || subtitle) && (
+          <div className="flex min-w-0 flex-1 flex-col">
+            {title && (
+              <div className="text-base leading-snug font-sans truncate">{title}</div>
+            )}
+            {subtitle && (
+              <div className="text-sm leading-snug font-sans text-muted truncate group-[.active]:text-surface/80">
+                {subtitle}
+              </div>
+            )}
           </div>
         )}
-        {children}
       </div>
       {meta && (
         <div className="shrink-0 text-sm text-muted group-[.active]:text-surface/80">
