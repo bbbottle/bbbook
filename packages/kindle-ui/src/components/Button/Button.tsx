@@ -1,5 +1,5 @@
 import { type ElementType, type ReactNode, forwardRef } from 'react'
-import { SyncIcon } from '@primer/octicons-react/SyncIcon'
+import { KebabHorizontalIcon } from '@primer/octicons-react/KebabHorizontalIcon'
 import { cn } from '../../utils/cn.js'
 
 export interface ButtonProps {
@@ -57,11 +57,7 @@ export const Button = forwardRef<HTMLElement, ButtonProps>(function Button(
         {children}
       </span>
       {loading ? (
-        <SyncIcon
-          aria-hidden="true"
-          size={16}
-          className="absolute animate-spin [animation-duration:700ms] motion-reduce:animate-none"
-        />
+        <KebabHorizontalIcon aria-hidden="true" size={16} className="absolute" />
       ) : null}
     </Component>
   )
