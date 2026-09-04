@@ -97,7 +97,7 @@ export const Device = forwardRef<ScreenHandle, DeviceProps>(function Device(
       </div>
 
       <IndicatorLight
-        className="pointer-events-none absolute -bottom-px left-1/2 -translate-x-1/2"
+        className="pointer-events-none absolute bottom-[-2px] left-1/2 -translate-x-1/2"
         danger={danger}
         status={status}
       />
