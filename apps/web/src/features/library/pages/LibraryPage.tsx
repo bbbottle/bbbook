@@ -1,13 +1,13 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useOutletContext } from 'react-router-dom'
+import useSWR from 'swr'
 import { List } from '@bbbook/kindle-ui/components/List'
 import { ListItem } from '@bbbook/kindle-ui/components/ListItem'
 import { Section } from '@bbbook/kindle-ui/components/Section'
 import { Typography } from '@bbbook/kindle-ui/components/Typography'
 import type { AppOutletContext } from '../../../app/layout/context.js'
 import { getErrorCode } from '../../../shared/lib/errors.js'
-import { useCached } from '../../../shared/lib/useCached.js'
 import { fetchBooks, type BooksResponse } from '../api/library.js'
 import { BOOKS_CACHE_KEY } from '../model/library.js'
 
@@ -19,11 +19,10 @@ export function LibraryPage() {
   const navigate = useNavigate()
   const { query, mainRef } = useOutletContext<AppOutletContext>()
   const deferredQuery = useDeferredValue(query)
-  const { data, error, loading, refresh } = useCached<BooksResponse>({
-    key: BOOKS_CACHE_KEY,
-    fn: fetchBooks,
-    ttl: 0,
-  })
+  const { data, error, isLoading, mutate } = useSWR<BooksResponse>(
+    BOOKS_CACHE_KEY,
+    fetchBooks
+  )
   const pullRef = useRef<HTMLDivElement>(null)
   const pullWillRefreshRef = useRef(false)
   const [pullWillRefresh, setPullWillRefresh] = useState(false)
@@ -69,7 +68,7 @@ export function LibraryPage() {
       isPulling = false
       const shouldRefresh = pullWillRefreshRef.current
       resetPull()
-      if (shouldRefresh) refresh()
+      if (shouldRefresh) void mutate()
     }
     const onTouchCancel = () => {
       if (!isPulling) return
@@ -87,7 +86,7 @@ export function LibraryPage() {
       element.removeEventListener('touchend', onTouchEnd)
       element.removeEventListener('touchcancel', onTouchCancel)
     }
-  }, [mainRef, refresh])
+  }, [mainRef, mutate])
 
   const filteredBooks = useMemo(() => {
     const books = data?.books ?? []
@@ -116,7 +115,7 @@ export function LibraryPage() {
         </span>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <Typography className="px-4 py-6 text-sm text-muted">
           {t('common.loading')}
         </Typography>
@@ -126,7 +125,7 @@ export function LibraryPage() {
           {localizedError}
         </Typography>
       ) : null}
-      {!loading && !error && filteredBooks.length === 0 ? (
+      {!isLoading && !error && filteredBooks.length === 0 ? (
         <Typography className="px-4 py-6 text-sm text-muted">
           {deferredQuery ? t('library.noSearchResults') : t('library.empty')}
         </Typography>

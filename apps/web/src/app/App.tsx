@@ -1,14 +1,20 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import useSWR from 'swr'
 import { Device } from '@bbbook/kindle-ui/components/Device'
 import '@bbbook/kindle-ui/styles'
 import {
   fetchCurrentUser,
   fetchUserPreference,
 } from '../features/auth/api/auth.js'
+import {
+  fetchDeviceInfo,
+  type DeviceInfo,
+} from '../features/device/api/device.js'
+import { DEVICE_INFO_CACHE_KEY } from '../features/device/model/device.js'
+import { useApiLoading } from '../shared/api/loading.js'
 import { clearSessionToken, useSessionToken } from '../shared/auth/session.js'
 import { createStoredBoolean } from '../shared/lib/storedBoolean.js'
-import { useCached } from '../shared/lib/useCached.js'
 import { setLocalePreference } from '../i18n/localePreference.js'
 
 const AppRouter = lazy(() =>
@@ -27,15 +33,30 @@ export default function App() {
   const [showLogin, setShowLogin] = useState(false)
   const locked = lockedStore.useValue()
   const accountKey = sessionToken && !locked ? sessionToken : null
+  const apiLoading = useApiLoading()
 
-  const { data: currentUserData } = useCached({
-    key: accountKey ? `current-user:${accountKey}` : null,
-    fn: fetchCurrentUser,
-  })
-  const { data: prefData } = useCached({
-    key: accountKey ? `user-preference:${accountKey}` : null,
-    fn: fetchUserPreference,
-  })
+  const { data: currentUserData } = useSWR(
+    accountKey ? `current-user:${accountKey}` : null,
+    fetchCurrentUser
+  )
+  const { data: prefData } = useSWR(
+    accountKey ? `user-preference:${accountKey}` : null,
+    fetchUserPreference
+  )
+  const { data: deviceInfo } = useSWR<DeviceInfo>(
+    sessionToken ? DEVICE_INFO_CACHE_KEY : null,
+    fetchDeviceInfo,
+    {
+      dedupingInterval: 60_000,
+      refreshInterval: 60_000,
+    }
+  )
+
+  const indicatorStatus = apiLoading
+    ? 'blink'
+    : sessionToken && deviceInfo?.isCharging
+      ? 'on'
+      : 'off'
 
   useEffect(() => {
     if (prefData) {
@@ -72,6 +93,7 @@ export default function App() {
         onLogout={handleLogout}
         onLock={handleLock}
         currentUser={currentUser}
+        deviceInfo={deviceInfo}
       />
     )
   } else if (showLogin && !locked) {
@@ -82,7 +104,10 @@ export default function App() {
 
   return (
     <div className="relative flex min-h-full w-full flex-col items-center justify-center p-4">
-      <Device wallpaper={locked ? '/assets/wallpaper.png' : false}>
+      <Device
+        status={indicatorStatus}
+        wallpaper={locked ? '/assets/wallpaper.png' : false}
+      >
         <div className="relative h-full w-full">
           <Suspense fallback={null}>{screenContent}</Suspense>
           {isBlankLock ? (

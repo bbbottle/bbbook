@@ -6,6 +6,10 @@ import {
   post,
   remove,
 } from '../../../shared/api/client.js'
+import {
+  finishApiRequest,
+  startApiRequest,
+} from '../../../shared/api/loading.js'
 import { getAuthHeaders } from '../../../shared/auth/session.js'
 
 export interface BooksResponse {
@@ -63,13 +67,20 @@ export async function uploadBook(
           status: 0,
         })
       )
+    xhr.onloadend = finishApiRequest
 
     xhr.open('POST', `${API_BASE_URL}/kindle/books`)
     const headers = getAuthHeaders()
     Object.entries(headers).forEach(([key, value]) =>
       xhr.setRequestHeader(key, value)
     )
-    xhr.send(formData)
+    startApiRequest()
+    try {
+      xhr.send(formData)
+    } catch (error) {
+      finishApiRequest()
+      reject(error)
+    }
   })
 }
 

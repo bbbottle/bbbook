@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import useSWR, { mutate } from 'swr'
 import { Button } from '@bbbook/kindle-ui/components/Button'
 import { Card, CardContent, CardTitle } from '@bbbook/kindle-ui/components/Card'
 import { Section } from '@bbbook/kindle-ui/components/Section'
 import { Typography } from '@bbbook/kindle-ui/components/Typography'
 import { getErrorCode } from '../../../shared/lib/errors.js'
-import { invalidateCached, useCached } from '../../../shared/lib/useCached.js'
 import {
   deleteBook,
   fetchBooks,
@@ -22,11 +22,7 @@ export function BookPage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const locationState = useLocation().state as Book | undefined
-  const { data } = useCached<BooksResponse>({
-    key: BOOKS_CACHE_KEY,
-    fn: fetchBooks,
-    ttl: 0,
-  })
+  const { data } = useSWR<BooksResponse>(BOOKS_CACHE_KEY, fetchBooks)
   const [deleting, setDeleting] = useState(false)
   const book = locationState ?? data?.books.find((item) => item.id === id)
 
@@ -36,7 +32,7 @@ export function BookPage() {
     const toastId = toast.loading(t('library.deleting'))
     try {
       await deleteBook(book.fileName)
-      invalidateCached(BOOKS_CACHE_KEY)
+      await mutate(BOOKS_CACHE_KEY, undefined, { revalidate: false })
       navigate('/library')
       toast.success(t('library.deleteDone'), { id: toastId })
     } catch (error) {

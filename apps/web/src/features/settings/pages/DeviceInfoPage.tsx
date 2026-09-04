@@ -1,18 +1,18 @@
 import { useTranslation } from 'react-i18next'
+import useSWR from 'swr'
 import { Section } from '@bbbook/kindle-ui/components/Section'
 import { Typography } from '@bbbook/kindle-ui/components/Typography'
 import { fetchDeviceInfo, type DeviceInfo } from '../../device/api/device.js'
 import { DEVICE_INFO_CACHE_KEY } from '../../device/model/device.js'
 import { getErrorCode } from '../../../shared/lib/errors.js'
-import { useCached } from '../../../shared/lib/useCached.js'
 
 export function DeviceInfoPage() {
   const { t } = useTranslation()
-  const { data: info, error } = useCached<DeviceInfo>({
-    key: DEVICE_INFO_CACHE_KEY,
-    fn: fetchDeviceInfo,
-    ttl: 60_000,
-  })
+  const { data: info, error } = useSWR<DeviceInfo>(
+    DEVICE_INFO_CACHE_KEY,
+    fetchDeviceInfo,
+    { dedupingInterval: 60_000 }
+  )
   const errorCode = error ? getErrorCode(error) : null
 
   return (
