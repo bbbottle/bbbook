@@ -23,7 +23,12 @@ const meta: Meta<typeof Device> = {
   component: Device,
   parameters: { layout: 'centered' },
   argTypes: {
+    danger: { control: 'boolean' },
     overlay: { control: 'boolean' },
+    status: {
+      control: 'select',
+      options: ['on', 'off', 'blink'],
+    },
   },
 }
 export default meta
@@ -37,12 +42,12 @@ const headerMenu = [
 ]
 
 export const Playground: Story = {
-  args: { overlay: true },
+  args: { danger: false, overlay: true, status: 'on' },
   render: (args) => <Device {...args} />,
 }
 
 export const LockScreen: Story = {
-  args: { overlay: true },
+  args: { danger: false, overlay: true, status: 'on' },
   render: (args) => <Device {...args} />,
 }
 
@@ -188,5 +193,4 @@ export const Components: Story = {
     )
   },
 }
-
 
