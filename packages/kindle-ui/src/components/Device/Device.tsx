@@ -1,11 +1,17 @@
 import { forwardRef, useImperativeHandle, useRef, type ReactNode } from 'react'
 import { Screen, type ScreenHandle } from '../Screen/index.js'
+import {
+  IndicatorLight,
+  type IndicatorLightStatus,
+} from '../IndicatorLight/index.js'
 import { cn } from '../../utils/cn.js'
 
 export interface DeviceProps {
   children?: ReactNode
   className?: string
+  danger?: boolean
   overlay?: boolean
+  status?: IndicatorLightStatus
   wallpaper?: string | false
 }
 
@@ -13,7 +19,9 @@ export const Device = forwardRef<ScreenHandle, DeviceProps>(function Device(
   {
     children,
     className,
+    danger = false,
     overlay = true,
+    status = 'on',
     wallpaper = '/assets/wallpaper.png',
   }: DeviceProps,
   ref
@@ -27,7 +35,7 @@ export const Device = forwardRef<ScreenHandle, DeviceProps>(function Device(
   return (
     <div
       className={cn(
-        'relative mx-auto aspect-[268/382] select-none overflow-hidden',
+        'relative mx-auto aspect-[268/382] select-none',
         'rounded-kindle border border-device-bezel bg-device-shell shadow-shell',
         className
       )}
@@ -87,6 +95,12 @@ export const Device = forwardRef<ScreenHandle, DeviceProps>(function Device(
           kindle
         </span>
       </div>
+
+      <IndicatorLight
+        className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2"
+        danger={danger}
+        status={status}
+      />
     </div>
   )
 })

@@ -38,6 +38,8 @@
   --ku-device-screen-frame-left: #c4c5b1;
   --ku-device-screen-frame-right: #908775;
   --ku-device-logo: #736a56;
+  --ku-indicator-light: #d1ff48;
+  --ku-indicator-light-danger: #ff4848;
 
   --ku-radius-sm: 1px;
   --ku-radius-md: 1px;
@@ -55,6 +57,7 @@
   --ku-motion-fast: 100ms;
   --ku-motion-base: 200ms;
   --ku-motion-slow: 300ms;
+  --ku-motion-indicator-blink: 1s;
 
   --ku-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ku-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
@@ -93,6 +96,49 @@ body {
   img.ku-grey-image {
     filter: grayscale(100%) contrast(1.08);
   }
+
+  .ku-indicator-light {
+    --ku-indicator-light-active: var(--ku-indicator-light);
+
+    position: relative;
+    display: block;
+    width: calc(2 / 268 * var(--device-width, 268px));
+    height: calc(1 / 268 * var(--device-width, 268px));
+    min-width: 2px;
+    min-height: 1px;
+    background-color: var(--ku-device-bezel);
+  }
+
+  .ku-indicator-light[data-danger="true"] {
+    --ku-indicator-light-active: var(--ku-indicator-light-danger);
+  }
+
+  .ku-indicator-light::after {
+    position: absolute;
+    inset: 0;
+    background-color: var(--ku-indicator-light-active);
+    box-shadow:
+      0 calc(1 / 268 * var(--device-width, 268px))
+        calc(2.4 / 268 * var(--device-width, 268px))
+        var(--ku-indicator-light-active),
+      0 calc(2 / 268 * var(--device-width, 268px))
+        calc(4 / 268 * var(--device-width, 268px))
+        var(--ku-indicator-light-active),
+      0 calc(3 / 268 * var(--device-width, 268px))
+        calc(4 / 268 * var(--device-width, 268px))
+        var(--ku-indicator-light-active);
+    content: "";
+    opacity: 0;
+  }
+
+  .ku-indicator-light[data-status="on"]::after {
+    opacity: 1;
+  }
+
+  .ku-indicator-light[data-status="blink"]::after {
+    animation: ku-indicator-light-blink var(--ku-motion-indicator-blink) steps(1, end)
+      infinite;
+  }
 }
 
 @layer utilities {
@@ -103,5 +149,24 @@ body {
 
   .ku-scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+}
+
+@keyframes ku-indicator-light-blink {
+  0%,
+  49.999% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ku-indicator-light[data-status="blink"]::after {
+    animation: none;
+    opacity: 1;
   }
 }

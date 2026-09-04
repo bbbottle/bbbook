@@ -35,6 +35,12 @@ export type { EinkOverlayHandle, EinkOverlayProps } from './components/EinkOverl
 export { Icon } from './components/Icon/index.js'
 export type { IconName, IconProps } from './components/Icon/index.js'
 
+export { IndicatorLight } from './components/IndicatorLight/index.js'
+export type {
+  IndicatorLightProps,
+  IndicatorLightStatus,
+} from './components/IndicatorLight/index.js'
+
 export { Input, OtpInput } from './components/Input/index.js'
 export type { InputProps, OtpInputProps } from './components/Input/index.js'
 
