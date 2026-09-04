@@ -1,5 +1,6 @@
 import { forwardRef, useImperativeHandle, useRef, type ReactNode } from 'react'
 import { Screen, type ScreenHandle } from '../Screen/index.js'
+import { Indicator } from '../Indicator/index.js'
 import { cn } from '../../utils/cn.js'
 
 export interface DeviceProps {
@@ -7,6 +8,7 @@ export interface DeviceProps {
   className?: string
   overlay?: boolean
   wallpaper?: string | false
+  indicator?: 'on' | 'off' | 'blink'
 }
 
 export const Device = forwardRef<ScreenHandle, DeviceProps>(function Device(
@@ -15,6 +17,7 @@ export const Device = forwardRef<ScreenHandle, DeviceProps>(function Device(
     className,
     overlay = true,
     wallpaper = '/assets/wallpaper.png',
+    indicator = 'off',
   }: DeviceProps,
   ref
 ) {
@@ -87,6 +90,13 @@ export const Device = forwardRef<ScreenHandle, DeviceProps>(function Device(
           kindle
         </span>
       </div>
+
+      {/* Figma node — status indicator; bottom-centered LED */}
+      <Indicator
+        status={indicator}
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2"
+        style={{ top: '94.5%' }}
+      />
     </div>
   )
 })

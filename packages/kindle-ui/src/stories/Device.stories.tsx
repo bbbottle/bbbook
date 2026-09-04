@@ -24,6 +24,7 @@ const meta: Meta<typeof Device> = {
   parameters: { layout: 'centered' },
   argTypes: {
     overlay: { control: 'boolean' },
+    indicator: { control: 'select', options: ['on', 'off', 'blink'] },
   },
 }
 export default meta
@@ -189,4 +190,14 @@ export const Components: Story = {
   },
 }
 
+export const IndicatorStates: Story = {
+  args: { overlay: true },
+  render: () => (
+    <div className="flex flex-wrap items-start justify-center gap-8">
+      <Device indicator="off" />
+      <Device indicator="on" />
+      <Device indicator="blink" />
+    </div>
+  ),
+}
 

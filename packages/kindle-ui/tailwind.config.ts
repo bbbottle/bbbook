@@ -30,6 +30,7 @@ export default {
           },
           logo: 'var(--ku-device-logo)',
         },
+        indicator: 'var(--ku-indicator-on)',
       },
       fontFamily: {
         sans: [
@@ -65,6 +66,22 @@ export default {
         eink: 'var(--ku-shadow-eink)',
         screen: 'var(--ku-shadow-screen)',
         shell: 'var(--ku-shadow-shell)',
+        indicator: 'var(--ku-shadow-indicator)',
+      },
+      keyframes: {
+        blink: {
+          '0%, 50%': {
+            backgroundColor: 'var(--ku-indicator-on)',
+            boxShadow: 'var(--ku-shadow-indicator)',
+          },
+          '50.01%, 100%': {
+            backgroundColor: 'var(--ku-device-shell)',
+            boxShadow: 'none',
+          },
+        },
+      },
+      animation: {
+        blink: 'blink 1.2s steps(1) infinite',
       },
       spacing: {
         '18': '4.5rem',

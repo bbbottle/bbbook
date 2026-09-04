@@ -18,6 +18,9 @@ export type { ContainerProps } from './components/Container/index.js'
 export { Device } from './components/Device/index.js'
 export type { DeviceProps } from './components/Device/index.js'
 
+export { Indicator } from './components/Indicator/index.js'
+export type { IndicatorProps } from './components/Indicator/index.js'
+
 export { Dialog, DialogTitle, DialogContent, DialogAction } from './components/Dialog/index.js'
 export type {
   DialogProps,

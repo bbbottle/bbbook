@@ -39,6 +39,10 @@
   --ku-device-screen-frame-right: #908775;
   --ku-device-logo: #736a56;
 
+  --ku-indicator-on: #22c55e;
+  --ku-shadow-indicator: 0 0 3px 1px rgba(34, 197, 94, 0.6),
+    0 0 6px 2px rgba(34, 197, 94, 0.35);
+
   --ku-radius-sm: 1px;
   --ku-radius-md: 1px;
   --ku-radius-lg: 1px;
@@ -103,5 +107,19 @@ body {
 
   .ku-scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+}
+
+@keyframes ku-indicator-blink {
+  0%,
+  50% {
+    background-color: var(--ku-indicator-on);
+    box-shadow: var(--ku-shadow-indicator);
+  }
+
+  50.01%,
+  100% {
+    background-color: var(--ku-device-shell);
+    box-shadow: none;
   }
 }
