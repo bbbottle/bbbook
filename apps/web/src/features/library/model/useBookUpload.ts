@@ -41,7 +41,9 @@ export function useBookUpload() {
               : `${t('library.uploading')} ${progress}%`
           toast.loading(message, { id: toastId })
         })
-        await mutate(BOOKS_CACHE_KEY, undefined, { revalidate: true })
+        void mutate(BOOKS_CACHE_KEY, undefined, { revalidate: true }).catch(
+          () => undefined
+        )
         toast.success(t('library.uploadDone'), { id: toastId })
       } catch (error) {
         toast.error(
