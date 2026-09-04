@@ -129,8 +129,6 @@ export default function App() {
           ) : null}
           <Toaster
             position="bottom-center"
-            offset={16}
-            mobileOffset={16}
             className="!absolute !z-40"
             style={{ ['--width' as string]: 'calc(100% - 2rem)' }}
             toastOptions={{ className: '!rounded-none !border-ink' }}
