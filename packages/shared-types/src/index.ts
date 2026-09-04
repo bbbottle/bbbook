@@ -88,6 +88,7 @@ export const ErrorCodes = [
   'INVALID_BACKUP_CODE',
   'RATE_LIMITED',
   'QUEUE_FULL',
+  'DEVICE_INITIALIZING',
   'DEVICE_UNAVAILABLE',
   'UNKNOWN_ERROR',
 ] as const

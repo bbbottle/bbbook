@@ -16,6 +16,7 @@ const statusByTag: Record<string, ContentfulStatusCode> = {
   UserNotFoundError: 404,
   RateLimitedError: 429,
   QueueFullError: 503,
+  KindleSnapshotPendingError: 503,
   KindleUnavailableError: 503,
 }
 
@@ -31,6 +32,7 @@ const codeByTag: Record<string, ErrorCode> = {
   InvalidBackupCodeError: 'INVALID_BACKUP_CODE',
   RateLimitedError: 'RATE_LIMITED',
   QueueFullError: 'QUEUE_FULL',
+  KindleSnapshotPendingError: 'DEVICE_INITIALIZING',
   KindleUnavailableError: 'DEVICE_UNAVAILABLE',
 }
 

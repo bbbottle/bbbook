@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useMinuteTime } from '../../hooks/useMinuteTime.js'
 import { cn } from '../../utils/cn.js'
 
 export interface TimeBarProps {
@@ -6,12 +6,7 @@ export interface TimeBarProps {
 }
 
 export function TimeBar({ className }: TimeBarProps) {
-  const [time, setTime] = useState(() => getTimeString())
-
-  useEffect(() => {
-    const id = setInterval(() => setTime(getTimeString()), 1000)
-    return () => clearInterval(id)
-  }, [])
+  const time = useMinuteTime()
 
   return (
     <div
@@ -23,8 +18,4 @@ export function TimeBar({ className }: TimeBarProps) {
       {time}
     </div>
   )
-}
-
-function getTimeString() {
-  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }

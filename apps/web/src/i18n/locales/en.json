@@ -114,6 +114,7 @@
     "INVALID_BACKUP_CODE": "Invalid backup code",
     "RATE_LIMITED": "Too many requests, please try again later",
     "QUEUE_FULL": "Service busy, please try again later",
+    "DEVICE_INITIALIZING": "Device is starting",
     "DEVICE_UNAVAILABLE": "Device unavailable",
     "UNKNOWN_ERROR": "Unknown error"
   }

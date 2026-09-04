@@ -1,20 +1,19 @@
 import type { ReactNode } from 'react'
-import {
-  ArrowLeftIcon,
-  ChevronRightIcon,
-  DeviceMobileIcon,
-  GearIcon,
-  GlobeIcon,
-  HomeIcon,
-  PackageIcon,
-  PaperAirplaneIcon,
-  PersonIcon,
-  RssIcon,
-  SearchIcon,
-  ThreeBarsIcon,
-  XIcon,
-} from '@primer/octicons-react'
-import { BatteryChargingIcon, BatteryFullIcon } from '../../icons/index.js'
+import { ArrowLeftIcon } from '@primer/octicons-react/ArrowLeftIcon'
+import { ChevronRightIcon } from '@primer/octicons-react/ChevronRightIcon'
+import { DeviceMobileIcon } from '@primer/octicons-react/DeviceMobileIcon'
+import { GearIcon } from '@primer/octicons-react/GearIcon'
+import { GlobeIcon } from '@primer/octicons-react/GlobeIcon'
+import { HomeIcon } from '@primer/octicons-react/HomeIcon'
+import { PackageIcon } from '@primer/octicons-react/PackageIcon'
+import { PaperAirplaneIcon } from '@primer/octicons-react/PaperAirplaneIcon'
+import { PersonIcon } from '@primer/octicons-react/PersonIcon'
+import { RssIcon } from '@primer/octicons-react/RssIcon'
+import { SearchIcon } from '@primer/octicons-react/SearchIcon'
+import { ThreeBarsIcon } from '@primer/octicons-react/ThreeBarsIcon'
+import { XIcon } from '@primer/octicons-react/XIcon'
+import { BatteryChargingIcon } from '../../icons/BatteryChargingIcon.js'
+import { BatteryFullIcon } from '../../icons/BatteryFullIcon.js'
 
 export type IconName =
   | 'home'

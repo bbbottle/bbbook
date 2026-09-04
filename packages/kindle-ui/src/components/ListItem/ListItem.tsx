@@ -52,24 +52,24 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     >
       <div className="flex flex-1 items-center gap-3 min-w-0">
         {children}
-        {(title || subtitle) && (
+        {title != null || subtitle != null ? (
           <div className="flex min-w-0 flex-1 flex-col">
-            {title && (
+            {title != null ? (
               <div className="text-base leading-snug font-sans truncate">{title}</div>
-            )}
-            {subtitle && (
+            ) : null}
+            {subtitle != null ? (
               <div className="text-sm leading-snug font-sans text-muted truncate group-active:text-surface group-active:opacity-80 group-data-[active]:text-surface group-data-[active]:opacity-80">
                 {subtitle}
               </div>
-            )}
+            ) : null}
           </div>
-        )}
+        ) : null}
       </div>
-      {meta && (
+      {meta != null ? (
         <div className="shrink-0 text-sm text-muted group-active:text-surface group-active:opacity-80 group-data-[active]:text-surface group-data-[active]:opacity-80">
           {meta}
         </div>
-      )}
+      ) : null}
     </Component>
   )
 })

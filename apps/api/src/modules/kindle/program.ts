@@ -2,7 +2,7 @@ import * as NodeFs from 'node:fs'
 import { DateTime, Duration, Effect, Layer, Option, Ref, Result } from 'effect'
 import { CommandRejectedError, type KindleSDK } from '@bbbook/kindle-sdk'
 import type { DeviceInfo } from '@bbbook/kindle-sdk'
-import { KindleUnavailableError } from '../../shared/schema/errors.js'
+import { KindleSnapshotPendingError, KindleUnavailableError } from '../../shared/schema/errors.js'
 import { KINDLE_SYNC_INTERVAL_MS } from '../../config.js'
 import { KindleSDKService } from './sdk.js'
 import { KindleDeviceInfoService, KindleLibraryService } from './service.js'
@@ -80,7 +80,9 @@ const makeDeviceInfoService = (sdk: KindleSDK) =>
         if (Option.isSome(state.lastError)) {
           return yield* Effect.fail(state.lastError.value)
         }
-        return yield* new KindleUnavailableError({ message: 'No Kindle snapshot available', cause: null })
+        return yield* new KindleSnapshotPendingError({
+          message: 'No Kindle snapshot available',
+        })
       }
 
       const now = yield* DateTime.now

@@ -115,14 +115,14 @@ function createProgram(gl: WebGLRenderingContext, vs: string, fs: string) {
 export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
   function EinkOverlay({ children, className, paused = false }, ref) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    const glRef = useRef<WebGLRenderingContext | null>(null)
-    const programRef = useRef<WebGLProgram | null>(null)
-    const positionBufferRef = useRef<WebGLBuffer | null>(null)
     const flashRef = useRef(0)
     const rafRef = useRef<number>(0)
+    const pausedRef = useRef(paused)
+    const renderRef = useRef<() => void>(() => {})
 
     const flash = useCallback(() => {
       flashRef.current = 1
+      renderRef.current()
     }, [])
 
     useImperativeHandle(ref, () => ({ refresh: flash }), [flash])
@@ -137,13 +137,13 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
           alpha: true,
           antialias: false,
         }) as WebGLRenderingContext | null) ||
-        (canvas.getContext('experimental-webgl') as WebGLRenderingContext | null)
+        (canvas.getContext(
+          'experimental-webgl'
+        ) as WebGLRenderingContext | null)
       if (!gl) return
-      glRef.current = gl
 
       const program = createProgram(gl, VERTEX_SHADER, FRAGMENT_SHADER)
       if (!program) return
-      programRef.current = program
       gl.useProgram(program)
 
       const buffer = gl.createBuffer()
@@ -153,8 +153,6 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
         new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
         gl.STATIC_DRAW
       )
-      positionBufferRef.current = buffer
-
       const positionLocation = gl.getAttribLocation(program, 'a_position')
       gl.enableVertexAttribArray(positionLocation)
       gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0)
@@ -164,50 +162,63 @@ export const EinkOverlay = forwardRef<EinkOverlayHandle, EinkOverlayProps>(
       gl.enable(gl.BLEND)
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
 
-      return () => {
-        cancelAnimationFrame(rafRef.current)
-        if (buffer) gl.deleteBuffer(buffer)
-        if (program) gl.deleteProgram(program)
-        glRef.current = null
-      }
-    }, [])
-
-    useEffect(() => {
-      const canvas = canvasRef.current
-      const gl = glRef.current
-      const program = programRef.current
-      if (!canvas || !gl || !program) return
-
       const uFlash = gl.getUniformLocation(program, 'u_flash')
       const uResolution = gl.getUniformLocation(program, 'u_resolution')
 
       const render = () => {
         const dpr = Math.min(window.devicePixelRatio || 1, 2)
-        const w = Math.max(1, Math.floor(canvas.clientWidth * dpr))
-        const h = Math.max(1, Math.floor(canvas.clientHeight * dpr))
+        const width = Math.max(1, Math.floor(canvas.clientWidth * dpr))
+        const height = Math.max(1, Math.floor(canvas.clientHeight * dpr))
 
-        if (canvas.width !== w || canvas.height !== h) {
-          canvas.width = w
-          canvas.height = h
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width
+          canvas.height = height
+        }
+
+        if (!pausedRef.current) {
+          flashRef.current = Math.max(0, flashRef.current - 0.03)
         }
 
         gl.viewport(0, 0, canvas.width, canvas.height)
         gl.clearColor(0, 0, 0, 0)
         gl.clear(gl.COLOR_BUFFER_BIT)
-
-        if (uResolution) gl.uniform2f(uResolution, canvas.width, canvas.height)
-
-        if (!paused) {
-          flashRef.current = Math.max(0, flashRef.current - 0.03)
+        if (uResolution) {
+          gl.uniform2f(uResolution, canvas.width, canvas.height)
         }
         gl.uniform1f(uFlash, flashRef.current)
-
         gl.drawArrays(gl.TRIANGLES, 0, 6)
-        rafRef.current = requestAnimationFrame(render)
+
+        if (!pausedRef.current && flashRef.current > 0) {
+          rafRef.current = requestAnimationFrame(render)
+        }
       }
 
-      rafRef.current = requestAnimationFrame(render)
-      return () => cancelAnimationFrame(rafRef.current)
+      renderRef.current = () => {
+        cancelAnimationFrame(rafRef.current)
+        render()
+      }
+
+      const resizeObserver =
+        typeof ResizeObserver === 'undefined'
+          ? null
+          : new ResizeObserver(renderRef.current)
+      resizeObserver?.observe(canvas)
+      window.addEventListener('resize', renderRef.current)
+      render()
+
+      return () => {
+        cancelAnimationFrame(rafRef.current)
+        resizeObserver?.disconnect()
+        window.removeEventListener('resize', renderRef.current)
+        if (buffer) gl.deleteBuffer(buffer)
+        if (program) gl.deleteProgram(program)
+        renderRef.current = () => {}
+      }
+    }, [])
+
+    useEffect(() => {
+      pausedRef.current = paused
+      renderRef.current()
     }, [paused])
 
     return (

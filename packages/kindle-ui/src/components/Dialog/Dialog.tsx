@@ -11,7 +11,14 @@ export interface DialogProps {
   className?: string
 }
 
-export function Dialog({ open, onClose, title, children, actions, className }: DialogProps) {
+export function Dialog({
+  open,
+  onClose,
+  title,
+  children,
+  actions,
+  className,
+}: DialogProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [mounted, setMounted] = useState(open)
   const [entering, setEntering] = useState(false)
@@ -59,10 +66,18 @@ export function Dialog({ open, onClose, title, children, actions, className }: D
           className
         )}
       >
-        {title && <h2 className="mb-4 text-lg font-serif font-semibold text-ink">{title}</h2>}
+        {title ? (
+          <h2 className="mb-4 text-lg font-serif font-semibold text-ink">
+            {title}
+          </h2>
+        ) : null}
         <div className="text-base font-serif text-ink">{children}</div>
-        {actions && <div className="mt-6 flex items-center justify-end gap-3">{actions}</div>}
-        {onClose && (
+        {actions != null ? (
+          <div className="mt-6 flex items-center justify-end gap-3">
+            {actions}
+          </div>
+        ) : null}
+        {onClose ? (
           <button
             type="button"
             onClick={onClose}
@@ -71,7 +86,7 @@ export function Dialog({ open, onClose, title, children, actions, className }: D
           >
             <Icon name="close" size={24} />
           </button>
-        )}
+        ) : null}
       </div>
     </div>
   )
