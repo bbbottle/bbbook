@@ -114,6 +114,7 @@
     "INVALID_BACKUP_CODE": "備用碼無效",
     "RATE_LIMITED": "請求過於頻繁，請稍後再試",
     "QUEUE_FULL": "服務繁忙，請稍後再試",
+    "DEVICE_INITIALIZING": "裝置正在啟動",
     "DEVICE_UNAVAILABLE": "裝置不可用",
     "UNKNOWN_ERROR": "未知錯誤"
   }

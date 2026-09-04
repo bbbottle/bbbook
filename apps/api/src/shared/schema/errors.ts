@@ -16,3 +16,10 @@ export class KindleUnavailableError extends Schema.TaggedError<KindleUnavailable
     cause: Schema.optional(Schema.Unknown),
   }
 ) {}
+
+export class KindleSnapshotPendingError extends Schema.TaggedError<KindleSnapshotPendingError>()(
+  "KindleSnapshotPendingError",
+  {
+    message: Schema.String,
+  }
+) {}

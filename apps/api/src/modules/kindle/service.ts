@@ -1,12 +1,15 @@
 import { Context, Effect } from 'effect'
 import type { Book, DeviceInfo } from '@bbbook/kindle-sdk'
 import { InvalidRequestError } from '../auth/errors.js'
-import { KindleUnavailableError } from '../../shared/schema/errors.js'
+import { KindleSnapshotPendingError, KindleUnavailableError } from '../../shared/schema/errors.js'
 
 export class KindleDeviceInfoService extends Context.Service<
   KindleDeviceInfoService,
   {
-    getDeviceInfo(): Effect.Effect<{ readonly info: DeviceInfo; readonly stale: boolean }, KindleUnavailableError>
+    getDeviceInfo(): Effect.Effect<
+      { readonly info: DeviceInfo; readonly stale: boolean },
+      KindleSnapshotPendingError | KindleUnavailableError
+    >
     refresh(): Effect.Effect<DeviceInfo, KindleUnavailableError>
     invalidateCache(): Effect.Effect<void>
   }
