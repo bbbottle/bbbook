@@ -70,7 +70,6 @@ interface PageProps {
 
 function LanguagePage(_props: PageProps) {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const [preference, setPreference] = useState<LocalePreference>(() => getLocalePreference())
   const latestRef = useRef(preference)
   const savingRef = useRef(false)
@@ -101,12 +100,8 @@ function LanguagePage(_props: PageProps) {
   }
 
   return (
-    <Section className="flex flex-col gap-4 p-4">
-      <Button variant="ghost" className="self-start" onClick={() => navigate(-1)}>
-        <Icon name="back" size={18} />
-        {t('common.back')}
-      </Button>
-      <div className="flex flex-col gap-2">
+    <Section className="flex flex-col gap-4 py-4">
+      <div className="flex flex-col gap-2 px-4">
         {LocaleOptions.map((option) => (
           <Button
             key={option.value}
@@ -180,6 +175,7 @@ function Layout({ onLogout, onLock }: LayoutProps) {
   }
 
   const menuItems: MenuItemProps[] = [
+    { textPrimary: t('menu.settings'), onClick: () => navigate('/settings') },
     {
       textPrimary: t('library.upload'),
       onClick: () => {
@@ -204,8 +200,8 @@ function Layout({ onLogout, onLock }: LayoutProps) {
             <ActionItem icon={<Icon name="home" size={22} />} onClick={() => navigate('/library')}>
               {t('nav.library')}
             </ActionItem>
-            <ActionItem icon={<Icon name="settings" size={22} />} onClick={() => navigate('/settings')}>
-              {t('nav.settings')}
+            <ActionItem icon={<Icon name="back" size={18} />} onClick={() => navigate(-1)}>
+              {t('common.back')}
             </ActionItem>
           </ActionGroup>
           <ActionBarSpace />
@@ -459,7 +455,6 @@ function BookPage() {
 
 function DeviceInfoPage(_props: PageProps) {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const { data: info, error: infoError } = useCached<DeviceInfo>({
     key: 'kindle-info',
     fn: fetchDeviceInfo,
@@ -471,13 +466,9 @@ function DeviceInfoPage(_props: PageProps) {
     code ? t(`errors.${code}`, { defaultValue: code }) : null
 
   return (
-    <Section className="flex flex-col gap-4 p-4">
-      <Button variant="ghost" className="self-start" onClick={() => navigate(-1)}>
-        <Icon name="back" size={18} />
-        {t('common.back')}
-      </Button>
+    <Section className="flex flex-col gap-4 py-4">
       {info ? (
-        <dl className="grid min-w-0 grid-cols-2 gap-2 text-sm font-sans text-ink [&>*]:min-w-0">
+        <dl className="grid min-w-0 grid-cols-2 gap-2 px-4 text-sm font-sans text-ink [&>*]:min-w-0">
           <dt className="text-muted">{t('settings.serial')}</dt>
           <dd className="truncate" title={info.serialNumber}>{info.serialNumber}</dd>
           <dt className="text-muted">{t('settings.freeMemory')}</dt>
@@ -488,9 +479,9 @@ function DeviceInfoPage(_props: PageProps) {
           <dd>{info.uptimeSeconds}s</dd>
         </dl>
       ) : deviceError ? (
-        <Typography className="text-sm text-muted">{localizedMessage(deviceError)}</Typography>
+        <Typography className="px-4 text-sm text-muted">{localizedMessage(deviceError)}</Typography>
       ) : (
-        <Typography className="text-sm text-muted">{t('settings.loadingDeviceInfo')}</Typography>
+        <Typography className="px-4 text-sm text-muted">{t('settings.loadingDeviceInfo')}</Typography>
       )}
     </Section>
   )
@@ -498,7 +489,6 @@ function DeviceInfoPage(_props: PageProps) {
 
 function UserManagementPage({ role }: PageProps) {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [newUsername, setNewUsername] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -542,22 +532,14 @@ function UserManagementPage({ role }: PageProps) {
 
   if (role !== 'admin') {
     return (
-      <Section className="p-4">
-        <Button variant="ghost" className="self-start" onClick={() => navigate(-1)}>
-          <Icon name="back" size={18} />
-          {t('common.back')}
-        </Button>
-        <Typography className="mt-4 text-sm text-muted">{t('errors.FORBIDDEN')}</Typography>
+      <Section className="flex flex-col gap-4 py-4">
+        <Typography className="px-4 text-sm text-muted">{t('errors.FORBIDDEN')}</Typography>
       </Section>
     )
   }
 
   return (
-    <Section className="flex flex-col gap-4 p-4">
-      <Button variant="ghost" className="self-start" onClick={() => navigate(-1)}>
-        <Icon name="back" size={18} />
-        {t('common.back')}
-      </Button>
+    <Section className="flex flex-col gap-4 py-4">
       <List>
         {users.map((user) => (
           <ListItem
@@ -568,9 +550,9 @@ function UserManagementPage({ role }: PageProps) {
           />
         ))}
       </List>
-      <Button onClick={() => setDialogOpen(true)}>{t('settings.addUser')}</Button>
+      <Button className="mx-4" onClick={() => setDialogOpen(true)}>{t('settings.addUser')}</Button>
       {adminMessage ? (
-        <Typography className="text-sm text-muted">{adminMessage}</Typography>
+        <Typography className="px-4 text-sm text-muted">{adminMessage}</Typography>
       ) : null}
 
       {dialogOpen && (
@@ -614,7 +596,7 @@ function SettingsPage({ role }: PageProps) {
   const navigate = useNavigate()
 
   return (
-    <Section className="flex flex-col gap-4 p-4">
+    <Section className="flex flex-col py-4">
       <List>
         <ListItem
           title={t('settings.deviceInfo')}

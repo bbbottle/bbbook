@@ -18,6 +18,7 @@
     "settings": "settings"
   },
   "menu": {
+    "settings": "Settings",
     "logout": "Logout",
     "lock": "Lock screen"
   },
