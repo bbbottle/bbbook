@@ -112,7 +112,7 @@ export function UserManagementPage({ role }: UserManagementPageProps) {
               </Button>
               <Button
                 onClick={() => formRef.current?.requestSubmit()}
-                disabled={creating}
+                loading={creating}
               >
                 {t('common.add')}
               </Button>

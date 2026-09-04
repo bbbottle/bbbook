@@ -9,6 +9,7 @@ const meta: Meta<typeof Button> = {
   argTypes: {
     variant: { control: 'select', options: ['default', 'outline', 'ghost'] },
     disabled: { control: 'boolean' },
+    loading: { control: 'boolean' },
   },
   render: (args) => (
     <Device wallpaper="">
@@ -36,4 +37,8 @@ export const Ghost: Story = {
 
 export const Disabled: Story = {
   args: { variant: 'default', children: 'Disabled', disabled: true },
+}
+
+export const Loading: Story = {
+  args: { variant: 'default', children: 'Submit', loading: true },
 }

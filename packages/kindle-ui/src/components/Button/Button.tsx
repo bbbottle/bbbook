@@ -1,10 +1,12 @@
 import { type ElementType, type ReactNode, forwardRef } from 'react'
+import { KebabHorizontalIcon } from '@primer/octicons-react/KebabHorizontalIcon'
 import { cn } from '../../utils/cn.js'
 
 export interface ButtonProps {
   as?: ElementType
   variant?: 'default' | 'outline' | 'ghost'
   disabled?: boolean
+  loading?: boolean
   children?: ReactNode
   className?: string
   href?: string
@@ -17,6 +19,7 @@ export const Button = forwardRef<HTMLElement, ButtonProps>(function Button(
     as,
     variant = 'default',
     disabled,
+    loading = false,
     children,
     className,
     href,
@@ -27,10 +30,10 @@ export const Button = forwardRef<HTMLElement, ButtonProps>(function Button(
   ref
 ) {
   const Component = as || (href ? 'a' : 'button')
-  const isDisabled = disabled
+  const isDisabled = disabled || loading
 
   const baseStyles =
-    'inline-flex items-center justify-center min-w-[70px] h-12 px-6 rounded-md font-sans text-sm font-semibold tracking-wide uppercase transition-[colors,transform] duration-ku-fast ease-ku-out focus-visible:ku-focus-ring active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed'
+    'relative inline-flex items-center justify-center min-w-[70px] h-12 px-6 rounded-md font-sans text-sm font-semibold tracking-wide uppercase transition-[colors,transform] duration-ku-fast ease-ku-out focus-visible:ku-focus-ring active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed'
 
   const variantStyles = {
     default: 'bg-ink text-paper hover:bg-paper hover:text-ink border border-ink active:bg-ink active:text-paper',
@@ -41,15 +44,21 @@ export const Button = forwardRef<HTMLElement, ButtonProps>(function Button(
   return (
     <Component
       ref={ref as never}
-      href={Component === 'a' ? href : undefined}
+      href={Component === 'a' && !isDisabled ? href : undefined}
       type={Component === 'button' ? type : undefined}
       disabled={Component === 'button' ? isDisabled : undefined}
       aria-disabled={isDisabled}
+      aria-busy={loading || undefined}
       onClick={isDisabled ? undefined : onClick}
       className={cn(baseStyles, variantStyles[variant], className)}
       {...rest}
     >
-      {children}
+      <span className={cn('inline-flex items-center', loading && 'opacity-0')}>
+        {children}
+      </span>
+      {loading ? (
+        <KebabHorizontalIcon aria-hidden="true" size={16} className="absolute" />
+      ) : null}
     </Component>
   )
 })

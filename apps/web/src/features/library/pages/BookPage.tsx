@@ -103,7 +103,7 @@ export function BookPage() {
         <Button onClick={() => void openBook(book.fileName)}>
           {t('library.open')}
         </Button>
-        <Button variant="outline" disabled={deleting} onClick={handleDelete}>
+        <Button variant="outline" loading={deleting} onClick={handleDelete}>
           {t('library.delete')}
         </Button>
       </div>
