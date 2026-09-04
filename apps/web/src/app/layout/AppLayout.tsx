@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { Toaster } from 'sonner'
@@ -15,36 +15,22 @@ import { Icon } from '@bbbook/kindle-ui/components/Icon'
 import { Navbar } from '@bbbook/kindle-ui/components/Navbar'
 import { StatuBar } from '@bbbook/kindle-ui/components/StatuBar'
 import { Typography } from '@bbbook/kindle-ui/components/Typography'
-import {
-  fetchDeviceInfo,
-  type DeviceInfo,
-} from '../../features/device/api/device.js'
-import { DEVICE_INFO_CACHE_KEY } from '../../features/device/model/device.js'
+import type { DeviceInfo } from '../../features/device/api/device.js'
 import { useBookUpload } from '../../features/library/model/useBookUpload.js'
-import { useCached } from '../../shared/lib/useCached.js'
 import type { AppOutletContext } from './context.js'
 
 export interface AppLayoutProps {
   onLogout?: () => void
   onLock?: () => void
+  info?: DeviceInfo
 }
 
-export function AppLayout({ onLogout, onLock }: AppLayoutProps) {
+export function AppLayout({ onLogout, onLock, info }: AppLayoutProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const mainRef = useRef<HTMLElement>(null)
   const [query, setQuery] = useState('')
   const upload = useBookUpload()
-  const { data: info, revalidate } = useCached<DeviceInfo>({
-    key: DEVICE_INFO_CACHE_KEY,
-    fn: fetchDeviceInfo,
-    ttl: 60_000,
-  })
-
-  useEffect(() => {
-    const id = window.setInterval(revalidate, 60_000)
-    return () => window.clearInterval(id)
-  }, [revalidate])
 
   const menuItems = useMemo<MenuItemProps[]>(
     () => [

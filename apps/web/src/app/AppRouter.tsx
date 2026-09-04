@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import { MemoryRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import type { CurrentUser } from '../features/auth/api/auth.js'
+import type { DeviceInfo } from '../features/device/api/device.js'
 import { AppLayout } from './layout/AppLayout.js'
 
 const LibraryPage = lazy(() =>
@@ -38,9 +39,15 @@ export interface AppRouterProps {
   onLogout?: () => void
   onLock?: () => void
   currentUser?: CurrentUser | null
+  deviceInfo?: DeviceInfo
 }
 
-export function AppRouter({ onLogout, onLock, currentUser }: AppRouterProps) {
+export function AppRouter({
+  onLogout,
+  onLock,
+  currentUser,
+  deviceInfo,
+}: AppRouterProps) {
   const role = currentUser?.role
 
   return (
@@ -48,7 +55,13 @@ export function AppRouter({ onLogout, onLock, currentUser }: AppRouterProps) {
       <Routes>
         <Route
           path="/"
-          element={<AppLayout onLogout={onLogout} onLock={onLock} />}
+          element={
+            <AppLayout
+              onLogout={onLogout}
+              onLock={onLock}
+              info={deviceInfo}
+            />
+          }
         >
           <Route index element={<Navigate to="/library" replace />} />
           <Route path="library" element={<LibraryPage />} />

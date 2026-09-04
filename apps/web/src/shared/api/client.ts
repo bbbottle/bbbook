@@ -1,4 +1,5 @@
 import { getAuthHeaders } from '../auth/session.js'
+import { finishApiRequest, startApiRequest } from './loading.js'
 
 export const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) || ''
@@ -56,23 +57,28 @@ export async function request<T>(
 ): Promise<T> {
   const headers = new Headers(authenticated ? getAuthHeaders() : undefined)
   new Headers(options.headers).forEach((value, key) => headers.set(key, value))
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-    credentials: 'include',
-  })
+  startApiRequest()
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+      credentials: 'include',
+    })
 
-  if (!response.ok) {
-    const payload = await response.json().catch(() => ({}))
-    const error = parseApiError(payload)
-    const retryAfter =
-      response.status === 429
-        ? parseRetryAfter(response.headers.get('retry-after'))
-        : error.retryAfter
-    throw new ApiError(error.code, response.status, retryAfter)
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}))
+      const error = parseApiError(payload)
+      const retryAfter =
+        response.status === 429
+          ? parseRetryAfter(response.headers.get('retry-after'))
+          : error.retryAfter
+      throw new ApiError(error.code, response.status, retryAfter)
+    }
+
+    return response.json()
+  } finally {
+    finishApiRequest()
   }
-
-  return response.json()
 }
 
 export function get<T>(path: string): Promise<T> {

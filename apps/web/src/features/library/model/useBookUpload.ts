@@ -1,13 +1,13 @@
 import { useCallback, useRef, useState, type ChangeEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { mutate } from 'swr'
 import { uploadBook } from '../api/library.js'
 import {
   BOOK_FILE_ACCEPT,
   BOOKS_CACHE_KEY,
   isAllowedBookFile,
 } from './library.js'
-import { invalidateCached } from '../../../shared/lib/useCached.js'
 import { getErrorCode } from '../../../shared/lib/errors.js'
 
 export function useBookUpload() {
@@ -41,7 +41,7 @@ export function useBookUpload() {
               : `${t('library.uploading')} ${progress}%`
           toast.loading(message, { id: toastId })
         })
-        invalidateCached(BOOKS_CACHE_KEY)
+        await mutate(BOOKS_CACHE_KEY, undefined, { revalidate: true })
         toast.success(t('library.uploadDone'), { id: toastId })
       } catch (error) {
         toast.error(
