@@ -12,6 +12,7 @@ export interface ListItemProps {
   className?: string
   href?: string
   onClick?: React.MouseEventHandler<HTMLElement>
+  type?: 'button' | 'submit' | 'reset'
 }
 
 export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem(
@@ -26,21 +27,25 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     className,
     href,
     onClick,
+    type,
     ...rest
   },
   ref
 ) {
-  const Component = as || (href ? 'a' : 'div')
+  const isActive = selected || active
+  const Component = as || (href ? 'a' : onClick ? 'button' : 'div')
 
   return (
     <Component
       ref={ref as never}
       href={Component === 'a' ? href : undefined}
       onClick={onClick}
+      type={Component === 'button' ? type ?? 'button' : undefined}
+      data-active={isActive ? 'true' : undefined}
       className={cn(
-        'group relative flex items-center justify-between gap-4 px-4 py-3 min-h-[56px] cursor-pointer border-b border-divider last:border-b-0 text-left',
+        'group relative flex w-full items-center justify-between gap-4 px-4 py-3 min-h-[56px] cursor-pointer border-b border-divider last:border-b-0 text-left',
         'transition-[colors,transform] duration-ku-fast ease-ku-out outline-none focus-visible:ku-focus-ring active:scale-[0.99] active:bg-ink active:text-surface',
-        (selected || active) && 'bg-ink text-surface',
+        isActive && 'bg-ink text-surface',
         className
       )}
       {...rest}
@@ -53,7 +58,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
               <div className="text-base leading-snug font-sans truncate">{title}</div>
             )}
             {subtitle && (
-              <div className="text-sm leading-snug font-sans text-muted truncate group-[.active]:text-surface/80">
+              <div className="text-sm leading-snug font-sans text-muted truncate group-active:text-surface group-active:opacity-80 group-data-[active]:text-surface group-data-[active]:opacity-80">
                 {subtitle}
               </div>
             )}
@@ -61,7 +66,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         )}
       </div>
       {meta && (
-        <div className="shrink-0 text-sm text-muted group-[.active]:text-surface/80">
+        <div className="shrink-0 text-sm text-muted group-active:text-surface group-active:opacity-80 group-data-[active]:text-surface group-data-[active]:opacity-80">
           {meta}
         </div>
       )}
