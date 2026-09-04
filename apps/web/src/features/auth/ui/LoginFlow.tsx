@@ -198,19 +198,23 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                 {state.loading ? '...' : t('auth.verify')}
               </Button>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-sans text-muted">
-                  {t('auth.useOtp')}
-                </span>
-                <Switch
-                  checked={mode === 'totp'}
-                  onChange={(checked) => {
-                    setMode(checked ? 'totp' : 'password')
-                    setOtp('')
-                    setPassword('')
-                  }}
-                  ariaLabel={t('auth.useOtp')}
-                  disabled={state.loading}
-                />
+                <div></div>
+                <div>
+                  <span className="text-xs font-sans text-muted">
+                    {t('auth.useOtp')}
+                  </span>
+                  <Switch
+                    checked={mode === 'totp'}
+                    onChange={(checked) => {
+                      setMode(checked ? 'totp' : 'password')
+                      setOtp('')
+                      setPassword('')
+                    }}
+                    ariaLabel={t('auth.useOtp')}
+                    disabled={state.loading}
+                  />
+                </div>
+
               </div>
             </form>
           )}
