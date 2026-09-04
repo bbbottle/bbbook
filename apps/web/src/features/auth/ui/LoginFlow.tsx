@@ -189,13 +189,13 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
               />
               <Button
                 type="submit"
+                loading={state.loading}
                 disabled={
-                  state.loading ||
                   !username ||
                   (mode === 'totp' ? !OTP_REGEX.test(otp.trim()) : !password)
                 }
               >
-                {state.loading ? '...' : t('auth.verify')}
+                {t('auth.verify')}
               </Button>
               <div className="flex items-center justify-between">
                 <div></div>
@@ -236,7 +236,8 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
               />
               <Button
                 type="submit"
-                disabled={state.loading || otp.length !== 6}
+                loading={state.loading}
+                disabled={otp.length !== 6}
               >
                 {t('auth.verify')}
               </Button>
@@ -264,7 +265,8 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
               />
               <Button
                 type="submit"
-                disabled={state.loading || !backupCodeValue.trim()}
+                loading={state.loading}
+                disabled={!backupCodeValue.trim()}
               >
                 {t('auth.signIn')}
               </Button>
@@ -325,7 +327,8 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                   />
                   <Button
                     type="submit"
-                    disabled={state.loading || otp.length !== 6}
+                    loading={state.loading}
+                    disabled={otp.length !== 6}
                   >
                     {t('common.confirm')}
                   </Button>
@@ -349,7 +352,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                   </li>
                 ))}
               </ul>
-              <Button onClick={handleContinue} disabled={state.loading}>
+              <Button onClick={handleContinue} loading={state.loading}>
                 {t('auth.continueToSignIn')}
               </Button>
             </div>
