@@ -199,7 +199,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
               </Button>
               <div className="flex items-center justify-between">
                 <div></div>
-                <div>
+                <div className="flex items-center gap-2">
                   <span className="text-xs font-sans text-muted">
                     {t('auth.useOtp')}
                   </span>
