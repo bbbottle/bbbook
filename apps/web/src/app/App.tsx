@@ -130,7 +130,6 @@ export default function App() {
           <Toaster
             position="bottom-center"
             className="!absolute !z-40"
-            style={{ ['--width' as string]: 'calc(100% - 2rem)' }}
             toastOptions={{ className: '!rounded-none !border-ink' }}
           />
         </div>
