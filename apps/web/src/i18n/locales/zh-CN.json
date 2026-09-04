@@ -82,7 +82,7 @@
     "passwordPlaceholder": "密码",
     "otpPlaceholder": "动态密码",
     "verify": "验证",
-    "useOtp": "使用动态密码",
+    "useOtp": "动态密码",
     "otpAriaLabel": "动态密码",
     "otpDigitAriaLabel": "第 {{index}} 位，共 {{length}} 位",
     "errorPasswordRequired": "请输入密码",
