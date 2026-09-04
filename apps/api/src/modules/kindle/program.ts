@@ -101,13 +101,17 @@ const makeDeviceInfoService = (sdk: KindleSDK) =>
       yield* invalidate
     })
 
+    const syncEffect = Effect.catch(cachedRefresh, (error) =>
+      Effect.logError('Kindle background sync failed', error)
+    )
+    yield* Effect.forkScoped(syncEffect)
+
     if (KINDLE_SYNC_INTERVAL_MS > 0) {
-      const syncEffect = Effect.catch(cachedRefresh, (error) =>
-        Effect.logError('Kindle background sync failed', error)
-      )
       yield* Effect.forkScoped(
         Effect.forever(
-          syncEffect.pipe(Effect.andThen(Effect.sleep(Duration.millis(KINDLE_SYNC_INTERVAL_MS))))
+          Effect.sleep(Duration.millis(KINDLE_SYNC_INTERVAL_MS)).pipe(
+            Effect.andThen(syncEffect)
+          )
         )
       )
     }
