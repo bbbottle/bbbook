@@ -103,9 +103,8 @@ body {
     position: relative;
     display: block;
     width: calc(2 / 268 * var(--device-width, 268px));
-    height: calc(1 / 268 * var(--device-width, 268px));
+    height: 1px;
     min-width: 2px;
-    min-height: 1px;
     background-color: var(--ku-device-bezel);
   }
 
