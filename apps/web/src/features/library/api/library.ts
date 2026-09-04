@@ -22,21 +22,11 @@ export function fetchBooks(): Promise<BooksResponse> {
   return get('/kindle/books')
 }
 
-export async function uploadBook(
-  file: File,
-  onProgress?: (progress: number, status: 'uploading' | 'processing') => void
-): Promise<{ success: true }> {
+export async function uploadBook(file: File): Promise<{ success: true }> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
     const formData = new FormData()
     formData.append('file', file)
-
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        const progress = Math.round((event.loaded / event.total) * 100)
-        onProgress?.(progress, progress === 100 ? 'processing' : 'uploading')
-      }
-    }
 
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {

@@ -1,7 +1,6 @@
 import { Suspense, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useNavigate } from 'react-router-dom'
-import { Toaster } from 'sonner'
 import {
   ActionBar,
   ActionBarSpace,
@@ -14,7 +13,6 @@ import type { MenuItemProps } from '@bbbook/kindle-ui/components/Menu'
 import { Icon } from '@bbbook/kindle-ui/components/Icon'
 import { Navbar } from '@bbbook/kindle-ui/components/Navbar'
 import { StatuBar } from '@bbbook/kindle-ui/components/StatuBar'
-import { Typography } from '@bbbook/kindle-ui/components/Typography'
 import type { DeviceInfo } from '../../features/device/api/device.js'
 import { useBookUpload } from '../../features/library/model/useBookUpload.js'
 import type { AppOutletContext } from './context.js'
@@ -91,13 +89,7 @@ export function AppLayout({ onLogout, onLock, info }: AppLayoutProps) {
       </Navbar>
 
       <main ref={mainRef} className="flex-1 overflow-auto">
-        <Suspense
-          fallback={
-            <Typography className="px-4 py-6 text-sm text-muted">
-              {t('common.loading')}
-            </Typography>
-          }
-        >
+        <Suspense fallback={null}>
           <Outlet context={outletContext} />
         </Suspense>
       </main>
@@ -108,12 +100,6 @@ export function AppLayout({ onLogout, onLock, info }: AppLayoutProps) {
         className="hidden"
         disabled={upload.uploading}
         {...upload.inputProps}
-      />
-
-      <Toaster
-        position="bottom-right"
-        className="!z-40"
-        toastOptions={{ className: '!rounded-none !border-ink' }}
       />
     </div>
   )

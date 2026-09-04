@@ -1,5 +1,6 @@
 import { useReducer, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import { Button } from '@bbbook/kindle-ui/components/Button'
 import { Card, CardContent } from '@bbbook/kindle-ui/components/Card'
 import { Input, OtpInput } from '@bbbook/kindle-ui/components/Input'
@@ -40,6 +41,11 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
   const [backupCodeValue, setBackupCodeValue] = useState('')
   const [mode, setMode] = useState<'totp' | 'password'>('totp')
 
+  const handleError = (error: unknown) => {
+    toast.error(localizeError(error, t))
+    dispatch({ type: 'ERROR' })
+  }
+
   const completeSession = (sessionToken: string) => {
     setSessionToken(sessionToken)
     dispatch({ type: 'SESSION_OK' })
@@ -75,8 +81,8 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
           dispatch({ type: 'SETUP_OK', ...setup })
         }
       }
-    } catch (err) {
-      dispatch({ type: 'ERROR', message: localizeError(err, t) })
+    } catch (error) {
+      handleError(error)
     }
   }
 
@@ -98,15 +104,15 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
           tempToken: response.tempToken!,
         })
       }
-    } catch (err) {
-      dispatch({ type: 'ERROR', message: localizeError(err, t) })
+    } catch (error) {
+      handleError(error)
     }
   }
 
   const handleConfirm = async (e: FormEvent) => {
     e.preventDefault()
     if (otp.length !== 6) {
-      dispatch({ type: 'ERROR', message: t('auth.errorOtpLength') })
+      handleError(new Error(t('auth.errorOtpLength')))
       return
     }
     dispatch({ type: 'SUBMIT' })
@@ -118,15 +124,15 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
       })
       setOtp('')
       dispatch({ type: 'CONFIRM_OK', backupCodes: response.backupCodes })
-    } catch (err) {
-      dispatch({ type: 'ERROR', message: localizeError(err, t) })
+    } catch (error) {
+      handleError(error)
     }
   }
 
   const handleVerify = async (e: FormEvent) => {
     e.preventDefault()
     if (otp.length !== 6) {
-      dispatch({ type: 'ERROR', message: t('auth.errorOtpLength') })
+      handleError(new Error(t('auth.errorOtpLength')))
       return
     }
     dispatch({ type: 'SUBMIT' })
@@ -136,15 +142,15 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
         token: otp,
       })
       completeSession(response.sessionToken)
-    } catch (err) {
-      dispatch({ type: 'ERROR', message: localizeError(err, t) })
+    } catch (error) {
+      handleError(error)
     }
   }
 
   const handleBackup = async (e: FormEvent) => {
     e.preventDefault()
     if (!backupCodeValue.trim()) {
-      dispatch({ type: 'ERROR', message: t('auth.backupCodePlaceholder') })
+      handleError(new Error(t('auth.backupCodePlaceholder')))
       return
     }
     dispatch({ type: 'SUBMIT' })
@@ -154,8 +160,8 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
         code: backupCodeValue.trim(),
       })
       completeSession(response.sessionToken)
-    } catch (err) {
-      dispatch({ type: 'ERROR', message: localizeError(err, t) })
+    } catch (error) {
+      handleError(error)
     }
   }
 
@@ -189,8 +195,8 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
               />
               <Button
                 type="submit"
-                loading={state.loading}
                 disabled={
+                  state.loading ||
                   !username ||
                   (mode === 'totp' ? !OTP_REGEX.test(otp.trim()) : !password)
                 }
@@ -214,7 +220,6 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                     disabled={state.loading}
                   />
                 </div>
-
               </div>
             </form>
           )}
@@ -236,8 +241,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
               />
               <Button
                 type="submit"
-                loading={state.loading}
-                disabled={otp.length !== 6}
+                disabled={state.loading || otp.length !== 6}
               >
                 {t('auth.verify')}
               </Button>
@@ -265,8 +269,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
               />
               <Button
                 type="submit"
-                loading={state.loading}
-                disabled={!backupCodeValue.trim()}
+                disabled={state.loading || !backupCodeValue.trim()}
               >
                 {t('auth.signIn')}
               </Button>
@@ -283,18 +286,11 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
           {state.stage === 'setup' && (
             <form onSubmit={handleConfirm} className="flex flex-col gap-4">
               {!state.secret ? (
-                <>
-                  <Typography className="text-center text-sm">
-                    {state.loading
-                      ? t('auth.preparingTwoFactor')
-                      : t('auth.twoFactorLoadFailed')}
-                  </Typography>
-                  {!state.loading && (
-                    <Button type="button" onClick={startLogin}>
-                      {t('common.tryAgain')}
-                    </Button>
-                  )}
-                </>
+                !state.loading ? (
+                  <Button type="button" onClick={startLogin}>
+                    {t('common.tryAgain')}
+                  </Button>
+                ) : null
               ) : (
                 <>
                   <Typography className="text-center text-sm">
@@ -327,8 +323,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                   />
                   <Button
                     type="submit"
-                    loading={state.loading}
-                    disabled={otp.length !== 6}
+                    disabled={state.loading || otp.length !== 6}
                   >
                     {t('common.confirm')}
                   </Button>
@@ -352,7 +347,7 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
                   </li>
                 ))}
               </ul>
-              <Button onClick={handleContinue} loading={state.loading}>
+              <Button onClick={handleContinue} disabled={state.loading}>
                 {t('auth.continueToSignIn')}
               </Button>
             </div>
@@ -363,12 +358,6 @@ export function LoginFlow({ onAuthed }: LoginFlowProps) {
               {t('auth.signedIn')}
             </Typography>
           )}
-
-          {state.error ? (
-            <p className="text-center text-sm font-sans text-ink" role="alert">
-              {state.error}
-            </p>
-          ) : null}
         </CardContent>
       </Card>
     </div>

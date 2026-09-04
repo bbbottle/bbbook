@@ -7,7 +7,6 @@ import { ListItem } from '@bbbook/kindle-ui/components/ListItem'
 import { Section } from '@bbbook/kindle-ui/components/Section'
 import { Typography } from '@bbbook/kindle-ui/components/Typography'
 import type { AppOutletContext } from '../../../app/layout/context.js'
-import { getErrorCode } from '../../../shared/lib/errors.js'
 import { fetchBooks, type BooksResponse } from '../api/library.js'
 import { BOOKS_CACHE_KEY } from '../model/library.js'
 
@@ -19,7 +18,7 @@ export function LibraryPage() {
   const navigate = useNavigate()
   const { query, mainRef } = useOutletContext<AppOutletContext>()
   const deferredQuery = useDeferredValue(query)
-  const { data, error, isLoading, mutate } = useSWR<BooksResponse>(
+  const { data, mutate } = useSWR<BooksResponse>(
     BOOKS_CACHE_KEY,
     fetchBooks
   )
@@ -97,10 +96,6 @@ export function LibraryPage() {
     )
   }, [data?.books, deferredQuery])
 
-  const localizedError = error
-    ? t(`errors.${getErrorCode(error)}`, { defaultValue: getErrorCode(error) })
-    : null
-
   return (
     <Section className="flex flex-col">
       <div
@@ -115,17 +110,7 @@ export function LibraryPage() {
         </span>
       </div>
 
-      {isLoading ? (
-        <Typography className="px-4 py-6 text-sm text-muted">
-          {t('common.loading')}
-        </Typography>
-      ) : null}
-      {localizedError ? (
-        <Typography className="px-4 py-6 text-sm text-muted">
-          {localizedError}
-        </Typography>
-      ) : null}
-      {!isLoading && !error && filteredBooks.length === 0 ? (
+      {data && filteredBooks.length === 0 ? (
         <Typography className="px-4 py-6 text-sm text-muted">
           {deferredQuery ? t('library.noSearchResults') : t('library.empty')}
         </Typography>

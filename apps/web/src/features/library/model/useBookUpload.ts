@@ -32,23 +32,15 @@ export function useBookUpload() {
       }
 
       setUploading(true)
-      const toastId = toast.loading(t('library.uploading'))
       try {
-        await uploadBook(file, (progress, status) => {
-          const message =
-            status === 'processing'
-              ? t('library.processing')
-              : `${t('library.uploading')} ${progress}%`
-          toast.loading(message, { id: toastId })
-        })
+        await uploadBook(file)
         void mutate(BOOKS_CACHE_KEY, undefined, { revalidate: true }).catch(
           () => undefined
         )
-        toast.success(t('library.uploadDone'), { id: toastId })
+        toast.success(t('library.uploadDone'))
       } catch (error) {
         toast.error(
-          localizeError(getErrorCode(error)) || t('library.uploadFailed'),
-          { id: toastId }
+          localizeError(getErrorCode(error)) || t('library.uploadFailed')
         )
       } finally {
         setUploading(false)
