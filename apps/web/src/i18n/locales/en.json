@@ -18,6 +18,7 @@
     "settings": "settings"
   },
   "menu": {
+    "settings": "Settings",
     "logout": "Logout",
     "lock": "Lock screen"
   },
@@ -66,6 +67,9 @@
     "username": "Username",
     "initialPassword": "Initial password",
     "language": "Language",
+    "deviceInfoDesc": "Serial number, memory and storage",
+    "languageDesc": "Choose interface language",
+    "userManagementDesc": "Manage users and TOTP",
     "languageSystem": "Follow system",
     "languageZhCN": "简体中文",
     "languageZhTW": "繁體中文",
