@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Toaster } from 'sonner'
 import useSWR from 'swr'
 import { Device } from '@bbbook/kindle-ui/components/Device'
 import '@bbbook/kindle-ui/styles'
@@ -126,6 +127,14 @@ export default function App() {
               onClick={handleUnlock}
             />
           ) : null}
+          <Toaster
+            position="bottom-right"
+            offset={16}
+            mobileOffset={16}
+            className="!absolute !z-40"
+            style={{ ['--width' as string]: 'calc(100% - 2rem)' }}
+            toastOptions={{ className: '!rounded-none !border-ink' }}
+          />
         </div>
       </Device>
     </div>

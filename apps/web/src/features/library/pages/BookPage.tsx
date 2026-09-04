@@ -29,15 +29,14 @@ export function BookPage() {
   const performDelete = async () => {
     if (!book) return
     setDeleting(true)
-    const toastId = toast.loading(t('library.deleting'))
     try {
       await deleteBook(book.fileName)
       await mutate(BOOKS_CACHE_KEY, undefined, { revalidate: false })
       navigate('/library')
-      toast.success(t('library.deleteDone'), { id: toastId })
+      toast.success(t('library.deleteDone'))
     } catch (error) {
       const code = getErrorCode(error)
-      toast.error(t(`errors.${code}`, { defaultValue: code }), { id: toastId })
+      toast.error(t(`errors.${code}`, { defaultValue: code }))
     } finally {
       setDeleting(false)
     }
@@ -65,16 +64,7 @@ export function BookPage() {
   }
 
   if (!book) {
-    return (
-      <Section className="p-4">
-        <Typography className="text-sm text-muted">
-          {t('library.bookNotFound')}
-        </Typography>
-        <Button className="mt-4" onClick={() => navigate('/library')}>
-          {t('common.back')}
-        </Button>
-      </Section>
-    )
+    return null
   }
 
   return (
@@ -99,7 +89,7 @@ export function BookPage() {
         <Button onClick={() => void openBook(book.fileName)}>
           {t('library.open')}
         </Button>
-        <Button variant="outline" loading={deleting} onClick={handleDelete}>
+        <Button variant="outline" disabled={deleting} onClick={handleDelete}>
           {t('library.delete')}
         </Button>
       </div>

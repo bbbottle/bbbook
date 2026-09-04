@@ -1,19 +1,16 @@
 import { useTranslation } from 'react-i18next'
 import useSWR from 'swr'
 import { Section } from '@bbbook/kindle-ui/components/Section'
-import { Typography } from '@bbbook/kindle-ui/components/Typography'
 import { fetchDeviceInfo, type DeviceInfo } from '../../device/api/device.js'
 import { DEVICE_INFO_CACHE_KEY } from '../../device/model/device.js'
-import { getErrorCode } from '../../../shared/lib/errors.js'
 
 export function DeviceInfoPage() {
   const { t } = useTranslation()
-  const { data: info, error } = useSWR<DeviceInfo>(
+  const { data: info } = useSWR<DeviceInfo>(
     DEVICE_INFO_CACHE_KEY,
     fetchDeviceInfo,
     { dedupingInterval: 60_000 }
   )
-  const errorCode = error ? getErrorCode(error) : null
 
   return (
     <Section className="flex flex-col gap-4 py-4">
@@ -30,15 +27,7 @@ export function DeviceInfoPage() {
           <dt className="text-muted">{t('settings.uptime')}</dt>
           <dd>{info.uptimeSeconds}s</dd>
         </dl>
-      ) : errorCode ? (
-        <Typography className="px-4 text-sm text-muted">
-          {t(`errors.${errorCode}`, { defaultValue: errorCode })}
-        </Typography>
-      ) : (
-        <Typography className="px-4 text-sm text-muted">
-          {t('settings.loadingDeviceInfo')}
-        </Typography>
-      )}
+      ) : null}
     </Section>
   )
 }

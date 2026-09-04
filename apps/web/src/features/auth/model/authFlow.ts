@@ -13,13 +13,12 @@ export interface AuthFlowState {
   uri: string
   qrCodeDataUrl: string
   backupCodes: string[]
-  error: string | null
   loading: boolean
 }
 
 export type AuthFlowAction =
   | { type: 'SUBMIT' }
-  | { type: 'ERROR'; message: string }
+  | { type: 'ERROR' }
   | { type: 'LOGIN_OK'; stage: 'setup' | 'verify'; tempToken: string }
   | { type: 'SETUP_OK'; secret: string; uri: string; qrCodeDataUrl: string }
   | { type: 'CONFIRM_OK'; backupCodes: string[] }
@@ -34,7 +33,6 @@ export const initialAuthFlowState: AuthFlowState = {
   uri: '',
   qrCodeDataUrl: '',
   backupCodes: [],
-  error: null,
   loading: false,
 }
 
@@ -44,16 +42,15 @@ export function authFlowReducer(
 ): AuthFlowState {
   switch (action.type) {
     case 'SUBMIT':
-      return { ...state, loading: true, error: null }
+      return { ...state, loading: true }
     case 'ERROR':
-      return { ...state, loading: false, error: action.message }
+      return { ...state, loading: false }
     case 'LOGIN_OK':
       return {
         ...state,
         stage: action.stage,
         tempToken: action.tempToken,
         loading: action.stage === 'setup',
-        error: null,
       }
     case 'SETUP_OK':
       return {
@@ -63,7 +60,6 @@ export function authFlowReducer(
         uri: action.uri,
         qrCodeDataUrl: action.qrCodeDataUrl,
         loading: false,
-        error: null,
       }
     case 'CONFIRM_OK':
       return {
@@ -71,12 +67,11 @@ export function authFlowReducer(
         stage: 'confirm',
         backupCodes: action.backupCodes,
         loading: false,
-        error: null,
       }
     case 'SESSION_OK':
-      return { ...state, stage: 'authed', loading: false, error: null }
+      return { ...state, stage: 'authed', loading: false }
     case 'USE_BACKUP':
-      return { ...state, stage: 'backup', error: null }
+      return { ...state, stage: 'backup' }
     case 'RESET':
       return initialAuthFlowState
   }
