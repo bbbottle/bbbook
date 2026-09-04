@@ -128,7 +128,7 @@ export default function App() {
             />
           ) : null}
           <Toaster
-            position="bottom-right"
+            position="bottom-center"
             offset={16}
             mobileOffset={16}
             className="!absolute !z-40"
