@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react'
-import { PaperAirplaneIcon, RssIcon } from '@primer/octicons-react'
+import { PaperAirplaneIcon } from '@primer/octicons-react/PaperAirplaneIcon'
+import { RssIcon } from '@primer/octicons-react/RssIcon'
 import { cn } from '../../utils/cn.js'
-import {
-  BatteryChargingIcon,
-  BatteryFullIcon,
-} from '../../icons/index.js'
+import { useMinuteTime } from '../../hooks/useMinuteTime.js'
+import { BatteryChargingIcon } from '../../icons/BatteryChargingIcon.js'
+import { BatteryFullIcon } from '../../icons/BatteryFullIcon.js'
 
 export interface StatuBarProps {
   deviceName?: string
@@ -20,10 +19,6 @@ export interface StatuBarProps {
   className?: string
 }
 
-function getTimeString() {
-  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-}
-
 export function StatuBar({
   deviceName = 'My Kindle',
   time,
@@ -33,14 +28,7 @@ export function StatuBar({
   celluar,
   className,
 }: StatuBarProps) {
-  const [liveTime, setLiveTime] = useState(time ?? getTimeString())
-
-  useEffect(() => {
-    if (time) return
-    const id = setInterval(() => setLiveTime(getTimeString()), 1000)
-    return () => clearInterval(id)
-  }, [time])
-
+  const liveTime = useMinuteTime()
   const displayTime = time ?? liveTime
 
   return (

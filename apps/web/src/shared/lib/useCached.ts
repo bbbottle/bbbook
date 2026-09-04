@@ -55,14 +55,14 @@ function notifyListeners(key: string) {
   }
 }
 
-function notifyRefresh(key: string) {
+export function invalidateCached(key: string) {
   dataCache.delete(key)
   promiseCache.delete(key)
   nextRequestId(key)
   notifyListeners(key)
 }
 
-function notifyRevalidate(key: string) {
+export function revalidateCached(key: string) {
   promiseCache.delete(key)
   nextRequestId(key)
   notifyListeners(key)
@@ -82,13 +82,21 @@ interface UseCachedResult<T> {
   revalidate: () => void
 }
 
-export function useCached<T>({ key, fn, ttl }: UseCachedOptions<T>): UseCachedResult<T> {
+export function useCached<T>({
+  key,
+  fn,
+  ttl,
+}: UseCachedOptions<T>): UseCachedResult<T> {
   const fnRef = useRef(fn)
   fnRef.current = fn
 
   const clearOnNextTick = useRef(false)
   const [tick, setTick] = useState(0)
-  const [state, setState] = useState<{ data: T | undefined; error: unknown; loading: boolean }>(() => {
+  const [state, setState] = useState<{
+    data: T | undefined
+    error: unknown
+    loading: boolean
+  }>(() => {
     if (key) {
       const cached = getCached<T>(key, ttl)
       if (cached !== undefined) {
@@ -117,29 +125,35 @@ export function useCached<T>({ key, fn, ttl }: UseCachedOptions<T>): UseCachedRe
 
     const clearData = clearOnNextTick.current
     clearOnNextTick.current = false
-    setState((prev) => ({ data: clearData ? undefined : prev.data, error: undefined, loading: true }))
+    setState((prev) => ({
+      data: clearData ? undefined : prev.data,
+      error: undefined,
+      loading: true,
+    }))
 
     let promiseEntry = promiseCache.get(key) as PromiseEntry<T> | undefined
     let requestId: number
     if (!promiseEntry) {
       requestId = nextRequestId(key)
       const inner = fnRef.current()
-      const promise: Promise<T> = inner.then(
-        (value) => {
-          if (isCurrentRequest(key, requestId)) {
-            dataCache.set(key, { value, timestamp: Date.now(), requestId })
+      const promise: Promise<T> = inner
+        .then(
+          (value) => {
+            if (isCurrentRequest(key, requestId)) {
+              dataCache.set(key, { value, timestamp: Date.now(), requestId })
+            }
+            return value
+          },
+          (reason: unknown) => {
+            throw reason
           }
-          return value
-        },
-        (reason: unknown) => {
-          throw reason
-        }
-      ).finally(() => {
-        const current = promiseCache.get(key)
-        if (current?.promise === promise) {
-          promiseCache.delete(key)
-        }
-      })
+        )
+        .finally(() => {
+          const current = promiseCache.get(key)
+          if (current?.promise === promise) {
+            promiseCache.delete(key)
+          }
+        })
       promiseEntry = { promise, requestId }
       promiseCache.set(key, promiseEntry)
     } else {
@@ -167,13 +181,19 @@ export function useCached<T>({ key, fn, ttl }: UseCachedOptions<T>): UseCachedRe
   const refresh = useCallback(() => {
     if (!key) return
     clearOnNextTick.current = true
-    notifyRefresh(key)
+    invalidateCached(key)
   }, [key])
 
   const revalidate = useCallback(() => {
     if (!key) return
-    notifyRevalidate(key)
+    revalidateCached(key)
   }, [key])
 
-  return { data: state.data, error: state.error, loading: state.loading, refresh, revalidate }
+  return {
+    data: state.data,
+    error: state.error,
+    loading: state.loading,
+    refresh,
+    revalidate,
+  }
 }

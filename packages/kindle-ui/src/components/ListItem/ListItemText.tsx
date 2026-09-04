@@ -15,7 +15,7 @@ export function ListItemText({
 }: ListItemTextProps) {
   return (
     <div className={cn('flex min-w-0 flex-1 flex-col justify-center', className)}>
-      {primary && (
+      {primary != null ? (
         <div
           className={cn(
             'truncate text-base font-sans font-semibold text-ink',
@@ -24,10 +24,10 @@ export function ListItemText({
         >
           {primary}
         </div>
-      )}
-      {secondary && (
+      ) : null}
+      {secondary != null ? (
         <div className="truncate text-sm font-sans text-muted">{secondary}</div>
-      )}
+      ) : null}
     </div>
   )
 }
