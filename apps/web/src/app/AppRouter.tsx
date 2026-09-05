@@ -70,7 +70,15 @@ export function AppRouter({
             <Route index element={<SettingsPage role={role} />} />
             <Route path="device" element={<DeviceInfoPage />} />
             <Route path="language" element={<LanguagePage />} />
-            <Route path="users" element={<UserManagementPage role={role} />} />
+            <Route
+              path="users"
+              element={
+                <UserManagementPage
+                  role={role}
+                  currentUserId={currentUser?.id}
+                />
+              }
+            />
           </Route>
         </Route>
       </Routes>

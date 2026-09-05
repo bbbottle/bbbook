@@ -26,6 +26,7 @@ export class UserRepository extends Context.Service<
       password: string,
       role: 'admin' | 'user'
     ): Effect.Effect<UserPublic, UserStoreError | UsernameTakenError>
+    deleteUser(userId: string): Effect.Effect<void, UserStoreError | UserNotFoundError>
     listUsers(): Effect.Effect<ReadonlyArray<UserPublic>, UserStoreError>
     updateLocale(
       userId: string,
@@ -258,6 +259,21 @@ export const UserRepositoryLive = Layer.effect(
       return users
     })
 
+    const deleteUser = Effect.fn('UserRepository.deleteUser')(function* (
+      userId: string
+    ) {
+      const maybeUser = yield* findById(userId)
+      if (Option.isNone(maybeUser)) {
+        return yield* new UserNotFoundError({ message: 'User not found' })
+      }
+      yield* repo.delete(maybeUser.value.id).pipe(
+        Effect.catchTags({
+          SqlError: Effect.die,
+          SchemaError: Effect.die,
+        })
+      )
+    })
+
     const updateLocale = Effect.fn('UserRepository.updateLocale')(function* (
       userId: string,
       locale: LocalePreference
@@ -347,6 +363,7 @@ export const UserRepositoryLive = Layer.effect(
       findById,
       verifyPassword,
       createUser,
+      deleteUser,
       listUsers,
       updateLocale,
       updateTotp,

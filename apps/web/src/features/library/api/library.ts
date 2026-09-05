@@ -78,10 +78,6 @@ export function deleteBook(fileName: string): Promise<{ success: true }> {
   return remove(`/kindle/books/${encodeURIComponent(fileName)}`)
 }
 
-export function openBook(fileName: string): Promise<{ success: true }> {
-  return post(`/kindle/books/${encodeURIComponent(fileName)}/open`)
-}
-
 export function restoreBook(fileName: string): Promise<{ success: true }> {
   return post(`/kindle/books/${encodeURIComponent(fileName)}/restore`)
 }

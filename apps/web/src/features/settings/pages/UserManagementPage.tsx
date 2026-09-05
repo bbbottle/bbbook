@@ -9,20 +9,25 @@ import { List } from '@bbbook/kindle-ui/components/List'
 import { ListItem } from '@bbbook/kindle-ui/components/ListItem'
 import { Section } from '@bbbook/kindle-ui/components/Section'
 import { getErrorCode } from '../../../shared/lib/errors.js'
-import { createUser, listUsers, type User } from '../api/users.js'
+import { createUser, deleteUser, listUsers, type User } from '../api/users.js'
 
 const USERS_CACHE_KEY = 'admin-users'
 
 export interface UserManagementPageProps {
   role?: 'admin' | 'user'
+  currentUserId?: string
 }
 
-export function UserManagementPage({ role }: UserManagementPageProps) {
+export function UserManagementPage({
+  role,
+  currentUserId,
+}: UserManagementPageProps) {
   const { t } = useTranslation()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [newUsername, setNewUsername] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [creating, setCreating] = useState(false)
+  const [deletingUserId, setDeletingUserId] = useState<string>()
   const formRef = useRef<HTMLFormElement>(null)
   const { data, mutate } = useSWR<User[]>(
     role === 'admin' ? USERS_CACHE_KEY : null,
@@ -55,6 +60,41 @@ export function UserManagementPage({ role }: UserManagementPageProps) {
     }
   }
 
+  const performDeleteUser = async (user: User) => {
+    setDeletingUserId(user.id)
+    try {
+      await deleteUser(user.id)
+      await mutate()
+      toast.success(t('settings.deleteUserDone'))
+    } catch (deleteError) {
+      const code = getErrorCode(deleteError)
+      toast.error(t(`errors.${code}`, { defaultValue: code }))
+    } finally {
+      setDeletingUserId(undefined)
+    }
+  }
+
+  const handleDeleteUser = (user: User) => {
+    if (deletingUserId) return
+    const confirmId = toast(
+      t('settings.deleteUserConfirm', { username: user.username }),
+      {
+        duration: Infinity,
+        action: {
+          label: t('common.confirm'),
+          onClick: () => {
+            toast.dismiss(confirmId)
+            void performDeleteUser(user)
+          },
+        },
+        cancel: {
+          label: t('common.cancel'),
+          onClick: () => toast.dismiss(confirmId),
+        },
+      }
+    )
+  }
+
   return (
     <Section className="flex flex-col gap-4 py-4">
       <List>
@@ -69,9 +109,23 @@ export function UserManagementPage({ role }: UserManagementPageProps) {
                 : t('settings.totpNotConfigured')
             }
             meta={
-              user.role === 'admin'
-                ? t('common.roleAdmin')
-                : t('common.roleUser')
+              <div className="flex items-center gap-2">
+                <span>
+                  {user.role === 'admin'
+                    ? t('common.roleAdmin')
+                    : t('common.roleUser')}
+                </span>
+                {user.id !== currentUserId ? (
+                  <Button
+                    variant="ghost"
+                    className="h-8 min-w-0 px-2 text-xs normal-case"
+                    disabled={deletingUserId === user.id}
+                    onClick={() => handleDeleteUser(user)}
+                  >
+                    {t('settings.deleteUser')}
+                  </Button>
+                ) : null}
+              </div>
             }
           />
         ))}
