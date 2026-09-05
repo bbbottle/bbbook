@@ -1,5 +1,7 @@
 import {
+  useEffect,
   useLayoutEffect,
+  useRef,
   useState,
   type ReactNode,
   type ElementType,
@@ -49,10 +51,30 @@ function MenuContent({
   anchorEl,
   children,
   className,
+  onClose,
 }: MenuContentProps) {
   const container = usePopoverContainer()
   const entering = usePopoverEntering()
+  const contentRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
+
+  useEffect(() => {
+    if (!onClose) return
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!(event.target instanceof Node)) return
+      const anchor =
+        typeof anchorEl === 'function' ? anchorEl(document.body) : anchorEl
+      if (
+        contentRef.current?.contains(event.target) ||
+        anchor?.contains(event.target)
+      ) {
+        return
+      }
+      onClose()
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [anchorEl, onClose])
 
   useLayoutEffect(() => {
     if (!container || !anchorEl) return
@@ -70,6 +92,7 @@ function MenuContent({
 
   return (
     <div
+      ref={contentRef}
       className={cn(
         'absolute z-30 min-w-[230px] overflow-hidden rounded-dialog border border-ink bg-paper shadow-eink',
         'transition-[opacity,transform] duration-ku-base ease-ku-out origin-top-right',

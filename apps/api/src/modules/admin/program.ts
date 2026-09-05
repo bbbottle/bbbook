@@ -1,6 +1,6 @@
 import { Effect } from 'effect'
 import { UserRepository } from '../auth/user.repository.js'
-import { UsernameTakenError } from '../auth/errors.js'
+import { UserNotFoundError, UsernameTakenError } from '../auth/errors.js'
 import { UserStoreError } from '../../shared/schema/errors.js'
 import type { AdminCreateUserRequest, AdminCreateUserResponse } from './schema.js'
 
@@ -16,4 +16,10 @@ export const createUser = Effect.fn('AdminProgram.createUser')(function* (
     repo.createUser(request.username, request.password, request.role ?? 'user')
   )
   return user
+})
+
+export const deleteUser = Effect.fn('AdminProgram.deleteUser')(function* (
+  userId: string
+): Effect.fn.Return<void, UserStoreError | UserNotFoundError, UserRepository> {
+  yield* UserRepository.use((repo) => repo.deleteUser(userId))
 })

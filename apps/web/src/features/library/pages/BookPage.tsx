@@ -11,7 +11,6 @@ import { getErrorCode } from '../../../shared/lib/errors.js'
 import {
   deleteBook,
   fetchBooks,
-  openBook,
   type Book,
   type BooksResponse,
 } from '../api/library.js'
@@ -85,14 +84,9 @@ export function BookPage() {
           ) : null}
         </CardContent>
       </Card>
-      <div className="flex gap-3">
-        <Button onClick={() => void openBook(book.fileName)}>
-          {t('library.open')}
-        </Button>
-        <Button variant="outline" disabled={deleting} onClick={handleDelete}>
-          {t('library.delete')}
-        </Button>
-      </div>
+      <Button variant="outline" disabled={deleting} onClick={handleDelete}>
+        {t('library.delete')}
+      </Button>
     </Section>
   )
 }

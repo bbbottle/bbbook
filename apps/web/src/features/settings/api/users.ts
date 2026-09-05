@@ -1,4 +1,4 @@
-import { get, post } from '../../../shared/api/client.js'
+import { get, post, remove } from '../../../shared/api/client.js'
 
 export interface User {
   id: string
@@ -19,4 +19,8 @@ export function listUsers(): Promise<User[]> {
 
 export function createUser(request: CreateUserRequest): Promise<User> {
   return post('/admin/users', request)
+}
+
+export function deleteUser(userId: string): Promise<{ success: true }> {
+  return remove(`/admin/users/${encodeURIComponent(userId)}`)
 }

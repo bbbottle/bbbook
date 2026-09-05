@@ -6,7 +6,7 @@ import { Hono } from 'hono'
 import { handleExit } from '../../shared/middleware/error-handler.js'
 import type { UserRepository } from '../auth/user.repository.js'
 import type { TokenService } from '../auth/token.service.js'
-import { createUser, listUsers } from './program.js'
+import { createUser, deleteUser, listUsers } from './program.js'
 import { AdminCreateUserRequestSchema } from './schema.js'
 
 export const createAdminRouter = (
@@ -30,6 +30,15 @@ export const createAdminRouter = (
     }
     const exit = await runtime.runPromiseExit(createUser(request))
     return handleExit(exit, c, (res) => c.json(res))
+  })
+
+  router.delete('/users/:userId', async (c) => {
+    const userId = c.req.param('userId')
+    if (userId === c.get('userId')) {
+      return c.json({ error: { code: 'FORBIDDEN' } }, 403 as ContentfulStatusCode)
+    }
+    const exit = await runtime.runPromiseExit(deleteUser(userId))
+    return handleExit(exit, c, () => c.json({ success: true }))
   })
 
   return router
